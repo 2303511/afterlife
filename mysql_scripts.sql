@@ -1,7 +1,6 @@
 -- create default user for access to AfterLifeDB
-CREATE SCHEMA `AfterLifeSchema` ;
+CREATE SCHEMA `AfterLifeDB` ;
 
-CREATE DATABASE AfterLifeDB;
 CREATE USER 'ITAdmin'@'%' IDENTIFIED BY 'AfterLifeITAdmin';
 GRANT ALL PRIVILEGES ON AfterLifeDB.* TO 'ITAdmin'@'%';
 FLUSH PRIVILEGES;
