@@ -1,24 +1,35 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import LoginPage from './pages/LoginPage';
-import Dashboard from './pages/Dashboard'; // Create this page next
-import './App.css';
-import logo from './logo.svg'; // optional if you're not using it
-import 'bootstrap/dist/css/bootstrap.min.css';
-import './index.css';
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import 'bootstrap/dist/css/bootstrap.min.css'; // ← put this FIRST
+import './index.css'; // your custom styles
+
+import MainLayout from "./layouts/MainLayout"; // assuming this is where your layout is
+import Login from "./pages/Login";
+
+import { appRoutes } from "./config/routesConfig";
 
 function App() {
   return (
-    
     <Router>
       <Routes>
-        {/* Default path - redirect to dashboard for now */}
+        {/* Default path - redirect to dashboard */}
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
 
-        {/* Login route */}
-        <Route path="/login" element={<LoginPage />} />
+        {/* Login route (without layout) */}
+        <Route path="/login" element={<Login />} />
 
-        {/* Dashboard route */}
-        <Route path="/dashboard" element={<Dashboard />} />
+        {/* All other routes use MainLayout */}
+        <Route
+          path="*"
+          element={
+            <MainLayout>
+              <Routes>
+                {appRoutes.map(({ path, element }) => (
+                  <Route key={path} path={path} element={element} />
+                ))}
+              </Routes>
+            </MainLayout>
+          }
+        />
       </Routes>
     </Router>
   );
