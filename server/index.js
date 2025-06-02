@@ -17,7 +17,7 @@ app.get("/api", (req, res) => {
 	res.send("API is working!");
 });
 
-const port = 3001;
+const port = 8888;
 app.listen(port, () => {
 	console.log(`Server running on http://localhost:${port}`);
 });

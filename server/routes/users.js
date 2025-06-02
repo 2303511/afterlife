@@ -4,6 +4,7 @@ const db = require('../db');
 
 // GET all users
 router.get('/', async (req, res) => {
+  console.log('Fetching all users');
   try {
     const [users] = await db.query('SELECT * FROM User');
     res.json(users);
