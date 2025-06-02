@@ -2,7 +2,7 @@
 import React from 'react';
 import LoginForm from '../components/LoginForm';
 
-export default function LoginPage() {
+export default function Login() {
   return (
     <div className="min-h-screen flex">
       {/* Left Side */}
