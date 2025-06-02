@@ -22,3 +22,31 @@ CREATE TABLE User (
     address TEXT,
     appliedUrns JSON  -- assuming this stores an array or structured data
 );
+
+-- insert dummy data into User table
+INSERT INTO User (
+    userId,
+    username,
+    password,
+    fullName,
+    contactNumber,
+    nric,
+    dob,
+    nationality,
+    address,
+    appliedUrns
+)
+VALUES (
+    '550e8400-e29b-41d4-a716-446655440000',  -- example UUID
+    'demoUser',
+    'hashedPassword123!',                   -- replace with real hashed password if needed
+    'John Doe',
+    '98765432',
+    'S1234567A',
+    '1990-01-01',
+    'Singaporean',
+    '123 Sample Street, SG 54321',
+    '["urn123", "urn456"]'                 -- JSON array as string
+);
+
+SELECT * FROM User;
