@@ -1,0 +1,131 @@
+/* MyBookings.css */
+
+.hero-gradient {
+	background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+}
+
+.section-gradient {
+	background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+}
+
+.card-hover {
+	transition: all 0.3s ease;
+}
+
+.card-hover:hover {
+	transform: translateY(-8px);
+	box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15) !important;
+}
+
+.btn-elegant {
+	background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+	border: none;
+	padding: 12px 30px;
+	font-weight: 500;
+	letter-spacing: 0.5px;
+	color: white;
+	transition: all 0.3s ease;
+}
+
+.btn-elegant:hover {
+	background: linear-gradient(135deg, #495057 0%, #343a40 100%);
+	transform: translateY(-2px);
+	color: white;
+	box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+}
+
+.section-title {
+	position: relative;
+	display: inline-block;
+	margin-bottom: 2rem;
+}
+
+.section-title::after {
+	content: '';
+	position: absolute;
+	bottom: -10px;
+	left: 50%;
+	transform: translateX(-50%);
+	width: 60px;
+	height: 3px;
+	background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+	border-radius: 2px;
+}
+
+.booking-card {
+	background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+	border-radius: 20px;
+	overflow: hidden;
+}
+
+.icon-circle {
+	width: 40px;
+	height: 40px;
+	background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+	border-radius: 50%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 1.2rem;
+}
+
+.loading-spinner {
+	width: 50px;
+	height: 50px;
+	border: 4px solid #f3f3f3;
+	border-top: 4px solid #6c757d;
+	border-radius: 50%;
+	animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+	0% {
+		transform: rotate(0deg);
+	}
+	100% {
+		transform: rotate(360deg);
+	}
+}
+
+.modal-content {
+	border-radius: 20px;
+	border: none;
+	box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+}
+
+.modal-header {
+	background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+	border-bottom: 1px solid #dee2e6;
+	border-radius: 20px 20px 0 0;
+}
+
+.payment-detail-card {
+	background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+	border-radius: 15px;
+	padding: 1.5rem;
+	margin-bottom: 1rem;
+	border: 1px solid #e9ecef;
+	transition: all 0.3s ease;
+}
+
+.payment-detail-card:hover {
+	transform: translateY(-2px);
+	box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+}
+
+.status-badge {
+	padding: 8px 16px;
+	border-radius: 20px;
+	font-weight: 600;
+	font-size: 0.85rem;
+}
+
+.status-completed {
+	background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+	color: #155724;
+}
+
+.status-pending {
+	background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+	color: #856404;
+}

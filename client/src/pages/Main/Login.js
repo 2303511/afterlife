@@ -30,6 +30,10 @@ export default function Login() {
         .catch((error) => {
             console.error("Login failed:", error);
         });
+		
+		// save session data
+		sessionStorage.setItem("userId", "123456");
+
 	};
 
 	return (

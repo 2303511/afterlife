@@ -5,98 +5,13 @@ import MainNavigation from "../../components/MainNavigation";
 import landingImage from "../../img/landing-image.png"; // replace with your actual image path
 import logo from "../../img/logo.svg"; // replace with your actual logo path
 
+// use custom theme styles
+import '../../styles/AfterLife-Theme.css';
+
 export default function HomePage() {
-	//   useEffect(() => {
-	//     fetch("/api/")
-	//       .then((res) => res.text())
-	//       .then((data) => {
-	//         console.log("API Response:", data);
-	//       })
-	//       .catch((err) => {
-	//         console.error("API call failed:", err);
-	//       });
-	//   }, []);
 
 	return (
 		<>
-			{/* Custom CSS for enhanced styling */}
-			<style jsx>{`
-				.hero-gradient {
-					background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-				}
-				.section-gradient {
-					background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
-				}
-				.card-hover {
-					transition: all 0.3s ease;
-				}
-				.card-hover:hover {
-					transform: translateY(-5px);
-					box-shadow: 0 8px 25px rgba(0,0,0,0.15) !important;
-				}
-				.step-circle {
-					background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
-					color: white;
-					transition: all 0.3s ease;
-				}
-				.step-circle:hover {
-					transform: scale(1.1);
-					box-shadow: 0 8px 20px rgba(108, 117, 125, 0.3);
-				}
-				.btn-elegant {
-					background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
-					border: none;
-					padding: 12px 30px;
-					font-weight: 500;
-					letter-spacing: 0.5px;
-                    color: white;
-					transition: all 0.3s ease;
-				}
-				.btn-elegant:hover {
-					background: linear-gradient(135deg, #495057 0%, #343a40 100%);
-					transform: translateY(-2px);
-                    color: white;
-					box-shadow: 0 8px 20px rgba(0,0,0,0.2);
-				}
-				.testimonial-card {
-					border: none;
-					transition: all 0.3s ease;
-					background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
-				}
-				.testimonial-card:hover {
-					transform: translateY(-8px);
-					box-shadow: 0 15px 35px rgba(0,0,0,0.1) !important;
-				}
-				.section-title {
-					position: relative;
-					display: inline-block;
-					margin-bottom: 2rem;
-				}
-				.section-title::after {
-					content: '';
-					position: absolute;
-					bottom: -10px;
-					left: 50%;
-					transform: translateX(-50%);
-					width: 60px;
-					height: 3px;
-					background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
-					border-radius: 2px;
-				}
-				.hero-content {
-					animation: fadeInUp 1s ease-out;
-				}
-				@keyframes fadeInUp {
-					from {
-						opacity: 0;
-						transform: translateY(30px);
-					}
-					to {
-						opacity: 1;
-						transform: translateY(0);
-					}
-				}
-			`}</style>
 
 			<MainNavigation />
 

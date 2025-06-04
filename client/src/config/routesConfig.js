@@ -8,20 +8,20 @@ import NicheBooking from "../pages/NicheBooking";
 import Profile from "../pages/Profile";
 
 import Dashboard from "../pages/Dashboard";
-import AllBookings from "../pages/AllBookings";
+import AllBookings from "../pages/Admin/AllBookings";
 import NicheMap from "../pages/NicheMap";
 import AddBooking from "../pages/AddBooking";
 
-import AdminDashboard from "../pages/AdminDashboard";
+import AdminDashboard from "../pages/Admin/AdminDashboard";
 
 export const appRoutes = [
   // User
-  {
-    label: "My Bookings",
-    path: "/my-bookings",
-    icon: <FaClipboardList />,
-    element: <MyBookings />,
-  },
+  // {
+  //   label: "My Bookings",
+  //   path: "/my-bookings",
+  //   icon: <FaClipboardList />,
+  //   element: <MyBookings />,
+  // },
   {
     label: "My Payments",
     path: "/my-payments",

@@ -5,13 +5,18 @@ require("dotenv").config();
 
 // TODO: import all routes here
 const usersRoute = require("./routes/users");
+const bookingsRoute = require("./routes/bookings");
+const paymentsRoute = require("./routes/payments");
+const nicheRoute = require("./routes/niche");
 
 app.use(cors());
 app.use(express.json());
 
 // TODO: Define routes
-app.use("/api/users", usersRoute); // 🆕 Route added
-app.use("/api/bookings", bookingsRoute); // 🆕 Route added
+app.use("/api/users", usersRoute);
+app.use("/api/bookings", bookingsRoute); 
+app.use("/api/payments", paymentsRoute); 
+app.use("/api/niche", nicheRoute); 
 
 app.get("/api", (req, res) => {
 	console.log("API is working!");
