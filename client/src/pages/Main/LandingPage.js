@@ -142,9 +142,11 @@ export default function HomePage() {
 								<button className="btn btn-elegant btn-lg rounded-pill px-4">
 									ℹ️ About Us
 								</button>
-								<button className="btn btn-elegant btn-lg rounded-pill px-4">
-									Get Started
-								</button>
+                                <a href="/login">
+                                    <button className="btn btn-elegant btn-lg rounded-pill px-4">
+                                        Get Started
+                                    </button>
+                                </a>
 							</div>
 						</div>
 					</div>
@@ -255,9 +257,11 @@ export default function HomePage() {
 					</div>
 
 					<div className="text-center mt-5">
-						<button className="btn btn-elegant btn-lg rounded-pill px-5">
-							🚀 Apply Now!
-						</button>
+						<a href="/login">
+                            <button className="btn btn-elegant btn-lg rounded-pill px-5">
+                                🚀 Apply Now!
+                            </button>
+                        </a>
 					</div>
 				</div>
 			</section>
