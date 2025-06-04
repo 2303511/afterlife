@@ -142,7 +142,7 @@ export default function HomePage() {
 								<button className="btn btn-elegant btn-lg rounded-pill px-4">
 									ℹ️ About Us
 								</button>
-								<button className="btn btn-outline-secondary btn-lg rounded-pill px-4">
+								<button className="btn btn-elegant btn-lg rounded-pill px-4">
 									Get Started
 								</button>
 							</div>
