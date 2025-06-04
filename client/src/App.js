@@ -6,6 +6,7 @@ import './index.css'; // your custom styles
 import UsersPage from './pages/testingUsersPage';
 import MainLayout from "./layouts/MainLayout"; // assuming this is where your layout is
 import Login from "./pages/Login";
+import HomePage from "./pages/Main/LandingPage";
 
 import { appRoutes } from "./config/routesConfig";
 
@@ -14,7 +15,7 @@ function App() {
     <Router>
       <Routes>
         {/* Default path - redirect to dashboard */}
-        <Route path="/" element={<Navigate to="/dashboard" replace />} />
+        <Route path="/" element={<HomePage />} />
 
         {/* Login route (without layout) */}
         <Route path="/login" element={<Login />} />
@@ -34,6 +35,7 @@ function App() {
             </MainLayout>
           }
         />
+        
       </Routes>
     </Router>
   );
