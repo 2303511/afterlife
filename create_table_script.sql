@@ -73,7 +73,6 @@ CREATE TABLE Niche (
     birthCertificate TEXT,
     deathCertificate TEXT,
     occupantName VARCHAR(50),
-    bookingID CHAR(36),
     FOREIGN KEY (blockID) REFERENCES Block(blockID)
 );
 
@@ -84,12 +83,10 @@ ALTER TABLE Booking
 -- 9. Payment table (depends on Booking)
 CREATE TABLE Payment (
     paymentID CHAR(36) PRIMARY KEY,
-    bookingID CHAR(36),
     amount FLOAT(10,2),
     paymentMethod VARCHAR(50),
     paymentDate DATE,
-    paymentStatus ENUM('Pending', 'Cancelled', 'Refunded', 'Fully Paid'),
-    FOREIGN KEY (bookingID) REFERENCES Booking(bookingID)
+    paymentStatus ENUM('Pending', 'Cancelled', 'Refunded', 'Fully Paid')
 );
 
 -- 10. Now ALTER Booking table to add FK to Payment
