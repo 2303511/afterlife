@@ -74,7 +74,7 @@ CREATE TABLE Niche (
     deathCertificate TEXT,
     occupantName VARCHAR(50),
     bookingID CHAR(36),
-    FOREIGN KEY (blockID) REFERENCES Block(blockID),
+    FOREIGN KEY (blockID) REFERENCES Block(blockID)
 );
 
 -- 8. Now ALTER Booking table to add FK to Niche and Payment
