@@ -69,8 +69,17 @@ export default function NicheMap() {
   useEffect(() => {
     if (!selectedBlock) return;
     axios.get(`http://localhost:8888/api/niche/niches/${selectedBlock}`)
-      .then(res => setSlots(res.data))
-      .catch(err => console.error("Error fetching niches:", err));
+    .then((res) => {
+      // map nicheID to id so modal reads it correctly
+      const mapped = res.data.map((slot) => ({
+        ...slot,
+        id: slot.nicheID,
+        status: slot.status.toLowerCase() 
+      }));
+      
+      setSlots(mapped);
+    })
+  
   }, [selectedBlock]);
 
   // Handlers
