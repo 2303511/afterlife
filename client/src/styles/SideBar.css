@@ -1,12 +1,11 @@
 .main-content {
     margin-left: 250px; /* same as your sidebar width */
-    padding: 0; /* optional, as your main already has p-3 */
+    padding: 0;
     min-height: 100vh;
     background-color: #f8f9fa;
   }
-
-
-.sidebar {
+  
+  .sidebar {
     height: 100vh;
     width: 250px;
     background-color: #f9f9f9;
@@ -61,6 +60,10 @@
     color: #3b49df;
   }
   
+  .nav-item.active .icon {
+    color: #3b49df;
+  }
+  
   .nav-item-content {
     display: flex;
     align-items: center;
@@ -72,9 +75,60 @@
     color: #6c757d;
   }
   
+  /* Sidebar footer */
   .sidebar-footer {
     padding: 0 1.5rem 1rem;
     font-size: 0.85rem;
+    color: #888;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .footer-nav {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    border-radius: 8px;
+    text-decoration: none;
+    color: #333;
+    font-weight: 500;
+    transition: background 0.2s;
+    cursor: pointer;
+    width: 100%;
+    text-align: left;
+    background: none;
+    border: none;
+  }
+  
+  .footer-nav:hover {
+    background-color: #f1f3f5;
+  }
+  
+  /* Red logout button variant */
+  .footer-nav.logout-btn {
+    color: #c0392b;
+  }
+  
+  .footer-nav.logout-btn:hover {
+    background-color: #ffeaea;
+  }
+  
+  .footer-role {
+    font-size: 0.75rem;
+    color: #888;
+    padding-top: 0.5rem;
+    padding-left: 4px;
+  }
+  
+  .sidebar-header {
+    padding: 1rem;
+    border-bottom: 1px solid #eee;
+  }
+  
+  .sidebar-role {
+    font-size: 0.9rem;
     color: #888;
   }
   

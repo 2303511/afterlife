@@ -5,7 +5,7 @@ import '../../styles/Niche-Management.css';
 import LocationSelector from "../../components/LocationSelector";
 import NicheLegend from "../../components/NicheLegend";
 import NicheGrid from "../../components/NicheGrid";
-import AddSlotModal from "../../components/AddSlotModal";
+import AddBlockModal from "../../components/AddBlockModal";
 import EditSlotModal from "../../components/EditSlotModal";
 
 const statusClass = {
@@ -20,7 +20,7 @@ const statusClass = {
 
 export default function NicheMap() {
   const [slots, setSlots] = useState([]);
-  const [showAddModal, setShowAddModal] = useState(false);
+  const [showBlockModal, setShowBlockModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
 
   const [newSlot, setNewSlot] = useState({ row: "", col: "", status: "available" });
@@ -32,6 +32,16 @@ export default function NicheMap() {
   const [selectedBuilding, setSelectedBuilding] = useState("");
   const [selectedLevel, setSelectedLevel] = useState("");
   const [selectedBlock, setSelectedBlock] = useState("");
+
+  const [newBlock, setNewBlock] = useState({
+    buildingId: "",
+    levelId: "",
+    notes: "",
+    rows: 1,
+    cols: 1,
+    status: "available"
+  });
+
 
   // Fetch buildings on load
   useEffect(() => {
@@ -69,17 +79,17 @@ export default function NicheMap() {
   useEffect(() => {
     if (!selectedBlock) return;
     axios.get(`http://localhost:8888/api/niche/niches/${selectedBlock}`)
-    .then((res) => {
-      // map nicheID to id so modal reads it correctly
-      const mapped = res.data.map((slot) => ({
-        ...slot,
-        id: slot.nicheID,
-        status: slot.status.toLowerCase() 
-      }));
-      
-      setSlots(mapped);
-    })
-  
+      .then((res) => {
+        // map nicheID to id so modal reads it correctly
+        const mapped = res.data.map((slot) => ({
+          ...slot,
+          id: slot.nicheID,
+          status: slot.status.toLowerCase()
+        }));
+
+        setSlots(mapped);
+      })
+
   }, [selectedBlock]);
 
   // Handlers
@@ -98,7 +108,7 @@ export default function NicheMap() {
       status: newSlot.status,
     };
     setSlots(prev => [...prev, newSlotEntry]);
-    setShowAddModal(false);
+    setShowBlockModal(false);
     setNewSlot({ row: "", col: "", status: "available" });
   };
 
@@ -111,10 +121,38 @@ export default function NicheMap() {
     setShowEditModal(false);
   };
 
+  const handleCreateBlock = () => {
+    axios.post("http://localhost:8888/api/niche/create-block", newBlock)
+      .then(res => {
+        alert("Block and niches created!");
+  
+        // Refresh block dropdown
+        return axios.get(`http://localhost:8888/api/niche/blocks/${newBlock.levelId}`);
+      })
+      .then(res => {
+        setBlocks(res.data);
+        if (res.data.length > 0) setSelectedBlock(res.data[res.data.length - 1].blockID);
+      })
+      .catch(err => {
+        console.error("Error creating block:", err);
+        alert("Failed to create block.");
+      });
+  
+    setShowBlockModal(false);
+    setNewBlock({
+      buildingId: "",
+      levelId: "",
+      notes: "",
+      rows: 1,
+      cols: 1,
+      status: "available"
+    });
+  };
+  
+
   return (
     <div className="container mt-4">
-      <h1>Niche Map</h1>
-      <h4>Booking Details</h4>
+      <h1>Niche Management</h1>
 
       <LocationSelector
         buildings={buildings}
@@ -126,7 +164,7 @@ export default function NicheMap() {
         onBuildingChange={(e) => setSelectedBuilding(e.target.value)}
         onLevelChange={(e) => setSelectedLevel(e.target.value)}
         onBlockChange={(e) => setSelectedBlock(e.target.value)}
-        onAddClick={() => setShowAddModal(true)}
+        onAddClick={() => setShowBlockModal(true)}
       />
 
       <NicheLegend statusClass={statusClass} />
@@ -137,14 +175,17 @@ export default function NicheMap() {
         onSlotClick={handleClick}
       />
 
-      <AddSlotModal
-        show={showAddModal}
-        onClose={() => setShowAddModal(false)}
-        onSave={handleAddSlot}
-        newSlot={newSlot}
-        setNewSlot={setNewSlot}
+      <AddBlockModal
+        show={showBlockModal}
+        onClose={() => setShowBlockModal(false)}
+        onSave={handleCreateBlock}
+        newBlock={newBlock}
+        setNewBlock={setNewBlock}
+        buildings={buildings}
+        levels={levels}
         statusClass={statusClass}
       />
+
 
       <EditSlotModal
         show={showEditModal}

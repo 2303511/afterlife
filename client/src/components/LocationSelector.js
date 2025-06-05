@@ -39,7 +39,7 @@ export default function LocationSelector({
         ))}
       </Form.Select>
 
-      <Button onClick={onAddClick}>+ Add Slot</Button>
+      <Button onClick={onAddClick}>+ Create Block</Button>
     </div>
   );
 }
