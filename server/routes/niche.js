@@ -38,4 +38,29 @@ router.get('/getNicheById', async (req, res) => {
     }
 });
 
+// Get all buildings
+router.get("/buildings", async (req, res) => {
+  const [rows] = await db.query("SELECT * FROM Building");
+  res.json(rows);
+});
+
+// Get levels for a building
+router.get("/levels/:buildingId", async (req, res) => {
+  const [rows] = await db.query("SELECT * FROM Level WHERE buildingID = ?", [req.params.buildingId]);
+  res.json(rows);
+});
+
+// Get blocks for a level
+router.get("/blocks/:levelId", async (req, res) => {
+  const [rows] = await db.query("SELECT * FROM Block WHERE levelID = ?", [req.params.levelId]);
+  res.json(rows);
+});
+
+// Get niches for a block
+router.get("/niches/:blockId", async (req, res) => {
+  const [rows] = await db.query("SELECT * FROM Niche WHERE blockID = ?", [req.params.blockId]);
+  res.json(rows);
+});
+
+
 module.exports = router;
