@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import "../components/NicheGridSelector.css";
+import "../styles/Niche-Management.css";
 
 import LocationSelector from "../components/LocationSelector";
 import NicheLegend from "../components/NicheLegend";
