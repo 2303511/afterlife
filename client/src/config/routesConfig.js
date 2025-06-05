@@ -7,15 +7,15 @@ import MyPayments from "../pages/MyPayments";
 import NicheBooking from "../pages/NicheBooking";
 import Profile from "../pages/Profile";
 
-import Dashboard from "../pages/Staff/Dashboard";
-import AllBookings from "../pages/Admin/AllBookings";
-import NicheManagement from "../pages/Staff/NicheManagement";
+import Dashboard from "../pages/staff/Dashboard";
+import AllBookings from "../pages/admin/AllBookings";
+import NicheManagement from "../pages/staff/NicheManagement";
 import AddBooking from "../pages/AddBooking";
 
-import AdminDashboard from "../pages/Admin/AdminDashboard";
-import BuildingManagement from "../pages/Admin/BuildingManagement";
+import AdminDashboard from "../pages/admin/AdminDashboard";
+import BuildingManagement from "../pages/admin/BuildingManagement";
 //import Login from "./pages/Main/Login";
-import LandingPage from "../pages/Main/LandingPage";
+import LandingPage from "../pages/public/LandingPage";
 
 // PUBLIC
 export const publicRoutes = [

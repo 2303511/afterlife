@@ -4,8 +4,6 @@ import './index.css';
 
 import UsersPage from './pages/testingUsersPage';
 
-import MyBookings from "./pages/Main/MyBookings";
-
 import { appRoutes } from "./config/routesConfig";
 import RoleLayout from "./layouts/RoleLayout"; 
 import PublicLayout from "./layouts/PublicLayout";
