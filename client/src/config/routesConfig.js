@@ -2,7 +2,7 @@ import { FaClipboardList, FaFileInvoice, FaBookOpen, FaUserCircle, FaListAlt, Fa
 import { MdDashboard, MdAdminPanelSettings } from "react-icons/md";
 
 // Import all route components
-import MyBookings from "../pages/MyBookings";
+//import MyBookings from "../pages/MyBookings"; - doesnt exist?
 import MyPayments from "../pages/MyPayments";
 import NicheBooking from "../pages/NicheBooking";
 import Profile from "../pages/Profile";
