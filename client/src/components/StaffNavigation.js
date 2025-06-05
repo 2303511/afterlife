@@ -18,7 +18,7 @@ export default function StaffNavigation() {
           className="logo-img"
           height="50"
         />
-        <div className="sidebar-role mt-2">Logged in as Staff</div>
+        <div className="sidebar-role mt-2">Logged in as {role}</div>
       </div>
 
       
