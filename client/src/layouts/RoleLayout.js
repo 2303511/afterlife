@@ -16,7 +16,7 @@ export default function RoleLayout() {
             <Outlet />
           </PublicLayout>
         );
-}
+    }
   
     if (role === "staff" || role === "admin") {
       return (

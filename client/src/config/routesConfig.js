@@ -1,5 +1,5 @@
 import { FaClipboardList, FaFileInvoice, FaBookOpen, FaUserCircle, FaListAlt, FaMapMarkedAlt, FaPlusSquare, FaClipboardCheck } from "react-icons/fa";
-import { MdDashboard, MdAdminPanelSettings } from "react-icons/md";
+import { MdDashboard, MdAdminPanelSettings, MdApartment} from "react-icons/md";
 
 // Import all route components
 import MyBookings from "../pages/Main/MyBookings"; 
@@ -9,11 +9,11 @@ import Profile from "../pages/Profile";
 
 import Dashboard from "../pages/Staff/Dashboard";
 import AllBookings from "../pages/Admin/AllBookings";
-import NicheMap from "../pages/Staff/NicheMap";
+import NicheManagement from "../pages/Staff/NicheManagement";
 import AddBooking from "../pages/AddBooking";
 
 import AdminDashboard from "../pages/Admin/AdminDashboard";
-
+import BuildingManagement from "../pages/Admin/BuildingManagement";
 //import Login from "./pages/Main/Login";
 import LandingPage from "../pages/Main/LandingPage";
 
@@ -82,10 +82,10 @@ export const staffRoutes = [
     element: <AllBookings />,
   },
   {
-    label: "Niche Map View",
-    path: "/niche-map-view",
+    label: "Niche Management",
+    path: "/niche-management",
     icon: <FaMapMarkedAlt />,
-    element: <NicheMap />,
+    element: <NicheManagement />,
   },
   {
     label: "Add Booking",
@@ -102,6 +102,12 @@ export const adminRoutes = [
     path: "/admin-dashboard",
     icon: <MdAdminPanelSettings />,
     element: <AdminDashboard />,
+  },
+  {
+    label: "Building Management",
+    path: "/building-management",
+    icon: <MdApartment />,
+    element: <BuildingManagement />,
   },
 ];
 

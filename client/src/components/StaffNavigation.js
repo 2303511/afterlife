@@ -1,25 +1,31 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { staffRoutes } from "../config/routesConfig";
-import "../styles/SideBar.css"; 
+import { staffRoutes, adminRoutes } from "../config/routesConfig";
+import "../styles/SideBar.css";
 import logo from "../img/logo.svg";
 
 export default function StaffNavigation() {
+  const role = localStorage.getItem("role");
+  const routes = role === "admin" ? adminRoutes : staffRoutes;
+
   return (
     <aside className="sidebar">
       {/* Logo Section */}
       <div className="sidebar-header text-center">
-  <img
-    src={logo}
-    alt="Afterlife Logo"
-    className="logo-img"
-    height="50" 
-  />
-</div>
+        <img
+          src={logo}
+          alt="Afterlife Logo"
+          className="logo-img"
+          height="50"
+        />
+        <div className="sidebar-role mt-2">Logged in as Staff</div>
+      </div>
+
+      
 
       {/* Navigation Links */}
       <nav className="sidebar-nav">
-        {staffRoutes.map((item, idx) => (
+        {routes.map((item, idx) => (
           <NavItem
             key={idx}
             icon={item.icon}
@@ -33,9 +39,31 @@ export default function StaffNavigation() {
       </nav>
 
       {/* Footer (optional: user avatar, logout) */}
+      {/* Footer (profile + logout + label) */}
       <div className="sidebar-footer">
-        <small className="text-muted">Logged in as Staff</small>
+        <Link to="/profile" className="nav-item footer-nav">
+          <div className="nav-item-content">
+            <i className="bi bi-person-circle icon"></i>
+            <span>Profile</span>
+          </div>
+        </Link>
+
+        <button
+          className="nav-item footer-nav text-danger"
+          onClick={() => {
+            window.location.href = "/login";
+          }}
+        >
+          <div className="nav-item-content">
+            <i className="bi bi-box-arrow-right icon"></i>
+            <span>Logout</span>
+          </div>
+        </button>
       </div>
+
+
+
+
     </aside>
   );
 }
