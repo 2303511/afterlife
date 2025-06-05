@@ -2,6 +2,8 @@ const express = require('express');
 const router = express.Router();
 const db = require('../db');
 
+const { v4: uuidv4 } = require("uuid");
+
 // GET all niches
 router.get('/', async (req, res) => {
     console.log('Fetching all niches');
@@ -60,6 +62,35 @@ router.get("/blocks/:levelId", async (req, res) => {
 router.get("/niches/:blockId", async (req, res) => {
   const [rows] = await db.query("SELECT * FROM Niche WHERE blockID = ?", [req.params.blockId]);
   res.json(rows);
+});
+
+router.post("/create-block", async (req, res) => {
+  const { levelId, notes, rows, cols, status } = req.body;
+
+  try {
+    const blockID = uuidv4();
+
+    // Insert the new block
+    await db.query("INSERT INTO Block (blockID, levelID, levelNumber, notes) VALUES (?, ?, ?, ?)", 
+      [blockID, levelId, 1, notes]);
+
+    // Generate niche slots
+    for (let r = 1; r <= rows; r++) {
+      for (let c = 1; c <= cols; c++) {
+        const nicheID = uuidv4();
+        const code = `${String(r).padStart(2, '0')}-${String(c).padStart(2, '0')}`;
+        await db.query(
+          "INSERT INTO Niche (nicheID, blockID, nicheRow, nicheColumn, niche_code, status) VALUES (?, ?, ?, ?, ?, ?)",
+          [nicheID, blockID, r, c, code, status]
+        );
+      }
+    }
+
+    res.json({ success: true, blockID });
+  } catch (err) {
+    console.error("Error creating block:", err);
+    res.status(500).json({ success: false, error: err.message });
+  }
 });
 
 
