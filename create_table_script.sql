@@ -1,14 +1,38 @@
 CREATE SCHEMA `AfterLifeDB`;
-
 USE AfterLifeDB;
 
--- Role table
+-- 1. Role table (no dependencies)
 CREATE TABLE Role (
     roleId CHAR(36) PRIMARY KEY,
     roleName VARCHAR(255)
 );
 
--- User table
+-- 2. Building table (no dependencies)
+CREATE TABLE Building (
+    buildingID CHAR(36) PRIMARY KEY,
+    buildingName VARCHAR(255),
+    buildingLocation TEXT
+);
+
+-- 3. Level table (depends on Building)
+CREATE TABLE Level (
+    levelID CHAR(36) PRIMARY KEY,
+    buildingID CHAR(36),
+    levelNumber INT,
+    notes TEXT,
+    FOREIGN KEY (buildingID) REFERENCES Building(buildingID)
+);
+
+-- 4. Block table (depends on Level)
+CREATE TABLE Block (
+    blockID CHAR(36) PRIMARY KEY,
+    levelID CHAR(36),
+    levelNumber INT,
+    notes TEXT,
+    FOREIGN KEY (levelID) REFERENCES Level(levelID)
+);
+
+-- 5. User table (depends on Role)
 CREATE TABLE User (
     userId CHAR(36) PRIMARY KEY,
     username VARCHAR(255),
@@ -24,32 +48,18 @@ CREATE TABLE User (
     FOREIGN KEY (roleId) REFERENCES Role(roleId)
 );
 
--- Building table
-CREATE TABLE Building (
-    buildingID CHAR(36) PRIMARY KEY,
-    buildingName VARCHAR(255),
-    buildingLocation TEXT
+-- 6. Booking table (depends on User, will later be used by Niche and Payment)
+CREATE TABLE Booking (
+    bookingID CHAR(36) PRIMARY KEY,
+    nicheID CHAR(36),         -- FK to Niche (but will define after Niche)
+    paidByID CHAR(36),
+    paymentID CHAR(36),       -- FK to Payment (will be created after)
+    bookingType ENUM('Current', 'PreOrder'),
+    FOREIGN KEY (paidByID) REFERENCES User(userId)
+    -- FOREIGN KEYs to nicheID and paymentID later via ALTER after tables are created
 );
 
--- Level table
-CREATE TABLE Level (
-    levelID CHAR(36) PRIMARY KEY,
-    buildingID CHAR(36),
-    levelNumber INT,
-    notes TEXT,
-    FOREIGN KEY (buildingID) REFERENCES Building(buildingID)
-);
-
--- Block table
-CREATE TABLE Block (
-    blockID CHAR(36) PRIMARY KEY,
-    levelID CHAR(36),
-    levelNumber INT,
-    notes TEXT,
-    FOREIGN KEY (levelID) REFERENCES Level(levelID)
-);
-
--- Niche table
+-- 7. Niche table (depends on Block and Booking)
 CREATE TABLE Niche (
     nicheID CHAR(36) PRIMARY KEY,
     blockID CHAR(36),
@@ -68,30 +78,11 @@ CREATE TABLE Niche (
     FOREIGN KEY (bookingID) REFERENCES Booking(bookingID)
 );
 
--- Urn table
-CREATE TABLE Urn (
-    urnID CHAR(36) PRIMARY KEY,
-    inscription TEXT,
-    inserted_at TIMESTAMP,
-    applicantID CHAR(36),
-    nicheID CHAR(36),
-    FOREIGN KEY (applicantID) REFERENCES User(userId),
-    FOREIGN KEY (nicheID) REFERENCES Niche(nicheID)
-);
+-- 8. Now ALTER Booking table to add FK to Niche and Payment
+ALTER TABLE Booking
+    ADD FOREIGN KEY (nicheID) REFERENCES Niche(nicheID);
 
--- Booking table
-CREATE TABLE Booking (
-    bookingID CHAR(36) PRIMARY KEY,
-    nicheID CHAR(36),
-    paidByID CHAR(36),
-    paymentID CHAR(36),
-    bookingType ENUM('Current', 'PreOrder'),
-    FOREIGN KEY (nicheID) REFERENCES Niche(nicheID),
-    FOREIGN KEY (paidByID) REFERENCES User(userId),
-    FOREIGN KEY (paymentID) REFERENCES Payment(paymentID)
-);
-
--- Payment table
+-- 9. Payment table (depends on Booking)
 CREATE TABLE Payment (
     paymentID CHAR(36) PRIMARY KEY,
     bookingID CHAR(36),
@@ -100,4 +91,19 @@ CREATE TABLE Payment (
     paymentDate DATE,
     paymentStatus ENUM('Pending', 'Cancelled', 'Refunded', 'Fully Paid'),
     FOREIGN KEY (bookingID) REFERENCES Booking(bookingID)
+);
+
+-- 10. Now ALTER Booking table to add FK to Payment
+ALTER TABLE Booking
+    ADD FOREIGN KEY (paymentID) REFERENCES Payment(paymentID);
+
+-- 11. Urn table (depends on User and Niche)
+CREATE TABLE Urn (
+    urnID CHAR(36) PRIMARY KEY,
+    inscription TEXT,
+    inserted_at TIMESTAMP,
+    applicantID CHAR(36),
+    nicheID CHAR(36),
+    FOREIGN KEY (applicantID) REFERENCES User(userId),
+    FOREIGN KEY (nicheID) REFERENCES Niche(nicheID)
 );
