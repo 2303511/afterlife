@@ -7,9 +7,9 @@ import MyPayments from "../pages/MyPayments";
 import NicheBooking from "../pages/NicheBooking";
 import Profile from "../pages/Profile";
 
-import Dashboard from "../pages/Dashboard";
+import Dashboard from "../pages/Staff/Dashboard";
 import AllBookings from "../pages/Admin/AllBookings";
-import NicheMap from "../pages/NicheMap";
+import NicheMap from "../pages/Staff/NicheMap";
 import AddBooking from "../pages/AddBooking";
 
 import AdminDashboard from "../pages/Admin/AdminDashboard";

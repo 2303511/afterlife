@@ -1,0 +1,80 @@
+.main-content {
+    margin-left: 250px; /* same as your sidebar width */
+    padding: 0; /* optional, as your main already has p-3 */
+    min-height: 100vh;
+    background-color: #f8f9fa;
+  }
+
+
+.sidebar {
+    height: 100vh;
+    width: 250px;
+    background-color: #f9f9f9;
+    border-right: 1px solid #ddd;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 1rem 0;
+    position: fixed;
+    left: 0;
+    top: 0;
+    z-index: 100;
+  }
+  
+  .sidebar-header {
+    padding: 0 1.5rem 1rem;
+    border-bottom: 1px solid #eee;
+  }
+  
+  .brand {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #3b49df;
+  }
+  
+  .sidebar-nav {
+    flex-grow: 1;
+    padding: 1rem 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .nav-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 14px;
+    border-radius: 8px;
+    text-decoration: none;
+    color: #333;
+    font-weight: 500;
+    transition: background 0.2s;
+  }
+  
+  .nav-item:hover {
+    background-color: #f1f3f5;
+  }
+  
+  .nav-item.active {
+    background-color: #eaeefc;
+    color: #3b49df;
+  }
+  
+  .nav-item-content {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  
+  .icon {
+    font-size: 1.2rem;
+    color: #6c757d;
+  }
+  
+  .sidebar-footer {
+    padding: 0 1.5rem 1rem;
+    font-size: 0.85rem;
+    color: #888;
+  }
+  

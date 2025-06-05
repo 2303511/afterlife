@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import "../styles/Niche-Management.css";
+import '../../styles/Niche-Management.css';
 
-import LocationSelector from "../components/LocationSelector";
-import NicheLegend from "../components/NicheLegend";
-import NicheGrid from "../components/NicheGrid";
-import AddSlotModal from "../components/AddSlotModal";
-import EditSlotModal from "../components/EditSlotModal";
+import LocationSelector from "../../components/LocationSelector";
+import NicheLegend from "../../components/NicheLegend";
+import NicheGrid from "../../components/NicheGrid";
+import AddSlotModal from "../../components/AddSlotModal";
+import EditSlotModal from "../../components/EditSlotModal";
 
 const statusClass = {
   available: "status-available",

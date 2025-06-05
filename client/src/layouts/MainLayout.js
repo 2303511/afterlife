@@ -1,12 +1,10 @@
 import Sidebar from "../components/Sidebar";
-import TopNavBar from "../components/TopNavBar";
 
 export default function MainLayout({ children }) {
   return (
-    <div className="d-flex">
+    <div>
       <Sidebar />
-      <div className="flex-grow-1">
-        <TopNavBar />
+      <div className="main-content">
         <main className="p-3">{children}</main>
       </div>
     </div>
