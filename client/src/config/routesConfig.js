@@ -2,7 +2,7 @@ import { FaClipboardList, FaFileInvoice, FaBookOpen, FaUserCircle, FaListAlt, Fa
 import { MdDashboard, MdAdminPanelSettings } from "react-icons/md";
 
 // Import all route components
-//import MyBookings from "../pages/MyBookings"; - doesnt exist?
+import MyBookings from "../pages/Main/MyBookings"; 
 import MyPayments from "../pages/MyPayments";
 import NicheBooking from "../pages/NicheBooking";
 import Profile from "../pages/Profile";
@@ -14,14 +14,39 @@ import AddBooking from "../pages/AddBooking";
 
 import AdminDashboard from "../pages/Admin/AdminDashboard";
 
-export const appRoutes = [
-  // User
-  // {
-  //   label: "My Bookings",
-  //   path: "/my-bookings",
-  //   icon: <FaClipboardList />,
-  //   element: <MyBookings />,
-  // },
+//import Login from "./pages/Main/Login";
+import LandingPage from "../pages/Main/LandingPage";
+
+// PUBLIC
+export const publicRoutes = [
+  {
+    label: "Home",
+    path: "/",
+    element: <LandingPage />,
+  },
+  {
+    label: "About Us",
+    path: "/about",
+  },
+  {
+    label: "FAQ",
+    path: "/faq",
+  },
+  /*{
+    label: "Login",
+    path: "/login",
+    element: <Login />,
+  },*/
+];
+
+// USER
+export const userRoutes = [
+  {
+    label: "My Bookings",
+    path: "/my-bookings",
+    icon: <FaClipboardList />,
+    element: <MyBookings />,
+  },
   {
     label: "My Payments",
     path: "/my-payments",
@@ -40,8 +65,10 @@ export const appRoutes = [
     icon: <FaUserCircle />,
     element: <Profile />,
   },
+];
 
-  // Staff
+// STAFF
+export const staffRoutes = [
   {
     label: "Dashboard",
     path: "/dashboard",
@@ -66,8 +93,10 @@ export const appRoutes = [
     icon: <FaPlusSquare />,
     element: <AddBooking />,
   },
+];
 
-  // Admin
+// ADMIN
+export const adminRoutes = [
   {
     label: "Admin Dashboard",
     path: "/admin-dashboard",
@@ -75,3 +104,13 @@ export const appRoutes = [
     element: <AdminDashboard />,
   },
 ];
+
+// Combined all for routing
+export const appRoutes = [
+  ...publicRoutes,
+  ...userRoutes,
+  ...staffRoutes,
+  ...adminRoutes,
+];
+
+export const publicPaths = publicRoutes.map(route => route.path);

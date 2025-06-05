@@ -1,6 +1,7 @@
 // src/components/Navbar.js
 import { FaSearch, FaUser } from "react-icons/fa";
 import logo from "../img/logo.svg";
+import { publicRoutes } from "../config/routesConfig";
 
 export default function MainNavigation() {
   return (
@@ -23,12 +24,12 @@ export default function MainNavigation() {
 
         {/* Right: Navigation */}
         <div className="d-flex align-items-center gap-4">
-          <a href="/" className="nav-link text-dark fw-medium">Home</a>
-          <a href="/about" className="nav-link text-dark fw-medium">About Us</a>
-          <a href="/faq" className="nav-link text-dark fw-medium">FAQ</a>
-          <a href="/login" className="nav-link">
-            <FaUser size={18} />
-          </a>
+          {/* Public links */}
+          {publicRoutes.map(({ path, label }) => (
+            <a key={path} href={path} className="nav-link text-dark fw-medium">
+              {label}
+            </a>
+          ))}
         </div>
       </div>
     </nav>

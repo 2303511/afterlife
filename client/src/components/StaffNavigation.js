@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { appRoutes } from "../config/routesConfig";
+import { staffRoutes } from "../config/routesConfig";
 import "../styles/SideBar.css"; 
 import logo from "../img/logo.svg";
 
-export default function Sidebar() {
+export default function StaffNavigation() {
   return (
     <aside className="sidebar">
       {/* Logo Section */}
@@ -19,7 +19,7 @@ export default function Sidebar() {
 
       {/* Navigation Links */}
       <nav className="sidebar-nav">
-        {appRoutes.map((item, idx) => (
+        {staffRoutes.map((item, idx) => (
           <NavItem
             key={idx}
             icon={item.icon}

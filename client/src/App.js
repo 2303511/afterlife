@@ -1,44 +1,36 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
-import 'bootstrap/dist/css/bootstrap.min.css'; // ← put this FIRST
-import './index.css'; // your custom styles
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import 'bootstrap/dist/css/bootstrap.min.css';
+import './index.css';
 
-// TODO: import pages here
 import UsersPage from './pages/testingUsersPage';
-import MainLayout from "./layouts/MainLayout"; // assuming this is where your layout is
-import Login from "./pages/Main/Login";
-import HomePage from "./pages/Main/LandingPage";
+
 import MyBookings from "./pages/Main/MyBookings";
 
 import { appRoutes } from "./config/routesConfig";
+import RoleLayout from "./layouts/RoleLayout"; 
+import PublicLayout from "./layouts/PublicLayout";
+import {publicRoutes } from "./config/routesConfig";
 
 function App() {
+  localStorage.setItem("role", "public"); // temp, change here to see staff and user navbar changes
   return (
     <Router>
       <Routes>
-        {/* Default path - redirect to dashboard */}
-        <Route path="/" element={<HomePage />} />
-        <Route path="/login" element={<Login />} />
+        {/* Public routes */}
+        {publicRoutes.map(({ path, element }) => (
+          <Route key={path} path={path} element={<PublicLayout>{element}</PublicLayout>} />
+        ))}
 
-        {/* USER */}
-        <Route path="/my-bookings" element={<MyBookings />} />
+        {/* Protected + role-based layout routes */}
+        <Route element={<RoleLayout />}>
+          {appRoutes.map(({ path, element }) => (
+            <Route key={path} path={path} element={element} />
+          ))}
+        </Route>
 
-        {/* ADMIN */}
+        {/* Optional fallback */}
         <Route path="/users" element={<UsersPage />} />
-
-        {/* All other routes use MainLayout */}
-        <Route
-          path="*"
-          element={
-            <MainLayout>
-              <Routes>
-                {appRoutes.map(({ path, element }) => (
-                  <Route key={path} path={path} element={element} />
-                ))}
-              </Routes>
-            </MainLayout>
-          }
-        />
-        
+        <Route path="*" element={<div>404 Page Not Found</div>} />
       </Routes>
     </Router>
   );

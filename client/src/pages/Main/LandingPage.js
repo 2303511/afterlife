@@ -1,5 +1,4 @@
 import { useEffect } from "react";
-import MainNavigation from "../../components/MainNavigation";
 
 // import images
 import landingImage from "../../img/landing-image.png"; // replace with your actual image path
@@ -12,8 +11,6 @@ export default function HomePage() {
 
 	return (
 		<>
-
-			<MainNavigation />
 
 			{/* Hero Section */}
 			<section className="hero-gradient py-5">

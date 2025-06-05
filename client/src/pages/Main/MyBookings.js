@@ -1,8 +1,6 @@
 import { useEffect, useState } from "react";
 import 'bootstrap/dist/js/bootstrap.bundle.min';
 
-import MainNavigation from "../../components/MainNavigation";
-
 function MainContent({ userBookings, onViewPayment }) {
 	if (!userBookings || !Array.isArray(userBookings)) {
 		return (
@@ -151,7 +149,6 @@ export default function MyBookings() {
 
 	return (
 		<>
-			<MainNavigation />
 
 			<MainContent
 				userBookings={userBookings}
