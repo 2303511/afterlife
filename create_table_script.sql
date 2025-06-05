@@ -75,7 +75,6 @@ CREATE TABLE Niche (
     occupantName VARCHAR(50),
     bookingID CHAR(36),
     FOREIGN KEY (blockID) REFERENCES Block(blockID),
-    FOREIGN KEY (bookingID) REFERENCES Booking(bookingID)
 );
 
 -- 8. Now ALTER Booking table to add FK to Niche and Payment
