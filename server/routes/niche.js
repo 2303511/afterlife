@@ -17,8 +17,8 @@ router.get('/', async (req, res) => {
 });
 
 // GET niche by ID 
-router.get('/getNicheById', async (req, res) => {
-    const nicheID = req.query.nicheId;
+router.get('/getNicheByID', async (req, res) => {
+    const nicheID = req.query.nicheID;
     console.log('Fetching niche with ID:', nicheID);
 
     if (!nicheID) {
@@ -47,32 +47,32 @@ router.get("/buildings", async (req, res) => {
 });
 
 // Get levels for a building
-router.get("/levels/:buildingId", async (req, res) => {
-  const [rows] = await db.query("SELECT * FROM Level WHERE buildingID = ?", [req.params.buildingId]);
+router.get("/levels/:buildingID", async (req, res) => {
+  const [rows] = await db.query("SELECT * FROM Level WHERE buildingID = ?", [req.params.buildingID]);
   res.json(rows);
 });
 
 // Get blocks for a level
-router.get("/blocks/:levelId", async (req, res) => {
-  const [rows] = await db.query("SELECT * FROM Block WHERE levelID = ?", [req.params.levelId]);
+router.get("/blocks/:levelID", async (req, res) => {
+  const [rows] = await db.query("SELECT * FROM Block WHERE levelID = ?", [req.params.levelID]);
   res.json(rows);
 });
 
 // Get niches for a block
-router.get("/niches/:blockId", async (req, res) => {
-  const [rows] = await db.query("SELECT * FROM Niche WHERE blockID = ?", [req.params.blockId]);
+router.get("/niches/:blockID", async (req, res) => {
+  const [rows] = await db.query("SELECT * FROM Niche WHERE blockID = ?", [req.params.blockID]);
   res.json(rows);
 });
 
 router.post("/create-block", async (req, res) => {
-  const { levelId, notes, rows, cols, status } = req.body;
+  const { levelID, notes, rows, cols, status } = req.body;
 
   try {
     const blockID = uuidv4();
 
     // Insert the new block
     await db.query("INSERT INTO Block (blockID, levelID, levelNumber, notes) VALUES (?, ?, ?, ?)", 
-      [blockID, levelId, 1, notes]);
+      [blockID, levelID, 1, notes]);
 
     // Generate niche slots
     for (let r = 1; r <= rows; r++) {

@@ -11,11 +11,11 @@ export default function MyBookings() {
 	const [paymentDetails, setPaymentDetails] = useState(null);
 	const [nicheDetailsMap, setNicheDetailsMap] = useState({}); // key: bookingID
 
-	const fetchBookingDetails = async (storedId) => {
-		console.log("3. Fetching booking details for userID:", storedId);
+	const fetchBookingDetails = async (storedID) => {
+		console.log("3. Fetching booking details for userID:", storedID);
 		try {
 			const response = await axios.get(`/api/bookings/getIndivBookings`, {
-				params: { userId: storedId },
+				params: { userID: storedID },
 				headers: {
 					"Content-Type": "application/json"
 				}
@@ -35,7 +35,7 @@ export default function MyBookings() {
 
 		try {
 			const response = await axios.get(`/api/payments/getPaymentByID`, {
-				params: { paymentId: paymentID },
+				params: { paymentID: paymentID },
 				headers: {
 					"Content-Type": "application/json"
 				}
@@ -52,8 +52,8 @@ export default function MyBookings() {
 	const fetchNicheDetails = async (nicheID) => {
 		console.log("Fetching niche details for nicheID:", nicheID);
 		try {
-			const response = await axios.get("/api/niche/getNicheById", {
-				params: { nicheId: nicheID },
+			const response = await axios.get("/api/niche/getNicheByID", {
+				params: { nicheID: nicheID },
 				headers: {
 					"Content-Type": "application/json"
 				}
@@ -67,8 +67,13 @@ export default function MyBookings() {
 		}
 	};
 
+	const fetchBeneficiaryDetails = async (beneficiaryID) => {
+		console.log("Fetching Beneficiary details for beneficiaryID", beneficiaryID);
+		
+	}
+
 	useEffect(() => {
-		const storedID = "dcd5af57-e5a9-4731-b7bd-26d231275c77";
+		const storedID = "be4e4478-4251-47d2-b571-40d35308bc6a";
 		setUserID(storedID);
 		console.log(`1. userID stored!: ${userID}`);
 	}, []);
@@ -108,7 +113,7 @@ export default function MyBookings() {
 
 	// Effect to handle modal close event and reset state
 	useEffect(() => {
-		const modal = document.getElementById("paymentModal");
+		const modal = document.getElementByID("paymentModal");
 		if (!modal) return;
 
 		const handleModalClose = () => {
@@ -146,29 +151,31 @@ export default function MyBookings() {
 
 					<p>Now showing: <b>{userBookings.length} booking(s)</b></p>
 
-					{userBookings.map((booking, index) => {
-						const niche = nicheDetailsMap[booking.bookingID];
+					<div className="row">
+						{userBookings.map((booking, index) => {
+							const niche = nicheDetailsMap[booking.bookingID];
 
-						if (!niche) return null; // Skip if niche details aren't loaded yet
+							if (!niche) return null; // Skip if niche details aren't loaded yet
 
-						return (
-							<div className="card col-3 m-3" key={booking.bookingID}>
-								<div className="card-body">
-									<h6 className="card-subtitle mb-2 text-body-secondary">
-										Block {niche.blockID}, {niche.nicheColumn}-{niche.nicheRow}
-									</h6>
-									<h5 className="card-title">{niche.occupantName || "No name"}</h5>
-									<p className="card-text">Some quick example text to build on the card title and make up the bulk of the card’s content.</p>
-									<a href="#" className="card-link">
-										Card link
-									</a>
-									<a href="#" className="card-link">
-										Another link
-									</a>
+							return (
+								<div className="card col-3 m-3" key={booking.bookingID}>
+									<div className="card-body">
+										<h6 className="card-subtitle mb-2 text-body-secondary">
+											Block {niche.blockID}, {niche.nicheColumn}-{niche.nicheRow}
+										</h6>
+										<h5 className="card-title">{niche.occupantName || "No name"}</h5>
+										<p className="card-text">Some quick example text to build on the card title and make up the bulk of the card’s content.</p>
+										<a href="#" className="card-link">
+											Card link
+										</a>
+										<a href="#" className="card-link">
+											Another link
+										</a>
+									</div>
 								</div>
-							</div>
-						);
-					})}
+							);
+						})}
+					</div>
 
 					{/* details table */}
 					<table className="table table-striped">
