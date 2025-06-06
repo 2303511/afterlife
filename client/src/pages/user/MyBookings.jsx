@@ -14,7 +14,7 @@ export default function MyBookings() {
 	const fetchBookingDetails = async (storedID) => {
 		console.log("3. Fetching booking details for userID:", storedID);
 		try {
-			const response = await axios.get(`/api/bookings/getIndivBookings`, {
+			const response = await axios.get(`/api/booking/getIndivBookings`, {
 				params: { userID: storedID },
 				headers: {
 					"Content-Type": "application/json"
@@ -53,7 +53,7 @@ export default function MyBookings() {
 		console.log("Fetching niche details for nicheID:", nicheID);
 		try {
 			const response = await axios.get("/api/niche/getNicheByID", {
-				params: { nicheID: nicheID },
+				params: { nicheID },
 				headers: {
 					"Content-Type": "application/json"
 				}
@@ -69,7 +69,22 @@ export default function MyBookings() {
 
 	const fetchBeneficiaryDetails = async (beneficiaryID) => {
 		console.log("Fetching Beneficiary details for beneficiaryID", beneficiaryID);
-		
+
+		try {
+			const response = await axios.get("/api/beneficiary/getBeneficiaryByID",  {
+				params: { beneficiaryID },
+				headers: {
+					"Content-Type": "application/json"
+				}
+			});
+
+			console.log("Beneficiary fetched:", response.data);
+			return response.data;
+		} catch (error) {
+			console.error("Failed to fetch beneficiary:", error);
+			return null
+		}
+
 	}
 
 	useEffect(() => {
@@ -81,12 +96,12 @@ export default function MyBookings() {
 	useEffect(() => {
 		if (!userID) return; // Wait until userID is set
 
-		console.log(`2. userID is now available: ${userID}, fetching bookings...`);
+		console.log(`2. userID is now available: ${userID}, fetching booking...`);
 
 		const init = async () => {
-			const bookings = await fetchBookingDetails(userID);
-			console.log("Bookings fetched:", bookings);
-			setUserBookings(bookings);
+			const booking = await fetchBookingDetails(userID);
+			console.log("Bookings fetched:", booking);
+			setUserBookings(booking);
 		};
 
 		init();
@@ -95,20 +110,20 @@ export default function MyBookings() {
 	useEffect(() => {
 		if (!userBookings || !Array.isArray(userBookings)) return;
 
-		const fetchAllNiches = async () => {
+		const fetchAll = async () => {
 			console.log("4. fetching all niche details");
-			const detailsMap = {};
+			const nicheMap = {};
 
 			for (const booking of userBookings) {
-				const data = await fetchNicheDetails(booking.nicheID);
-				detailsMap[booking.bookingID] = data;
+				const nicheDetail = await fetchNicheDetails(booking.nicheID);
+				nicheMap[booking.bookingID] = nicheDetail;
 			}
 
-			console.log("All niche details fetched:", detailsMap);
-			setNicheDetailsMap(detailsMap);
+			console.log("All niche details fetched:", nicheMap);
+			setNicheDetailsMap(nicheMap);
 		};
 
-		fetchAllNiches();
+		fetchAll();
 	}, [userBookings]);
 
 	// Effect to handle modal close event and reset state
