@@ -27,7 +27,7 @@ CREATE TABLE Level (
 CREATE TABLE Block (
     blockID CHAR(36) PRIMARY KEY,
     levelID CHAR(36),
-    levelNumber INT,
+    blockName VARCHAR(50),
     notes TEXT,
     FOREIGN KEY (levelID) REFERENCES Level(levelID)
 );
