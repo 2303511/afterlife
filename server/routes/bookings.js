@@ -20,8 +20,8 @@ router.get("/", async (req, res) => {
 });
 
 router.get("/getIndivBookings", async (req, res) => {
-    console.log("Fetching bookings for user with ID:", req.query.userID);
-    const userID = req.query.userID;
+    console.log("Fetching bookings for user with ID:", req.query.userId);
+    const userID = req.query.userId;
 
     try {
         const [bookings] = await db.query('SELECT * FROM Booking WHERE paidByID = ?', [userID]);

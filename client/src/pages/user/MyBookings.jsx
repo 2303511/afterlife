@@ -5,7 +5,7 @@ import "bootstrap/dist/js/bootstrap.bundle.min";
 
 export default function MyBookings() {
 	const [userID, setUserID] = useState(null);
-	const [userBookings, setUserBookings] = useState(null); // instead of []
+	const [userBookings, setUserBookings] = useState([]); // instead of []
 
 	// for payment modal ???
 	const [paymentDetails, setPaymentDetails] = useState(null);
@@ -52,7 +52,7 @@ export default function MyBookings() {
 	const fetchNicheDetails = async (nicheID) => {
 		console.log("Fetching niche details for nicheID:", nicheID);
 		try {
-			const response = await axios.get("/api/niches/getNicheById", {
+			const response = await axios.get("/api/niche/getNicheById", {
 				params: { nicheId: nicheID },
 				headers: {
 					"Content-Type": "application/json"
@@ -61,7 +61,6 @@ export default function MyBookings() {
 
 			console.log("Niche details fetched:", response.data);
 			return response.data;
-
 		} catch (error) {
 			console.error("Failed to fetch niche:", error);
 			return null;
@@ -80,20 +79,9 @@ export default function MyBookings() {
 		console.log(`2. userID is now available: ${userID}, fetching bookings...`);
 
 		const init = async () => {
-			try {
-				const response = await axios.get(`/api/bookings/getIndivBookings`, {
-					params: { userId: userID },
-					headers: {
-						"Content-Type": "application/json"
-					}
-				});
-
-				const bookings = response.data;
-				console.log("Bookings fetched:", bookings);
-				setUserBookings(bookings);
-			} catch (err) {
-				console.error("Error fetching bookings:", err);
-			}
+			const bookings = await fetchBookingDetails(userID);
+			console.log("Bookings fetched:", bookings);
+			setUserBookings(bookings);
 		};
 
 		init();
@@ -119,24 +107,24 @@ export default function MyBookings() {
 	}, [userBookings]);
 
 	// Effect to handle modal close event and reset state
-	// useEffect(() => {
-	// 	const modal = document.getElementById("paymentModal");
-	// 	if (!modal) return;
+	useEffect(() => {
+		const modal = document.getElementById("paymentModal");
+		if (!modal) return;
 
-	// 	const handleModalClose = () => {
-	// 		setPaymentDetails(null);
-	// 	};
+		const handleModalClose = () => {
+			setPaymentDetails(null);
+		};
 
-	// 	modal.addEventListener("hidden.bs.modal", handleModalClose);
+		modal.addEventListener("hidden.bs.modal", handleModalClose);
 
-	// 	return () => {
-	// 		modal.removeEventListener("hidden.bs.modal", handleModalClose);
-	// 	};
-	// }, []);
+		return () => {
+			modal.removeEventListener("hidden.bs.modal", handleModalClose);
+		};
+	}, []);
 
 	return (
 		<>
-			{!userBookings || !Array.isArray(userBookings)} ? (
+			{!userBookings || !Array.isArray(userBookings) ? (
 				<div className="container mt-5">
 					<h1 className="text-center mb-4">Loading...</h1>
 				</div>
@@ -156,23 +144,31 @@ export default function MyBookings() {
 
 					<h1 className="mb-4">My Bookings</h1>
 
-					{userBookings.map((booking, index) => (
-						<div class="card col-3 m-3">
-							<div class="card-body">
-								<h6 class="card-subtitle mb-2 text-body-secondary">
-									Block {nicheDetailsMap[booking.bookingID].nicheColumn}, {nicheDetailsMap[booking.bookingID].nicheColumn}-{nicheDetailsMap[booking.bookingID].nicheRow}
-								</h6>
-								<h5 class="card-title">{nicheDetailsMap[booking.bookingID].occupantName}</h5>
-								<p class="card-text">Some quick example text to build on the card title and make up the bulk of the card’s content.</p>
-								<a href="#" class="card-link">
-									Card link
-								</a>
-								<a href="#" class="card-link">
-									Another link
-								</a>
+					<p>Now showing: <b>{userBookings.length} booking(s)</b></p>
+
+					{userBookings.map((booking, index) => {
+						const niche = nicheDetailsMap[booking.bookingID];
+
+						if (!niche) return null; // Skip if niche details aren't loaded yet
+
+						return (
+							<div className="card col-3 m-3" key={booking.bookingID}>
+								<div className="card-body">
+									<h6 className="card-subtitle mb-2 text-body-secondary">
+										Block {niche.blockID}, {niche.nicheColumn}-{niche.nicheRow}
+									</h6>
+									<h5 className="card-title">{niche.occupantName || "No name"}</h5>
+									<p className="card-text">Some quick example text to build on the card title and make up the bulk of the card’s content.</p>
+									<a href="#" className="card-link">
+										Card link
+									</a>
+									<a href="#" className="card-link">
+										Another link
+									</a>
+								</div>
 							</div>
-						</div>
-					))}
+						);
+					})}
 
 					{/* details table */}
 					<table className="table table-striped">
@@ -195,8 +191,9 @@ export default function MyBookings() {
 											className="btn btn-secondary"
 											data-bs-toggle="modal"
 											data-bs-target="#paymentModal"
-											onClick={() => {
-												fetchPaymentDetails(booking.paymentID);
+											onClick={async () => {
+												const paymentDetails = await fetchPaymentDetails(booking.paymentID);
+												setPaymentDetails(paymentDetails);
 											}}>
 											View Payment Receipt
 										</div>
@@ -207,7 +204,6 @@ export default function MyBookings() {
 					</table>
 				</div>
 			)}
-
 			<div className="modal fade" id="paymentModal" tabIndex="-1" aria-labelledby="paymentModalLabel" aria-hidden="true">
 				<div className="modal-dialog">
 					<div className="modal-content">
