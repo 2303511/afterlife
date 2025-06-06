@@ -16,7 +16,7 @@ router.get('/', async (req, res) => {
 
 // GET payment by ID
 router.get('/getPaymentByID', async (req, res) => {
-    const paymentID = req.query.paymentId;
+    const paymentID = req.query.paymentID;
     console.log('Fetching payment with ID:', paymentID);
 
     if (!paymentID) {  

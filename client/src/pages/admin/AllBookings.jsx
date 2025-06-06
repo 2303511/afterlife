@@ -16,12 +16,12 @@ export default function AllBookings() {
 	const [userRole, setUserRole] = useState(null);
 
 	useEffect(() => {
-		const storedId = sessionStorage.getItem("userId");
+		const storedID = sessionStorage.getItem("userID");
 		const storedRole = sessionStorage.getItem("userRole");
 
 		console.log("userRole:", userRole, typeof userRole);
 
-		setUserID(storedId);
+		setUserID(storedID);
 		setUserRole(storedRole);
 
 		// TODO: get bookings for the user

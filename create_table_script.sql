@@ -3,7 +3,7 @@ USE AfterLifeDB;
 
 -- 1. Role table (no dependencies)
 CREATE TABLE Role (
-    roleId CHAR(36) PRIMARY KEY,
+    roleID CHAR(36) PRIMARY KEY,
     roleName VARCHAR(255)
 );
 
@@ -34,7 +34,7 @@ CREATE TABLE Block (
 
 -- 5. User table (depends on Role)
 CREATE TABLE User (
-    userId CHAR(36) PRIMARY KEY,
+    userID CHAR(36) PRIMARY KEY,
     username VARCHAR(255),
     hashedPassword VARCHAR(255),
     fullName VARCHAR(255),
@@ -44,43 +44,23 @@ CREATE TABLE User (
     nationality VARCHAR(255),
     userAddress TEXT,
     appliedUrns TEXT,
-    roleId CHAR(36),
-    FOREIGN KEY (roleId) REFERENCES Role(roleId)
+    roleID CHAR(36),
+    FOREIGN KEY (roleID) REFERENCES Role(roleID)
 );
 
--- 6. Booking table (depends on User, will later be used by Niche and Payment)
-CREATE TABLE Booking (
-    bookingID CHAR(36) PRIMARY KEY,
-    nicheID CHAR(36),         -- FK to Niche (but will define after Niche)
-    paidByID CHAR(36),
-    paymentID CHAR(36),       -- FK to Payment (will be created after)
-    bookingType ENUM('Current', 'PreOrder'),
-    FOREIGN KEY (paidByID) REFERENCES User(userId)
-    -- FOREIGN KEYs to nicheID and paymentID later via ALTER after tables are created
-);
-
--- 7. Niche table (depends on Block and Booking)
+-- 6. Niche table (depends on Block and Booking)
 CREATE TABLE Niche (
     nicheID CHAR(36) PRIMARY KEY,
     blockID CHAR(36),
     nicheColumn INT,
     nicheRow INT,
-    niche_code VARCHAR(50),
+    nicheCode VARCHAR(50),
     status ENUM('Available', 'Pending', 'Reserved', 'Occupied'),
     lastUpdated TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    dateOfBirth DATE,
-    dateOfDeath DATE,
-    birthCertificate TEXT,
-    deathCertificate TEXT,
-    occupantName VARCHAR(50),
     FOREIGN KEY (blockID) REFERENCES Block(blockID)
 );
 
--- 8. Now ALTER Booking table to add FK to Niche and Payment
-ALTER TABLE Booking
-    ADD FOREIGN KEY (nicheID) REFERENCES Niche(nicheID);
-
--- 9. Payment table (depends on Booking)
+-- 7. Payment table (depends on Booking)
 CREATE TABLE Payment (
     paymentID CHAR(36) PRIMARY KEY,
     amount FLOAT(10,2),
@@ -89,17 +69,29 @@ CREATE TABLE Payment (
     paymentStatus ENUM('Pending', 'Cancelled', 'Refunded', 'Fully Paid')
 );
 
--- 10. Now ALTER Booking table to add FK to Payment
-ALTER TABLE Booking
-    ADD FOREIGN KEY (paymentID) REFERENCES Payment(paymentID);
-
--- 11. Urn table (depends on User and Niche)
-CREATE TABLE Urn (
-    urnID CHAR(36) PRIMARY KEY,
+-- 8. Urn table (depends on User and Niche)
+CREATE TABLE Beneficiary (
+    beneficiaryID CHAR(36) PRIMARY KEY,
+    beneficiaryName VARCHAR(50),
     inscription TEXT,
-    inserted_at TIMESTAMP,
-    applicantID CHAR(36),
-    nicheID CHAR(36),
-    FOREIGN KEY (applicantID) REFERENCES User(userId),
-    FOREIGN KEY (nicheID) REFERENCES Niche(nicheID)
+    dateOfBirth DATE,
+    dateOfDeath DATE,
+    birthCertificate TEXT,
+    deathCertificate TEXT,
+    insertedAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    lastUpdated TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- 8. Booking table (depends on User, will later be used by Niche and Payment)
+CREATE TABLE Booking (
+    bookingID CHAR(36) PRIMARY KEY,
+    nicheID CHAR(36),         
+    paidByID CHAR(36),
+    paymentID CHAR(36),
+    beneficiaryID CHAR(36),
+    bookingType ENUM('Current', 'PreOrder', 'Archived'),
+    FOREIGN KEY (nicheID) REFERENCES Niche(nicheID),
+    FOREIGN KEY (paidByID) REFERENCES User(userID),
+    FOREIGN KEY (paymentID) REFERENCES Payment(paymentID),
+    FOREIGN KEY (beneficiaryID) REFERENCES Beneficiary(beneficiaryID)
 );

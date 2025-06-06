@@ -10,7 +10,7 @@ import PublicLayout from "./layouts/PublicLayout";
 import {publicRoutes } from "./config/routesConfig";
 
 function App() {
-  localStorage.setItem("role", "public"); // temp, change here to see staff and user navbar changes
+  localStorage.setItem("role", "user"); // temp, change here to see staff and user navbar changes
   return (
     <Router>
       <Routes>
