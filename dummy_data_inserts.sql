@@ -13,15 +13,15 @@ INSERT INTO Level (levelID, buildingID, levelNumber, notes) VALUES
 ('b8c413a8-94fc-4309-a2d4-2481fcadab20', '0a33cd7f-8884-41fb-9ae6-e192ea6651b8', 1, 'Level 1 of Eternal Light'),
 ('126d75d4-79cc-4ccb-b10f-23d4aac48cea', '0a33cd7f-8884-41fb-9ae6-e192ea6651b8', 2, 'Level 2 of Eternal Light');
 
-INSERT INTO Block (blockID, levelID, levelNumber, notes) VALUES
-('1b048553-e3da-484a-a76a-66108714a29d', '6ce2f7bd-2e9a-4dd7-886b-1cde50e35d06', 1, 'Block 1 of Level 1'),
-('77435da1-e7a7-42a9-b62a-4ce60715eea7', '6ce2f7bd-2e9a-4dd7-886b-1cde50e35d06', 1, 'Block 2 of Level 1'),
-('180df4c3-86d7-4a50-a051-df5ab7b01979', 'ca2c29b7-ee1b-4e58-ab90-1b9113522731', 2, 'Block 1 of Level 2'),
-('98232d67-2e53-41d5-94a0-6c52c843c3ca', 'ca2c29b7-ee1b-4e58-ab90-1b9113522731', 2, 'Block 2 of Level 2'),
-('b805aa3e-bd69-4a67-923d-578106f353f1', 'b8c413a8-94fc-4309-a2d4-2481fcadab20', 1, 'Block 1 of Level 1'),
-('179320f9-8ea6-44fd-b67a-40c342a385c5', 'b8c413a8-94fc-4309-a2d4-2481fcadab20', 1, 'Block 2 of Level 1'),
-('19f69cda-fc3f-4732-aef0-54fc58fe4d5d', '126d75d4-79cc-4ccb-b10f-23d4aac48cea', 2, 'Block 1 of Level 2'),
-('4e5f76b9-0d7f-4f6f-b7ce-6846b4c38911', '126d75d4-79cc-4ccb-b10f-23d4aac48cea', 2, 'Block 2 of Level 2');
+INSERT INTO Block (blockID, levelID, blockName, notes) VALUES
+('1b048553-e3da-484a-a76a-66108714a29d', '6ce2f7bd-2e9a-4dd7-886b-1cde50e35d06', 'Serenity', 'Block 1 of Level 1'),
+('77435da1-e7a7-42a9-b62a-4ce60715eea7', '6ce2f7bd-2e9a-4dd7-886b-1cde50e35d06', 'Tranquility', 'Block 2 of Level 1'),
+('180df4c3-86d7-4a50-a051-df5ab7b01979', 'ca2c29b7-ee1b-4e58-ab90-1b9113522731', 'Harmony', 'Block 1 of Level 2'),
+('98232d67-2e53-41d5-94a0-6c52c843c3ca', 'ca2c29b7-ee1b-4e58-ab90-1b9113522731', 'Grace', 'Block 2 of Level 2'),
+('b805aa3e-bd69-4a67-923d-578106f353f1', 'b8c413a8-94fc-4309-a2d4-2481fcadab20', 'Eternity', 'Block 1 of Level 1'),
+('179320f9-8ea6-44fd-b67a-40c342a385c5', 'b8c413a8-94fc-4309-a2d4-2481fcadab20', 'Unity', 'Block 2 of Level 1'),
+('19f69cda-fc3f-4732-aef0-54fc58fe4d5d', '126d75d4-79cc-4ccb-b10f-23d4aac48cea', 'Sanctuary', 'Block 1 of Level 2'),
+('4e5f76b9-0d7f-4f6f-b7ce-6846b4c38911', '126d75d4-79cc-4ccb-b10f-23d4aac48cea', 'Solace', 'Block 2 of Level 2');
 
 INSERT INTO User (userID, username, hashedPassword, fullName, contactNumber, nric, dob, nationality, userAddress, appliedUrns, roleID) VALUES
 ('e06d0bce-62da-4f1d-bf6e-9c1f090ffcfd', 'user1', 'hashedpass1', 'User 1', '81234560', 'S1234560A', '1990-01-01', 'Singaporean', 'Blk 10 Jurong West', '', 'cd73d682-5aca-4bb2-8963-8a197c5fb43b'),
