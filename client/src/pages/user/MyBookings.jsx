@@ -14,7 +14,7 @@ export default function MyBookings() {
 	const fetchBookingDetails = async (storedID) => {
 		console.log("3. Fetching booking details for userID:", storedID);
 		try {
-			const response = await axios.get(`/api/booking/getIndivBookings`, {
+			const response = await axios.get(`/api/booking/getIndivBooking`, {
 				params: { userID: storedID },
 				headers: {
 					"Content-Type": "application/json"
@@ -128,7 +128,7 @@ export default function MyBookings() {
 
 	// Effect to handle modal close event and reset state
 	useEffect(() => {
-		const modal = document.getElementByID("paymentModal");
+		const modal = document.getElementById("paymentModal");
 		if (!modal) return;
 
 		const handleModalClose = () => {

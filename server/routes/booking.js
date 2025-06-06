@@ -19,7 +19,7 @@ router.get("/", async (req, res) => {
     }
 });
 
-router.get("/getIndivBookings", async (req, res) => {
+router.get("/getIndivBooking", async (req, res) => {
     console.log("Fetching bookings for user with ID:", req.query.userID);
     const userID = req.query.userID;
 
