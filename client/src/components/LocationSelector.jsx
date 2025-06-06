@@ -11,7 +11,8 @@ export default function LocationSelector({
   onBuildingChange,
   onLevelChange,
   onBlockChange,
-  onAddClick
+  selectedSlot,
+  handleBook
 }) {
   return (
     <div className="d-flex gap-3 mb-3">
@@ -38,6 +39,15 @@ export default function LocationSelector({
           </option>
         ))}
       </Form.Select>
+
+      {selectedSlot && selectedSlot.status === "available" && (
+        <div className="text-center my-3">
+          <button className="btn btn-primary" onClick={handleBook}>
+            Book This Niche
+          </button>
+        </div>
+      )}
+
     </div>
   );
 }

@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+
 import axios from "axios";
 import '../../styles/Niche-Management.css';
 
@@ -6,6 +8,8 @@ import LocationSelector from "../../components/LocationSelector";
 import NicheLegend from "../../components/NicheLegend";
 import NicheGrid from "../../components/NicheGrid";
 import EditSlotModal from "../../components/EditSlotModal";
+import BookingPanel from "../../components/BookingPanel";
+
 
 const statusClass = {
   available: "status-available",
@@ -18,8 +22,12 @@ const statusClass = {
 };
 
 export default function NicheMap() {
+  const navigate = useNavigate();
+
+
   const [slots, setSlots] = useState([]);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showBooking, setShowBooking] = useState(false);
 
   const [newSlot, setNewSlot] = useState({ row: "", col: "", status: "available" });
   const [selectedSlotId, setSelectedSlotId] = useState(null);
@@ -124,8 +132,6 @@ export default function NicheMap() {
     }
   };
 
-
-
   const handleSaveSlot = () => {
     setSlots(prev =>
       prev.map(slot =>
@@ -135,7 +141,12 @@ export default function NicheMap() {
     setShowEditModal(false);
   };
 
-
+  const handleBook = () => {
+    if (selectedSlot && selectedSlot.status === "available") {
+      //navigate(`/add-booking?nicheID=${selectedSlot.id}`);
+      setShowBooking(true);
+    }
+  };
 
   return (
     <div className="container mt-4">
@@ -151,6 +162,8 @@ export default function NicheMap() {
         onBuildingChange={(e) => setSelectedBuilding(e.target.value)}
         onLevelChange={(e) => setSelectedLevel(e.target.value)}
         onBlockChange={(e) => setSelectedBlock(e.target.value)}
+        selectedSlot={selectedSlot}
+        handleBook={handleBook}
       />
 
       <NicheLegend statusClass={statusClass} />
@@ -163,6 +176,12 @@ export default function NicheMap() {
         numRows={maxRow}
         numCols={maxCol}
       />
+
+<BookingPanel
+  show={showBooking}
+  onClose={() => setShowBooking(false)}
+  selectedSlot={selectedSlot}
+/>
 
 
 
