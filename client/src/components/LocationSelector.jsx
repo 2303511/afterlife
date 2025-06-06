@@ -35,7 +35,7 @@ export default function LocationSelector({
       <Form.Select value={selectedBlock} onChange={onBlockChange} style={{ width: "200px" }}>
         {blocks.map((blk) => (
           <option key={blk.blockID} value={blk.blockID}>
-            Block {blk.levelNumber}
+            {blk.blockName}
           </option>
         ))}
       </Form.Select>

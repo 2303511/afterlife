@@ -197,6 +197,7 @@ export default function NicheMap() {
             onCancel={() => {
               setShowBooking(false);
               setSelectedSlot(null);
+              setSelectedSlotId(null);  
               setGridDisabled(false);
             }}
           />
