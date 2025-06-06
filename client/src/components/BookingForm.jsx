@@ -1,8 +1,21 @@
 import React, { useState } from "react";
-import { Button, Form } from "react-bootstrap";
+import { Button, Form, Row, Col } from "react-bootstrap";
+
+import ApplicantDetails from './ApplicantDetails';
+import BeneficiaryDetails from './BeneficiaryDetails';
 
 export default function BookingForm({ selectedSlot, onCancel }) {
-  const [formData, setFormData] = useState({ name: "" });
+  const [formData, setFormData] = useState({
+    fullName: "",
+    gender: "",
+    nationality: "",
+    nationalID: "",
+    mobileNumber: "",
+    address: "",
+    postalCode: "",
+    unitNumber: "",
+    remarks: "",
+  });
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -18,27 +31,18 @@ export default function BookingForm({ selectedSlot, onCancel }) {
   return (
     <div className="booking-form card p-4 mt-4">
       <div className="d-flex justify-content-between align-items-center mb-3">
-        <h4>Book Slot: {selectedSlot.niche_code}</h4>
+        <h4>New Application</h4>
         <Button variant="outline-danger" onClick={onCancel}>×</Button>
       </div>
 
+      <h6>Slot ID: {selectedSlot.nicheCode}</h6>
+
       <Form onSubmit={handleSubmit}>
-        <Form.Group className="mb-3">
-          <Form.Label>Applicant Name</Form.Label>
-          <Form.Control
-            type="text"
-            name="name"
-            value={formData.name}
-            onChange={handleChange}
-            placeholder="Enter name"
-            required
-          />
-        </Form.Group>
-
-        {/* More fields can go here */}
-
+        <ApplicantDetails formData={formData} onChange={handleChange} />
+        <BeneficiaryDetails formData={formData} onChange={handleChange} />
         <Button type="submit" variant="success">Confirm Booking</Button>
       </Form>
+
     </div>
   );
 }
