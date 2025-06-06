@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 
 import axios from "axios";
@@ -8,7 +8,7 @@ import LocationSelector from "../../components/LocationSelector";
 import NicheLegend from "../../components/NicheLegend";
 import NicheGrid from "../../components/NicheGrid";
 import EditSlotModal from "../../components/EditSlotModal";
-import BookingPanel from "../../components/BookingPanel";
+import BookingForm from "../../components/BookingForm";
 
 
 const statusClass = {
@@ -24,7 +24,6 @@ const statusClass = {
 export default function NicheMap() {
   const navigate = useNavigate();
 
-
   const [slots, setSlots] = useState([]);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showBooking, setShowBooking] = useState(false);
@@ -32,6 +31,8 @@ export default function NicheMap() {
   const [newSlot, setNewSlot] = useState({ row: "", col: "", status: "available" });
   const [selectedSlotId, setSelectedSlotId] = useState(null);
   const [selectedSlot, setSelectedSlot] = useState(null);
+  const [gridDisabled, setGridDisabled] = useState(false);
+
 
   const [buildings, setBuildings] = useState([]);
   const [levels, setLevels] = useState([]);
@@ -42,7 +43,10 @@ export default function NicheMap() {
 
   const maxRow = slots.length > 0 ? Math.max(...slots.map(s => s.nicheRow)) : 0;
   const maxCol = slots.length > 0 ? Math.max(...slots.map(s => s.nicheColumn)) : 0;
-  
+
+
+  const bookingRef = useRef(null);
+
 
 
   // Fetch buildings on load
@@ -80,32 +84,32 @@ export default function NicheMap() {
   // Fetch slots on block change
   useEffect(() => {
     if (!selectedBlock) return;
-  
+
     axios.get(`http://localhost:8888/api/niche/niches/${selectedBlock}`)
       .then((res) => {
-  
+
         const mapped = res.data
-        .sort((a, b) => {
-          if (a.nicheRow !== b.nicheRow) {
-            return a.nicheRow - b.nicheRow; // row order
-          }
-          return a.nicheColumn - b.nicheColumn; // column order within row
-        })
-        .map((slot) => ({
-          ...slot,
-          id: slot.nicheID,
-          status: slot.status.toLowerCase()
-        }));
-      
-  
+          .sort((a, b) => {
+            if (a.nicheRow !== b.nicheRow) {
+              return a.nicheRow - b.nicheRow; // row order
+            }
+            return a.nicheColumn - b.nicheColumn; // column order within row
+          })
+          .map((slot) => ({
+            ...slot,
+            id: slot.nicheID,
+            status: slot.status.toLowerCase()
+          }));
+
+
         setSlots(mapped);
       })
       .catch((err) => {
         console.error("Error fetching niches:", err);
       });
   }, [selectedBlock]);
-  
-  
+
+
 
   // Handlers
   const handleClick = (slot) => {
@@ -145,8 +149,14 @@ export default function NicheMap() {
     if (selectedSlot && selectedSlot.status === "available") {
       //navigate(`/add-booking?nicheID=${selectedSlot.id}`);
       setShowBooking(true);
+      setGridDisabled(true);
+      // Scroll to form
+      setTimeout(() => {
+        bookingRef.current?.scrollIntoView({ behavior: "smooth" });
+      }, 100); // delay ensures form is rendered
     }
   };
+
 
   return (
     <div className="container mt-4">
@@ -167,21 +177,33 @@ export default function NicheMap() {
       />
 
       <NicheLegend statusClass={statusClass} />
+      <div className={`niche-grid-wrapper ${gridDisabled ? "grid-disabled" : ""}`}>
+        <NicheGrid
+          slots={slots}
+          statusClass={statusClass}
+          onSlotClick={gridDisabled ? () => { } : handleClick}
+          selectedSlotId={selectedSlotId}
+          numRows={maxRow}
+          numCols={maxCol}
+        />
+      </div>
 
-      <NicheGrid
-        slots={slots}
-        statusClass={statusClass}
-        onSlotClick={handleClick}
-        selectedSlotId={selectedSlotId}
-        numRows={maxRow}
-        numCols={maxCol}
-      />
 
-<BookingPanel
-  show={showBooking}
-  onClose={() => setShowBooking(false)}
-  selectedSlot={selectedSlot}
-/>
+
+      <div ref={bookingRef}>
+        {showBooking && (
+          <BookingForm
+            selectedSlot={selectedSlot}
+            onCancel={() => {
+              setShowBooking(false);
+              setSelectedSlot(null);
+              setGridDisabled(false);
+            }}
+          />
+        )}
+      </div>
+
+
 
 
 

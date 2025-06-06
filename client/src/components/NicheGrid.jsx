@@ -22,9 +22,10 @@ export default function NicheGrid({ slots, statusClass, onSlotClick, selectedSlo
                 key={`cell-${row}-${col}`}
                 className={`slot-box ${statusClass[status] || "status-empty"} ${isSelected ? "selected" : ""}`}
                 onClick={() => slot && onSlotClick(slot)}
-                title={slot?.niche_code || `Row ${nicheRow}, Col ${nicheColumn}`}
+                title={slot?.nicheCode || `Row ${nicheRow}, Col ${nicheColumn}`}
               >
-                <small>{slot ? slot.niche_code : `${nicheRow}-${nicheColumn}`}</small>
+                <small>{`${nicheRow}-${nicheColumn}`}</small>
+
               </div>
             );
           })}

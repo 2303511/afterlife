@@ -54,6 +54,12 @@
     pointer-events: none;
   }
 
+  .grid-disabled {
+    pointer-events: none;
+    opacity: 0.5;
+  }
+  
+
   
   .status-available { background-color: #d3d3d3; }
   .status-selected  { background-color: #28a745; }
