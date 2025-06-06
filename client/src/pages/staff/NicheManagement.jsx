@@ -5,7 +5,6 @@ import '../../styles/Niche-Management.css';
 import LocationSelector from "../../components/LocationSelector";
 import NicheLegend from "../../components/NicheLegend";
 import NicheGrid from "../../components/NicheGrid";
-import AddBlockModal from "../../components/AddBlockModal";
 import EditSlotModal from "../../components/EditSlotModal";
 
 const statusClass = {
@@ -20,10 +19,10 @@ const statusClass = {
 
 export default function NicheMap() {
   const [slots, setSlots] = useState([]);
-  const [showBlockModal, setShowBlockModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
 
   const [newSlot, setNewSlot] = useState({ row: "", col: "", status: "available" });
+  const [selectedSlotId, setSelectedSlotId] = useState(null);
   const [selectedSlot, setSelectedSlot] = useState(null);
 
   const [buildings, setBuildings] = useState([]);
@@ -33,14 +32,9 @@ export default function NicheMap() {
   const [selectedLevel, setSelectedLevel] = useState("");
   const [selectedBlock, setSelectedBlock] = useState("");
 
-  const [newBlock, setNewBlock] = useState({
-    buildingId: "",
-    levelId: "",
-    notes: "",
-    rows: 1,
-    cols: 1,
-    status: "available"
-  });
+  const maxRow = slots.length > 0 ? Math.max(...slots.map(s => s.nicheRow)) : 0;
+  const maxCol = slots.length > 0 ? Math.max(...slots.map(s => s.nicheColumn)) : 0;
+  
 
 
   // Fetch buildings on load
@@ -78,39 +72,59 @@ export default function NicheMap() {
   // Fetch slots on block change
   useEffect(() => {
     if (!selectedBlock) return;
+  
     axios.get(`http://localhost:8888/api/niche/niches/${selectedBlock}`)
       .then((res) => {
-        // map nicheID to id so modal reads it correctly
-        const mapped = res.data.map((slot) => ({
+  
+        const mapped = res.data
+        .sort((a, b) => {
+          if (a.nicheRow !== b.nicheRow) {
+            return a.nicheRow - b.nicheRow; // row order
+          }
+          return a.nicheColumn - b.nicheColumn; // column order within row
+        })
+        .map((slot) => ({
           ...slot,
           id: slot.nicheID,
           status: slot.status.toLowerCase()
         }));
-
+      
+  
         setSlots(mapped);
       })
-
+      .catch((err) => {
+        console.error("Error fetching niches:", err);
+      });
   }, [selectedBlock]);
+  
+  
 
   // Handlers
   const handleClick = (slot) => {
     if (!slot) return;
-    setSelectedSlot(slot);
-    setShowEditModal(true);
+
+    if (slot.status.toLowerCase() === "available") {
+      // Toggle green selection for available slot
+      setSelectedSlotId((prevId) => {
+        const isSame = prevId === slot.id;
+        if (isSame) {
+          setShowEditModal(false);
+          return null;
+        } else {
+          setShowEditModal(false); // make sure modal closes if opened from other slot
+          setSelectedSlot(slot);
+          return slot.id;
+        }
+      });
+    } else {
+      // Directly open modal for other statuses
+      setSelectedSlot(slot);
+      setSelectedSlotId(null); // Deselect any green box
+      setShowEditModal(true);
+    }
   };
 
-  const handleAddSlot = () => {
-    const newId = `A3-${newSlot.row}-${newSlot.col}`;
-    const newSlotEntry = {
-      id: newId,
-      nicheRow: parseInt(newSlot.row),
-      nicheColumn: parseInt(newSlot.col),
-      status: newSlot.status,
-    };
-    setSlots(prev => [...prev, newSlotEntry]);
-    setShowBlockModal(false);
-    setNewSlot({ row: "", col: "", status: "available" });
-  };
+
 
   const handleSaveSlot = () => {
     setSlots(prev =>
@@ -121,34 +135,7 @@ export default function NicheMap() {
     setShowEditModal(false);
   };
 
-  const handleCreateBlock = () => {
-    axios.post("http://localhost:8888/api/niche/create-block", newBlock)
-      .then(res => {
-        alert("Block and niches created!");
-  
-        // Refresh block dropdown
-        return axios.get(`http://localhost:8888/api/niche/blocks/${newBlock.levelId}`);
-      })
-      .then(res => {
-        setBlocks(res.data);
-        if (res.data.length > 0) setSelectedBlock(res.data[res.data.length - 1].blockID);
-      })
-      .catch(err => {
-        console.error("Error creating block:", err);
-        alert("Failed to create block.");
-      });
-  
-    setShowBlockModal(false);
-    setNewBlock({
-      buildingId: "",
-      levelId: "",
-      notes: "",
-      rows: 1,
-      cols: 1,
-      status: "available"
-    });
-  };
-  
+
 
   return (
     <div className="container mt-4">
@@ -164,7 +151,6 @@ export default function NicheMap() {
         onBuildingChange={(e) => setSelectedBuilding(e.target.value)}
         onLevelChange={(e) => setSelectedLevel(e.target.value)}
         onBlockChange={(e) => setSelectedBlock(e.target.value)}
-        onAddClick={() => setShowBlockModal(true)}
       />
 
       <NicheLegend statusClass={statusClass} />
@@ -173,18 +159,11 @@ export default function NicheMap() {
         slots={slots}
         statusClass={statusClass}
         onSlotClick={handleClick}
+        selectedSlotId={selectedSlotId}
+        numRows={maxRow}
+        numCols={maxCol}
       />
 
-      <AddBlockModal
-        show={showBlockModal}
-        onClose={() => setShowBlockModal(false)}
-        onSave={handleCreateBlock}
-        newBlock={newBlock}
-        setNewBlock={setNewBlock}
-        buildings={buildings}
-        levels={levels}
-        statusClass={statusClass}
-      />
 
 
       <EditSlotModal

@@ -1,23 +1,31 @@
 import React from "react";
 
-export default function NicheGrid({ slots, statusClass, onSlotClick }) {
+export default function NicheGrid({ slots, statusClass, onSlotClick, selectedSlotId, numRows, numCols }) {
+
   return (
     <div className="grid-wrapper">
-      {[...Array(8)].map((_, row) => (
+
+      {[...Array(numRows)].map((_, row) => (
         <div className="d-flex" key={`row-${row}`}>
-          {[...Array(10)].map((_, col) => {
+          {[...Array(numCols)].map((_, col) => {
+            const nicheRow = row + 1;
+            const nicheColumn = col + 1;
+
             const slot = slots.find(
-              (s) => s.nicheRow === row + 1 && s.nicheColumn === col + 1
+              (s) => s.nicheRow === nicheRow && s.nicheColumn === nicheColumn
             );
-            const status = slot ? slot.status.toLowerCase() : "available";
+            const status = slot ? slot.status.toLowerCase() : "empty";
+            const isSelected = slot && slot.id === selectedSlotId;
 
             return (
               <div
-                key={`col-${col}`}
-                className={`slot-box ${statusClass[status]}`}
-                onClick={() => onSlotClick(slot)}
-                title={slot?.niche_code || `Row ${row + 1}, Col ${col + 1}`}
-              />
+                key={`cell-${row}-${col}`}
+                className={`slot-box ${statusClass[status] || "status-empty"} ${isSelected ? "selected" : ""}`}
+                onClick={() => slot && onSlotClick(slot)}
+                title={slot?.niche_code || `Row ${nicheRow}, Col ${nicheColumn}`}
+              >
+                <small>{slot ? slot.niche_code : `${nicheRow}-${nicheColumn}`}</small>
+              </div>
             );
           })}
         </div>
