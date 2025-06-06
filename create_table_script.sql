@@ -19,7 +19,6 @@ CREATE TABLE Level (
     levelID CHAR(36) PRIMARY KEY,
     buildingID CHAR(36),
     levelNumber INT,
-    notes TEXT,
     FOREIGN KEY (buildingID) REFERENCES Building(buildingID)
 );
 
@@ -28,7 +27,6 @@ CREATE TABLE Block (
     blockID CHAR(36) PRIMARY KEY,
     levelID CHAR(36),
     blockName VARCHAR(50),
-    notes TEXT,
     FOREIGN KEY (levelID) REFERENCES Level(levelID)
 );
 
@@ -43,7 +41,6 @@ CREATE TABLE User (
     dob DATE,
     nationality VARCHAR(255),
     userAddress TEXT,
-    appliedUrns TEXT,
     roleID CHAR(36),
     FOREIGN KEY (roleID) REFERENCES Role(roleID)
 );

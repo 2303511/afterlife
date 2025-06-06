@@ -7,12 +7,13 @@ INSERT INTO Building (buildingID, buildingName, buildingLocation) VALUES
 ('251db174-6bbc-4032-91ca-1af7586608bb', 'Tranquil Hall', 'North Wing'),
 ('0a33cd7f-8884-41fb-9ae6-e192ea6651b8', 'Eternal Light', 'South Wing');
 
-INSERT INTO Level (levelID, buildingID, levelNumber, notes) VALUES
-('6ce2f7bd-2e9a-4dd7-886b-1cde50e35d06', '251db174-6bbc-4032-91ca-1af7586608bb', 1, 'Level 1 of Tranquil Hall'),
-('ca2c29b7-ee1b-4e58-ab90-1b9113522731', '251db174-6bbc-4032-91ca-1af7586608bb', 2, 'Level 2 of Tranquil Hall'),
-('b8c413a8-94fc-4309-a2d4-2481fcadab20', '0a33cd7f-8884-41fb-9ae6-e192ea6651b8', 1, 'Level 1 of Eternal Light'),
-('126d75d4-79cc-4ccb-b10f-23d4aac48cea', '0a33cd7f-8884-41fb-9ae6-e192ea6651b8', 2, 'Level 2 of Eternal Light');
+INSERT INTO Level (levelID, buildingID, levelNumber) VALUES
+('6ce2f7bd-2e9a-4dd7-886b-1cde50e35d06', '251db174-6bbc-4032-91ca-1af7586608bb', 1),
+('ca2c29b7-ee1b-4e58-ab90-1b9113522731', '251db174-6bbc-4032-91ca-1af7586608bb', 2),
+('b8c413a8-94fc-4309-a2d4-2481fcadab20', '0a33cd7f-8884-41fb-9ae6-e192ea6651b8', 1),
+('126d75d4-79cc-4ccb-b10f-23d4aac48cea', '0a33cd7f-8884-41fb-9ae6-e192ea6651b8', 2);
 
+<<<<<<< Updated upstream
 INSERT INTO Block (blockID, levelID, blockName, notes) VALUES
 ('1b048553-e3da-484a-a76a-66108714a29d', '6ce2f7bd-2e9a-4dd7-886b-1cde50e35d06', 'Serenity', 'Block 1 of Level 1'),
 ('77435da1-e7a7-42a9-b62a-4ce60715eea7', '6ce2f7bd-2e9a-4dd7-886b-1cde50e35d06', 'Tranquility', 'Block 2 of Level 1'),
@@ -22,11 +23,22 @@ INSERT INTO Block (blockID, levelID, blockName, notes) VALUES
 ('179320f9-8ea6-44fd-b67a-40c342a385c5', 'b8c413a8-94fc-4309-a2d4-2481fcadab20', 'Unity', 'Block 2 of Level 1'),
 ('19f69cda-fc3f-4732-aef0-54fc58fe4d5d', '126d75d4-79cc-4ccb-b10f-23d4aac48cea', 'Sanctuary', 'Block 1 of Level 2'),
 ('4e5f76b9-0d7f-4f6f-b7ce-6846b4c38911', '126d75d4-79cc-4ccb-b10f-23d4aac48cea', 'Solace', 'Block 2 of Level 2');
+=======
+INSERT INTO Block (blockID, levelID, blockName) VALUES
+('1b048553-e3da-484a-a76a-66108714a29d', '6ce2f7bd-2e9a-4dd7-886b-1cde50e35d06', 'North Wing'),
+('77435da1-e7a7-42a9-b62a-4ce60715eea7', '6ce2f7bd-2e9a-4dd7-886b-1cde50e35d06', 'South Wing'),
+('180df4c3-86d7-4a50-a051-df5ab7b01979', 'ca2c29b7-ee1b-4e58-ab90-1b9113522731', 'North Wing'),
+('98232d67-2e53-41d5-94a0-6c52c843c3ca', 'ca2c29b7-ee1b-4e58-ab90-1b9113522731', 'South Wing'),
+('b805aa3e-bd69-4a67-923d-578106f353f1', 'b8c413a8-94fc-4309-a2d4-2481fcadab20', 'North Wing'),
+('179320f9-8ea6-44fd-b67a-40c342a385c5', 'b8c413a8-94fc-4309-a2d4-2481fcadab20', 'South Wing'),
+('19f69cda-fc3f-4732-aef0-54fc58fe4d5d', '126d75d4-79cc-4ccb-b10f-23d4aac48cea', 'North Wing'),
+('4e5f76b9-0d7f-4f6f-b7ce-6846b4c38911', '126d75d4-79cc-4ccb-b10f-23d4aac48cea', 'South Wing');
+>>>>>>> Stashed changes
 
-INSERT INTO User (userID, username, hashedPassword, fullName, contactNumber, nric, dob, nationality, userAddress, appliedUrns, roleID) VALUES
-('e06d0bce-62da-4f1d-bf6e-9c1f090ffcfd', 'user1', 'hashedpass1', 'User 1', '81234560', 'S1234560A', '1990-01-01', 'Singaporean', 'Blk 10 Jurong West', '', 'cd73d682-5aca-4bb2-8963-8a197c5fb43b'),
-('be4e4478-4251-47d2-b571-40d35308bc6a', 'user2', 'hashedpass2', 'User 2', '81234561', 'S1234561A', '1991-01-01', 'Singaporean', 'Blk 11 Jurong West', '', 'cd73d682-5aca-4bb2-8963-8a197c5fb43b'),
-('e43f9844-a6d8-4428-88ff-1225109d7061', 'user3', 'hashedpass3', 'User 3', '81234562', 'S1234562A', '1992-01-01', 'Singaporean', 'Blk 12 Jurong West', '', 'cd73d682-5aca-4bb2-8963-8a197c5fb43b');
+INSERT INTO User (userID, username, hashedPassword, fullName, contactNumber, nric, dob, nationality, userAddress, roleID) VALUES
+('e06d0bce-62da-4f1d-bf6e-9c1f090ffcfd', 'user1', 'hashedpass1', 'User 1', '81234560', 'S1234560A', '1990-01-01', 'Singaporean', 'Blk 10 Jurong West', 'cd73d682-5aca-4bb2-8963-8a197c5fb43b'),
+('be4e4478-4251-47d2-b571-40d35308bc6a', 'user2', 'hashedpass2', 'User 2', '81234561', 'S1234561A', '1991-01-01', 'Singaporean', 'Blk 11 Jurong West', 'cd73d682-5aca-4bb2-8963-8a197c5fb43b'),
+('e43f9844-a6d8-4428-88ff-1225109d7061', 'user3', 'hashedpass3', 'User 3', '81234562', 'S1234562A', '1992-01-01', 'Singaporean', 'Blk 12 Jurong West', 'cd73d682-5aca-4bb2-8963-8a197c5fb43b');
 
 INSERT INTO Niche (nicheID, blockID, nicheColumn, nicheRow, nicheCode, status, lastUpdated) VALUES
 ('693aa513-05cb-43b3-8ad1-12b202b8f82e', '1b048553-e3da-484a-a76a-66108714a29d', 1, 1, '1-1-1b04', 'Available', '2025-06-06 08:18:47'),
@@ -77,8 +89,8 @@ INSERT INTO Booking (bookingID, nicheID, paidByID, paymentID, beneficiaryID, boo
 ('c03fba81-43ef-4f0e-b2c0-85d1da52f052', '564a5355-8bbc-42fb-9f6f-e90430d64e3d', 'e06d0bce-62da-4f1d-bf6e-9c1f090ffcfd', '1ad688ac-c3c0-41ac-b881-28e2ca83911d', '8fb6d670-06f0-4d80-bcd2-0611648e9f4f', 'PreOrder'),
 ('ec6eab74-4abd-4cff-a72e-d43e8b8bd1ac', '39312f49-ffc8-4830-80df-c8b51271a233', 'e06d0bce-62da-4f1d-bf6e-9c1f090ffcfd', '97365402-c6a6-4d6d-a37f-b473965a1f79', '8fb6d670-06f0-4d80-bcd2-0611648e9f4f', 'Archived'),
 ('98cda605-f193-47c3-acaf-965017d08fc5', '361790b4-b930-49b3-af47-4a01080cb238', 'be4e4478-4251-47d2-b571-40d35308bc6a', '8a43c203-1054-4239-ac56-0d16ceeb2f58', '27e6a7a2-82a1-4a55-ac1e-582e6dc4dbc5', 'Current'),
-('c9a905c7-522d-4cd7-b6ee-1e1ece9047a0', '312b1b42-b552-441f-a083-f7433eb5af52', 'be4e4478-4251-47d2-b571-40d35308bc6a', '1ad688ac-c3c0-41ac-b881-28e2ca83911d', '27e6a7a2-82a1-4a55-ac1e-582e6dc4dbc5', 'PreOrder'),
-('926b581b-0d02-47fc-9a3b-d459b23c9121', '1b174c71-73ee-405e-b02f-c57701d0711a', 'be4e4478-4251-47d2-b571-40d35308bc6a', '97365402-c6a6-4d6d-a37f-b473965a1f79', '27e6a7a2-82a1-4a55-ac1e-582e6dc4dbc5', 'Archived'),
+('c9a905c7-522d-4cd7-b6ee-1e1ece9047a0', '312b1b42-b552-441f-a083-f7433eb5af52', 'be4e4478-4251-47d2-b571-40d35308bc6a', '1ad688ac-c3c0-41ac-b881-28e2ca83911d', '8fb6d670-06f0-4d80-bcd2-0611648e9f4f', 'PreOrder'),
+('926b581b-0d02-47fc-9a3b-d459b23c9121', '1b174c71-73ee-405e-b02f-c57701d0711a', 'be4e4478-4251-47d2-b571-40d35308bc6a', '97365402-c6a6-4d6d-a37f-b473965a1f79', '1b4a9a6e-653a-45be-aa49-52e26bde8f82', 'Archived'),
 ('c9196e7c-0e4c-45d1-ab68-7fcd7b5978c8', '467aace6-ca13-4939-8469-d68c05063cf7', 'e43f9844-a6d8-4428-88ff-1225109d7061', '8a43c203-1054-4239-ac56-0d16ceeb2f58', '1b4a9a6e-653a-45be-aa49-52e26bde8f82', 'Current'),
 ('ae643e4c-c141-463c-aabe-58078b1f6384', 'ddd6422d-d914-427b-be7e-7be893619811', 'e43f9844-a6d8-4428-88ff-1225109d7061', '1ad688ac-c3c0-41ac-b881-28e2ca83911d', '1b4a9a6e-653a-45be-aa49-52e26bde8f82', 'PreOrder'),
 ('4c9885bd-31bc-40cd-80ef-de0579bc330d', 'ece0289b-54b2-4b0c-b8ba-535f655e2c14', 'e43f9844-a6d8-4428-88ff-1225109d7061', '97365402-c6a6-4d6d-a37f-b473965a1f79', '1b4a9a6e-653a-45be-aa49-52e26bde8f82', 'Archived');

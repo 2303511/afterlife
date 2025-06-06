@@ -16,12 +16,19 @@ router.get("/", async (req, res) => {
 
 // getBeneficiary
 router.get("/getBeneficiaryByID", async (req, res) => {
-    const beneficiaryID = req.params.beneficiaryID;
+    const beneficiaryID = req.query.beneficiaryID;
     console.log("Fetching specific beneficiary by ID:", beneficiaryID);
 
     try {
-        const [beneficiary] = await db.query("SELECT * from Beneficiary WHERE beneficiaryID = ?", beneficiaryID);
-        res.json(beneficiary);
+        const [beneficiary] = await db.query("SELECT * from Beneficiary WHERE beneficiaryID = ?", [beneficiaryID]);
+        console.log("beneficiary fetched:", beneficiary);
+
+        if (beneficiary.length === 0) {
+            return res.status(404).json({ error: 'Beneficiary not found' });
+        }
+
+        res.json(beneficiary[0]);
+
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: "Failed to fetch beneficiary by ID:", beneficiaryID });
