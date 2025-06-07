@@ -1,4 +1,4 @@
-import StaffNavigation from "../components/StaffNavigation";
+import StaffNavigation from "../components/navigation/StaffNavigation";
 
 export default function MainLayout({ children }) {
   return (

@@ -4,11 +4,11 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import '../../styles/Niche-Management.css';
 
-import LocationSelector from "../../components/LocationSelector";
-import NicheLegend from "../../components/NicheLegend";
-import NicheGrid from "../../components/NicheGrid";
-import EditSlotModal from "../../components/EditSlotModal";
-import BookingForm from "../../components/BookingForm";
+import LocationSelector from "../../components/niche/LocationSelector";
+import NicheLegend from "../../components/niche/NicheLegend";
+import NicheGrid from "../../components/niche/NicheGrid";
+import EditSlotModal from "../../components/niche/EditSlotModal";
+import BookingForm from "../../components/booking/BookingForm";
 
 
 const statusClass = {

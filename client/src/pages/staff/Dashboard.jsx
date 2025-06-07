@@ -1,6 +1,6 @@
 import { useEffect } from "react";
-import StatCard from "../../components/StatCard";
-import BookingCard from "../../components/BookingCard";
+import StatCard from "../../components/staffDashboard/StatCard";
+import BookingCard from "../../components/staffDashboard/BookingCard";
 import "../../styles/Dashboard.css";
 
 export default function Dashboard() {
