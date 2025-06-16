@@ -1,34 +1,43 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import StatCard from "../../components/staffDashboard/StatCard";
-import BookingCard from "../../components/staffDashboard/BookingCard";
 import "../../styles/Dashboard.css";
+import axios from 'axios';
 
 export default function Dashboard() {
+  const [statsData, setStatsData] = useState({
+    totalBookings: 0,
+    pendingApproval: 0,
+    returningClients: 0,
+    nicheStatuses: []
+  });
+
   useEffect(() => {
-    fetch("/api/")
-      .then((res) => res.text())
-      .then((data) => {
-        console.log("API Response:", data);
+    axios.get("http://localhost:8888/api/dashboard/stats")
+      .then(res => {
+        setStatsData(res.data);
       })
-      .catch((err) => {
-        console.error("API call failed:", err);
+      .catch(err => {
+        console.error("Failed to load dashboard stats:", err);
       });
   }, []);
 
-  const stats = [
-    { label: "Total Bookings", value: "28,345", color: "" },
-    { label: "Pending Approval", value: "120", color: "text-danger" },
-    { label: "New Clients this month", value: "89", color: "", trend: "up" },
-    { label: "Returning Clients", value: "46%", color: "", trend: "down" }
-  ];
+  const statusColorMap = {
+    Available: "text-success",
+    Reserved: "text-warning",
+    Occupied: "text-danger",
+    Pending: "text-primary",
+    Blocked: "text-muted"
+  };
 
-  const bookings = [
-    { name: "Amanda Chavez", service: "Physiotherapy", date: "25 Jul 2020", time: "11:00 - 12:00" },
-    { name: "Fionna Wade", service: "Physiotherapy", date: "25 Jul 2020", time: "11:00 - 12:00" },
-    { name: "Beatrice Carrol", service: "Physiotherapy", date: "25 Jul 2020", time: "11:00 - 12:00" },
-    { name: "Jasmine Palmer", service: "Physiotherapy", date: "25 Jul 2020", time: "11:00 - 12:00" },
-    { name: "Randy Elliot", service: "Physiotherapy", date: "25 Jul 2020", time: "11:00 - 12:00" },
-    { name: "Christine Powell", service: "Physiotherapy", date: "25 Jul 2020", time: "11:00 - 12:00" },
+  const stats = [
+    { label: "Total Bookings", value: statsData.totalBookings.toLocaleString(), color: "" },
+    { label: "Pending Approval", value: statsData.pendingApproval.toString(), color: "text-danger" },
+    { label: "Returning Clients", value: `${statsData.returningClients}%`, color: "", trend: "down" },
+    ...((statsData.nicheStatuses || []).map((status) => ({
+      label: `${status.status} Niches`,
+      value: status.count.toString(),
+      color: statusColorMap[status.status] || ""
+    })))
   ];
 
   return (
@@ -38,22 +47,8 @@ export default function Dashboard() {
 
       <div className="row mb-4">
         {stats.map((stat, i) => (
-          <div className="col-md-3" key={i}>
+          <div className="col-md-3 mb-3" key={i}>
             <StatCard {...stat} />
-          </div>
-        ))}
-      </div>
-
-      <div className="tabs d-flex gap-4 mb-3">
-        <span className="active-tab">Bookings</span>
-        <span>Enquiries</span>
-        <span>My Services</span>
-      </div>
-
-      <div className="row">
-        {bookings.map((b, i) => (
-          <div className="col-md-4 mb-3" key={i}>
-            <BookingCard {...b} />
           </div>
         ))}
       </div>

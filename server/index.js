@@ -10,6 +10,7 @@ const paymentsRoute = require("./routes/payment");
 const nicheRoute = require("./routes/niche");
 const beneficiaryRoute = require("./routes/beneficiary");
 const blockRoute = require("./routes/block");
+const dashboardRoute = require("./routes/dashboard");
 
 app.use(cors());
 app.use(express.json());
@@ -21,6 +22,7 @@ app.use("/api/payment", paymentsRoute);
 app.use("/api/niche", nicheRoute); 
 app.use("/api/beneficiary", beneficiaryRoute);
 app.use("/api/block", blockRoute);
+app.use("/api/dashboard", dashboardRoute);
 
 app.get("/api", (req, res) => {
 	console.log("API is working!");
