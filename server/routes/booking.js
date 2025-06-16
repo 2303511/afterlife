@@ -26,14 +26,14 @@ router.get("/getBookingByUserID", async (req, res) => {
 
     try {
         const [bookings] = await db.query('SELECT * FROM Booking WHERE paidByID = ?', [userID]);
-        
+
         if (bookings.length === 0) {
             return res.json([]); // Return empty array if no bookings found
         }
-        
+
         console.log("Bookings found:", bookings);
         res.json(bookings);
-        
+
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: "Failed to fetch bookings" });
@@ -47,14 +47,14 @@ router.get("/getBookingByBookingID", async (req, res) => {
 
     try {
         const [bookings] = await db.query('SELECT * FROM Booking WHERE bookingID = ?', [bookingID]);
-        
+
         if (bookings.length === 0) {
             return res.json([]); // Return empty array if no bookings found
         }
-        
+
         console.log("Bookings found:", bookings);
         res.json(bookings);
-        
+
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: "Failed to fetch bookings" });
@@ -62,42 +62,41 @@ router.get("/getBookingByBookingID", async (req, res) => {
 
 });
 
-// booking made by staff member
+// insert user -> beneficiary -> payment -> booking -> update niche status
 router.post("/submitStaffBooking", async (req, res) => {
-    let dbConn;
-    dbConn = await db.getConnection();
+    const dbConn = await db.getConnection();
     await dbConn.beginTransaction();
- 
+
     try {
         const {
             // Applicant
             fullName, gender, nationality, nationalID, mobileNumber, address, postalCode, unitNumber, dob,
 
             // Beneficiary --> beneficiaryNationality, beneficiaryNationalID (not in table, but inside form)
-            beneficiaryName, beneficiaryGender, beneficiaryNationality, beneficiaryNationalID, dateOfBirth, dateOfDeath, 
+            beneficiaryName, beneficiaryGender, beneficiaryNationality, beneficiaryNationalID, dateOfBirth, dateOfDeath,
             birthCertificate, deathCertficate, relationshipWithApplicant, inscription, beneficiaryRemarks,
 
             // Booking
-            nicheID, bookingType
+            nicheID, bookingType,
+            // Payment
+            paymentMethod, paymentAmount,
+            // Meta
+            paidByID
         } = req.body;
 
-        const [existing] = await db.query("SELECT * FROM Booking WHERE nicheID = ?", [req.body.nicheID]);
-            if (existing.length > 0) {
-                return res.status(409).json({ error: "Niche already booked" });
-        }
+        const userID = uuidv4();
+        const beneficiaryID = uuidv4();
+        const bookingID = uuidv4();
+        const paymentID = uuidv4();
+        const paymentDate = new Date().toISOString().split("T")[0];
 
-        const [userID, beneficiaryID, bookingID] = [uuidv4(), uuidv4(), uuidv4()];
-        
-        const [[roleRow]] = await db.query(
+        // Get roleID
+        const [[roleRow]] = await dbConn.query(
             "SELECT roleID FROM Role WHERE roleName = ?",
             ["Applicant"]
-          );
-          
-          if (!roleRow) {
-            return res.status(400).json({ error: "Role not found" });
-          }
-          
-          const roleID = roleRow.roleID;
+        );
+        if (!roleRow) throw new Error("Role not found");
+        const roleID = roleRow.roleID;
 
         // Insert User
         await dbConn.query(`
@@ -113,30 +112,41 @@ router.post("/submitStaffBooking", async (req, res) => {
                 birthCertificate, deathCertificate, relationshipWithApplicant, inscription
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
             [beneficiaryID, beneficiaryName, dateOfBirth, dateOfDeath, birthCertificate, deathCertficate,
-             relationshipWithApplicant, inscription]
+                relationshipWithApplicant, inscription]
+        );
+
+        // Insert Payment
+        await dbConn.query(`
+        INSERT INTO Payment (paymentID, amount, paymentMethod, paymentDate, paymentStatus)
+        VALUES (?, ?, ?, ?, ?)`,
+            [paymentID, paymentAmount, paymentMethod, paymentDate, "Fully Paid"]
         );
 
         // Insert Booking
         await dbConn.query(`
-            INSERT INTO Booking (bookingID, nicheID, beneficiaryID, bookingType)
-            VALUES (?, ?, ?, ?)`,
-            [bookingID, nicheID, beneficiaryID, bookingType]
+        INSERT INTO Booking (bookingID, nicheID, beneficiaryID, bookingType, paymentID, paidByID)
+        VALUES (?, ?, ?, ?, ?, ?)`,
+            [bookingID, nicheID, beneficiaryID, bookingType, paymentID, userID]
         );
 
-        await dbConn.commit();
-        dbConn.release();
+        // Update Niche Status
+        await dbConn.query(`
+            UPDATE Niche
+            SET status = ?, lastUpdated = NOW()
+            WHERE nicheID = ?
+            `, ['Reserved', nicheID]);
 
-        res.status(201).json({ success: true, bookingID });
+        await dbConn.commit();
+        res.status(201).json({ success: true, bookingID, paymentID });
 
     } catch (err) {
         await dbConn.rollback();
-        dbConn.release();
-        console.error("Booking error:", err);
-        res.status(500).json({ error: "Booking failed" });
+        console.error("submission of booking failed:", err);
+        res.status(500).json({ error: "Failed to submit booking" });
     } finally {
-        if (dbConn) dbConn.release();
+        dbConn.release();
     }
-    
-})
+});
+
 
 module.exports = router;
