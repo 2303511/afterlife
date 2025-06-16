@@ -157,6 +157,22 @@ export default function NicheMap() {
     }
   };
 
+  // for booking
+  const handleSubmit = async (formData) => {
+    const payload = {
+      ...formData.applicant,
+      ...formData.beneficiary,
+      nicheID: selectedSlot.nicheID
+    };
+
+    try {
+      const res = await axios.post("http://localhost:8888/api/booking/submitStaffBooking", payload);
+      console.log("Booking success:", res.data);
+    } catch (err) {
+      console.error("Booking failed:", err);
+    }
+  };
+
 
   return (
     <div className="container mt-4">
@@ -200,6 +216,7 @@ export default function NicheMap() {
               setSelectedSlotId(null);  
               setGridDisabled(false);
             }}
+            onSubmit={handleSubmit}
           />
         )}
       </div>
