@@ -159,12 +159,25 @@ export default function NicheMap() {
     }
   };
 
-  // for booking via JSON
+  function formDataToJson(formData) {
+    const json = {};
+    for (let [key, value] of formData.entries()) {
+      json[key] = value;
+    }
+    return json;
+  }
+  
+
   const handleSubmit = async (paymentData) => {
-    //const currentStaffID = "your-staff-id"; // Replace with actual session ID later
+    if (!bookingFormData || !selectedSlot) {
+      console.error("Missing form or slot data");
+      return;
+    }
+  
+    const formJson = formDataToJson(bookingFormData);
   
     const fullPayload = {
-      ...bookingFormData,
+      ...formJson,
       paymentMethod: paymentData.method,
       paymentAmount: paymentData.amount,
       nicheID: selectedSlot.nicheID
@@ -189,6 +202,7 @@ export default function NicheMap() {
       console.error("Booking failed:", err);
     }
   };
+
   
 
   return (
