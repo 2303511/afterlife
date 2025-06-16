@@ -8,7 +8,7 @@ import NicheBooking from "../pages/NicheBooking";
 import Profile from "../pages/Profile";
 
 import Dashboard from "../pages/staff/Dashboard";
-import AllBookings from "../pages/admin/AllBookings";
+import SearchBooking from "../pages/staff/SearchBooking";
 import NicheManagement from "../pages/staff/NicheManagement";
 import AddBooking from "../pages/AddBooking";
 
@@ -76,10 +76,10 @@ export const staffRoutes = [
     element: <Dashboard />,
   },
   {
-    label: "All Bookings",
-    path: "/all-bookings",
+    label: "Search Booking",
+    path: "/search-booking",
     icon: <FaListAlt />,
-    element: <AllBookings />,
+    element: <SearchBooking />,
   },
   {
     label: "Niche Management",
