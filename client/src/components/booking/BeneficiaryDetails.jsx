@@ -1,7 +1,7 @@
 import React from "react";
 import { Form, Row, Col } from "react-bootstrap";
 
-export default function BeneficiaryDetails({ formData, onChange }) {
+export default function BeneficiaryDetails({ formData, onChange, onFileChange }) {
     return (
         <>
             <h5 className="mt-4 mb-3">Beneficiary Details</h5>
@@ -9,10 +9,10 @@ export default function BeneficiaryDetails({ formData, onChange }) {
             <Row>
                 <Col md={6}>
                     <Form.Group className="mb-3">
-                        <Form.Label>English Name</Form.Label>
+                        <Form.Label>Full Name</Form.Label>
                         <Form.Control
-                            name="beneficiaryEnglishName"
-                            value={formData.beneficiaryEnglishName}
+                            name="beneficiaryName"
+                            value={formData.beneficiaryName}
                             onChange={onChange}
                         />
                     </Form.Group>
@@ -28,6 +28,23 @@ export default function BeneficiaryDetails({ formData, onChange }) {
                             <option value="">Select Gender</option>
                             <option>Male</option>
                             <option>Female</option>
+                        </Form.Select>
+                    </Form.Group>
+                </Col>
+                <Col md={3}>
+                    <Form.Group className="mb-3">
+                        <Form.Label>Relationship With Applicant</Form.Label>
+                        <Form.Select
+                            name="relationshipWithApplicant"
+                            value={formData.relationshipWithApplicant}
+                            onChange={onChange}
+                        >
+                            <option value="">Select Relationship</option>
+                            <option>Mother</option>
+                            <option>Father</option>
+                            <option>Sibling</option>
+                            <option>Relative</option>
+                            <option>Other</option>
                         </Form.Select>
                     </Form.Group>
                 </Col>
@@ -61,21 +78,21 @@ export default function BeneficiaryDetails({ formData, onChange }) {
             <Row>
                 <Col md={6}>
                     <Form.Group className="mb-3">
-                        <Form.Label>Death Certificate Number</Form.Label>
+                        <Form.Label>Birth Certificate</Form.Label>
                         <Form.Control
-                            name="deathCertNo"
-                            value={formData.deathCertNo}
-                            onChange={onChange}
+                            type="file"
+                            name="birthCertFile"
+                            onChange={(e) => onFileChange(e, "birthCert")}
                         />
                     </Form.Group>
                 </Col>
                 <Col md={6}>
                     <Form.Group className="mb-3">
-                        <Form.Label>Cremate Certificate Number</Form.Label>
+                        <Form.Label>Death Certificate</Form.Label>
                         <Form.Control
-                            name="cremateCertNo"
-                            value={formData.cremateCertNo}
-                            onChange={onChange}
+                            type="file"
+                            name="deathCertFile"
+                            onChange={(e) => onFileChange(e, "deathCert")}
                         />
                     </Form.Group>
                 </Col>
@@ -84,8 +101,8 @@ export default function BeneficiaryDetails({ formData, onChange }) {
                         <Form.Label>Date of Birth</Form.Label>
                         <Form.Control
                             type="date"
-                            name="dob"
-                            value={formData.dob}
+                            name="dateOfBirth"
+                            value={formData.dateOfBirth}
                             onChange={onChange}
                         />
                     </Form.Group>
@@ -95,8 +112,8 @@ export default function BeneficiaryDetails({ formData, onChange }) {
                         <Form.Label>Date of Death</Form.Label>
                         <Form.Control
                             type="date"
-                            name="dod"
-                            value={formData.dod}
+                            name="dateOfDeath"
+                            value={formData.dateOfDeath}
                             onChange={onChange}
                         />
                     </Form.Group>
@@ -125,12 +142,12 @@ export default function BeneficiaryDetails({ formData, onChange }) {
             </Row>
 
             <Form.Group className="mb-3">
-                <Form.Label>Remarks</Form.Label>
+                <Form.Label>Inscrption</Form.Label>
                 <Form.Control
                     as="textarea"
                     rows={3}
-                    name="beneficiaryRemarks"
-                    value={formData.beneficiaryRemarks}
+                    name="inscription"
+                    value={formData.inscription}
                     onChange={onChange}
                 />
             </Form.Group>

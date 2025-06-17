@@ -1,5 +1,5 @@
 // src/layouts/UserLayout.js
-import UserNavigation from "../components/UserNavigation";
+import UserNavigation from "../components/navigation/UserNavigation";
 
 export default function UserLayout({ children }) {
   return (

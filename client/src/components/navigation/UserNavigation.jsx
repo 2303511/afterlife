@@ -1,7 +1,7 @@
 // src/components/Navbar.js
 import { FaSearch, FaUser } from "react-icons/fa";
-import logo from "../img/logo.svg";
-import { userRoutes } from "../config/routesConfig";
+import logo from "../../img/logo.svg";
+import { userRoutes } from "../../config/routesConfig";
 
 export default function UserNavigation() {
     return (

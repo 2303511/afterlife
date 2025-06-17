@@ -24,48 +24,63 @@
   font-weight: bold;
 }
 
-  .slot-box {
-    width: 60px;
-    height: 60px;
-    border-radius: 8px;
-    margin: 5px;
-    cursor: pointer;
-    transition: transform 0.1s;
-  }
-  
-  .slot-box:hover {
-    transform: scale(1.05);
-  }
-  
-  .legend-box {
-    width: 20px;
-    height: 20px;
-    border-radius: 4px;
-  }
+.slot-box {
+  width: 60px;
+  height: 60px;
+  border-radius: 8px;
+  margin: 5px;
+  cursor: pointer;
+  transition: transform 0.1s;
+}
 
-  .slot-box.selected {
-    border: 2px solid #0f0;
-    background-color: #b3fcb3 !important;
-  }
-  
-  .status-empty {
-    background-color: #e0e0e0;
-    opacity: 0.5;
-    pointer-events: none;
-  }
+.slot-box:hover {
+  transform: scale(1.05);
+}
 
-  .grid-disabled {
-    pointer-events: none;
-    opacity: 0.5;
-  }
-  
+.legend-box {
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+}
 
+.slot-box.selected {
+  border: 2px solid #0f0;
+  background-color: #b3fcb3 !important;
+}
+
+.status-empty {
+  background-color: #e0e0e0;
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.grid-disabled {
+  pointer-events: none;
+  opacity: 0.5;
+}
+
+
+
+.status-available { background-color: #d3d3d3; }
+.status-selected  { background-color: #28a745; }
+.status-pending   { background-color: #f0ad4e}
+.status-occupied  { background-color: #dc3545; }
+.status-reserved  { background-color: #ffc107; }
+.status-booked    { background-color: #007bff; }
+.status-blocked   { background-color: #6c757d; }
   
-  .status-available { background-color: #d3d3d3; }
-  .status-selected  { background-color: #28a745; }
-  .status-pending   { background-color: #f0ad4e}
-  .status-occupied  { background-color: #dc3545; }
-  .status-reserved  { background-color: #ffc107; }
-  .status-booked    { background-color: #007bff; }
-  .status-blocked   { background-color: #6c757d; }
+.status-current {
+	background-color: #c3e6cb;
+	color: #155724;
+}
+
+.status-preorder {
+	background-color: #ffeaa7;
+	color: #856404;
+}
+
+.status-archived {
+	background-color: #f5c6cb;
+	color: #721c24;
+}
   

@@ -4,11 +4,12 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import '../../styles/Niche-Management.css';
 
-import LocationSelector from "../../components/LocationSelector";
-import NicheLegend from "../../components/NicheLegend";
-import NicheGrid from "../../components/NicheGrid";
-import EditSlotModal from "../../components/EditSlotModal";
-import BookingForm from "../../components/BookingForm";
+import LocationSelector from "../../components/niche/LocationSelector";
+import NicheLegend from "../../components/niche/NicheLegend";
+import NicheGrid from "../../components/niche/NicheGrid";
+import EditSlotModal from "../../components/niche/EditSlotModal";
+import BookingForm from "../../components/booking/BookingForm";
+import PaymentForm from "../../components/booking/PaymentForm";
 
 
 const statusClass = {
@@ -46,7 +47,8 @@ export default function NicheMap() {
 
 
   const bookingRef = useRef(null);
-
+  const [step, setStep] = useState("booking"); // or 'payment'
+  const [bookingFormData, setBookingFormData] = useState(null);
 
 
   // Fetch buildings on load
@@ -157,6 +159,51 @@ export default function NicheMap() {
     }
   };
 
+  function formDataToJson(formData) {
+    const json = {};
+    for (let [key, value] of formData.entries()) {
+      json[key] = value;
+    }
+    return json;
+  }
+  
+
+  const handleSubmit = async (paymentData) => {
+    if (!bookingFormData || !selectedSlot) {
+      console.error("Missing form or slot data");
+      return;
+    }
+  
+    const formJson = formDataToJson(bookingFormData);
+  
+    const fullPayload = {
+      ...formJson,
+      paymentMethod: paymentData.method,
+      paymentAmount: paymentData.amount,
+      nicheID: selectedSlot.nicheID
+    };
+  
+    try {
+      const res = await axios.post(
+        "http://localhost:8888/api/booking/submitStaffBooking",
+        fullPayload,
+        { headers: { "Content-Type": "application/json" } }
+      );
+  
+      console.log("Booking success:", res.data);
+  
+      setStep("booking");
+      setShowBooking(false);
+      setSelectedSlot(null);
+      setSelectedSlotId(null);
+      setGridDisabled(false);
+      setBookingFormData(null);
+    } catch (err) {
+      console.error("Booking failed:", err);
+    }
+  };
+
+  
 
   return (
     <div className="container mt-4">
@@ -191,18 +238,29 @@ export default function NicheMap() {
 
 
       <div ref={bookingRef}>
-        {showBooking && (
+        {showBooking && step === "booking" && (
           <BookingForm
             selectedSlot={selectedSlot}
             onCancel={() => {
               setShowBooking(false);
               setSelectedSlot(null);
-              setSelectedSlotId(null);  
+              setSelectedSlotId(null);
               setGridDisabled(false);
+            }}
+            onSubmit={(formData) => {
+              setBookingFormData(formData); // temporarily store data
+              setStep("payment"); // go to payment step
             }}
           />
         )}
       </div>
+
+      {step === "payment" && (
+        <PaymentForm
+          onBack={() => setStep("booking")}
+          onSubmit={handleSubmit} // real DB submission happens here
+        />
+      )}
 
 
 

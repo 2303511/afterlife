@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { staffRoutes, adminRoutes } from "../config/routesConfig";
-import "../styles/SideBar.css";
-import logo from "../img/logo.svg";
+import { staffRoutes, adminRoutes } from "../../config/routesConfig";
+import "../../styles/SideBar.css";
+import logo from "../../img/logo.svg";
 
 export default function StaffNavigation() {
   const role = localStorage.getItem("role");

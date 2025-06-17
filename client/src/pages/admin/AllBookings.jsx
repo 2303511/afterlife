@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-import MainNavigation from "../../components/MainNavigation";
+import MainNavigation from "../../components/navigation/MainNavigation";
 
 function mainContent() {
 	return (

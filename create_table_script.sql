@@ -1,6 +1,22 @@
 CREATE SCHEMA `AfterLifeDB`;
 USE AfterLifeDB;
 
+-- Disable foreign key checks temporarily
+SET FOREIGN_KEY_CHECKS = 0;
+
+DROP TABLE IF EXISTS Booking;
+DROP TABLE IF EXISTS Payment;
+DROP TABLE IF EXISTS Beneficiary;
+DROP TABLE IF EXISTS Niche;
+DROP TABLE IF EXISTS User;
+DROP TABLE IF EXISTS Block;
+DROP TABLE IF EXISTS Level;
+DROP TABLE IF EXISTS Building;
+DROP TABLE IF EXISTS Role;
+
+-- Re-enable foreign key checks
+SET FOREIGN_KEY_CHECKS = 1;
+
 -- 1. Role table (no dependencies)
 CREATE TABLE Role (
     roleID CHAR(36) PRIMARY KEY,
@@ -19,7 +35,6 @@ CREATE TABLE Level (
     levelID CHAR(36) PRIMARY KEY,
     buildingID CHAR(36),
     levelNumber INT,
-    notes TEXT,
     FOREIGN KEY (buildingID) REFERENCES Building(buildingID)
 );
 
@@ -28,7 +43,6 @@ CREATE TABLE Block (
     blockID CHAR(36) PRIMARY KEY,
     levelID CHAR(36),
     blockName VARCHAR(50),
-    notes TEXT,
     FOREIGN KEY (levelID) REFERENCES Level(levelID)
 );
 
@@ -43,7 +57,7 @@ CREATE TABLE User (
     dob DATE,
     nationality VARCHAR(255),
     userAddress TEXT,
-    appliedUrns TEXT,
+    gender ENUM('Male', 'Female', 'Others'),
     roleID CHAR(36),
     FOREIGN KEY (roleID) REFERENCES Role(roleID)
 );
@@ -78,6 +92,7 @@ CREATE TABLE Beneficiary (
     dateOfDeath DATE,
     birthCertificate TEXT,
     deathCertificate TEXT,
+    relationshipWithApplicant ENUM('Mother', 'Father', 'Sibling', 'Relative', 'Others'),
     insertedAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     lastUpdated TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
