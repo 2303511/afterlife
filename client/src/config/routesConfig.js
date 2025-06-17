@@ -14,7 +14,7 @@ import AddBooking from "../pages/AddBooking";
 
 import AdminDashboard from "../pages/admin/AdminDashboard";
 import BuildingManagement from "../pages/admin/BuildingManagement";
-//import Login from "./pages/Main/Login";
+import Login from "../pages/public/Login";
 import LandingPage from "../pages/public/LandingPage";
 
 // PUBLIC
@@ -32,11 +32,11 @@ export const publicRoutes = [
     label: "FAQ",
     path: "/faq",
   },
-  /*{
+  {
     label: "Login",
     path: "/login",
     element: <Login />,
-  },*/
+  }
 ];
 
 // USER
