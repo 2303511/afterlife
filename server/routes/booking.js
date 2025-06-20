@@ -73,8 +73,11 @@ router.get('/search', async (req, res) => {
           u.fullName AS customerName,
           u.contactNumber,
           be.beneficiaryName,
-          p.amount,
+          p.paymentID,
+          p.amount as paymentAmount,
           p.paymentMethod,
+          p.paymentDate,
+          p.paymentStatus,
           n.nicheCode,
           n.status AS nicheStatus
         FROM Booking b
@@ -92,7 +95,37 @@ router.get('/search', async (req, res) => {
     }
 });
 
+// staff - view all pending bookings
+router.get("/pending", async (req, res) => {
+    try {
+        const [rows] = await db.query(`
+            SELECT 
+                b.bookingID, b.bookingType, b.nicheID, b.beneficiaryID,
+                u.fullName AS customerName, u.contactNumber,
+                n.nicheCode, n.status AS nicheStatus, n.lastUpdated,
+                be.beneficiaryName,
+                p.amount AS paymentAmount, p.paymentMethod
+            FROM Booking b
+            JOIN User u ON b.paidByID = u.userID
+            LEFT JOIN Beneficiary be ON b.beneficiaryID = be.beneficiaryID
+            LEFT JOIN Niche n ON b.nicheID = n.nicheID
+            LEFT JOIN Payment p ON b.paymentID = p.paymentID
+            WHERE n.status = 'Pending'
+            ORDER BY n.lastUpdated DESC
+        `);
+
+        res.json(rows);
+    } catch (err) {
+        console.error("Error fetching pending bookings:", err);
+        res.status(500).json({ message: "Internal server error" });
+    }
+});
+
+
+
+
 // insert user -> beneficiary -> payment -> booking -> update niche status
+// assuming that the applicant is someone who doesnt have a account with us, then the staff creates a new user for them.
 router.post("/submitStaffBooking", async (req, res) => {
     const dbConn = await db.getConnection();
     await dbConn.beginTransaction();
@@ -102,17 +135,29 @@ router.post("/submitStaffBooking", async (req, res) => {
             // Applicant
             fullName, gender, nationality, nationalID, mobileNumber, address, postalCode, unitNumber, dob,
 
-            // Beneficiary --> beneficiaryNationality, beneficiaryNationalID (not in table, but inside form)
-            beneficiaryName, beneficiaryGender, beneficiaryNationality, beneficiaryNationalID, dateOfBirth, dateOfDeath,
-            birthCertificate, deathCertficate, relationshipWithApplicant, inscription, beneficiaryRemarks,
+            // Beneficiary
+            beneficiaryName, beneficiaryGender, beneficiaryNationality, beneficiaryNationalID,
+            dateOfBirth, dateOfDeath, birthCertificate, deathCertficate,
+            relationshipWithApplicant, inscription, beneficiaryRemarks,
 
             // Booking
             nicheID, bookingType,
+
             // Payment
             paymentMethod, paymentAmount,
+
             // Meta
             paidByID
         } = req.body;
+
+        const validationErrors = validateBookingPayload(req.body);
+
+        if (Object.keys(validationErrors).length > 0) {
+            return res.status(400).json({
+                success: false,
+                errors: validationErrors
+            });
+        }
 
         const userID = uuidv4();
         const beneficiaryID = uuidv4();
@@ -135,36 +180,43 @@ router.post("/submitStaffBooking", async (req, res) => {
             [userID, fullName, gender, nationality, nationalID, mobileNumber, address, dob, roleID]
         );
 
+        // based off booking type whether to insert death date
+        const finalDateOfDeath = (bookingType === "PreOrder" || !dateOfDeath) ? null : dateOfDeath;
+
         // 3. Insert Beneficiary
         await dbConn.query(`
             INSERT INTO Beneficiary (
                 beneficiaryID, beneficiaryName, dateOfBirth, dateOfDeath,
                 birthCertificate, deathCertificate, relationshipWithApplicant, inscription
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-            [beneficiaryID, beneficiaryName, dateOfBirth, dateOfDeath, birthCertificate, deathCertficate,
+            [beneficiaryID, beneficiaryName, dateOfBirth, finalDateOfDeath, birthCertificate, deathCertficate,
                 relationshipWithApplicant, inscription]
         );
 
         // 4. Insert Payment
         await dbConn.query(`
-        INSERT INTO Payment (paymentID, amount, paymentMethod, paymentDate, paymentStatus)
-        VALUES (?, ?, ?, ?, ?)`,
+            INSERT INTO Payment (paymentID, amount, paymentMethod, paymentDate, paymentStatus)
+            VALUES (?, ?, ?, ?, ?)`,
             [paymentID, paymentAmount, paymentMethod, paymentDate, "Fully Paid"]
         );
 
         // 5. Insert Booking
         await dbConn.query(`
-        INSERT INTO Booking (bookingID, nicheID, beneficiaryID, bookingType, paymentID, paidByID)
-        VALUES (?, ?, ?, ?, ?, ?)`,
+            INSERT INTO Booking (bookingID, nicheID, beneficiaryID, bookingType, paymentID, paidByID)
+            VALUES (?, ?, ?, ?, ?, ?)`,
             [bookingID, nicheID, beneficiaryID, bookingType, paymentID, userID]
         );
 
-        // 6. Update Niche Status
+        // 6. Determine Niche Status
+        const nicheStatus = (bookingType === "Current") ? "Occupied" : "Reserved";
+        // only have occupied and reserved because staff
+
+        // 7. Update Niche Status
         await dbConn.query(`
             UPDATE Niche
             SET status = ?, lastUpdated = NOW()
             WHERE nicheID = ?
-            `, ['Reserved', nicheID]);
+        `, [nicheStatus, nicheID]);
 
         await dbConn.commit();
         res.status(201).json({ success: true, bookingID, paymentID });
@@ -177,6 +229,7 @@ router.post("/submitStaffBooking", async (req, res) => {
         dbConn.release();
     }
 });
+
 
 // staff - to approve pending niches aka to put a urn in
 router.post('/approve', async (req, res) => {
@@ -240,7 +293,141 @@ router.post('/booking/archive', async (req, res) => {
     }
 });
 
+//bene.beneficiaryNRIC, 
+router.get("/approval/:bookingID", async (req, res) => {
+    const dbConn = await db.getConnection();
+
+    try {
+        const [rows] = await dbConn.query(
+            `
+            SELECT 
+                b.*, 
+                bene.beneficiaryID, 
+                bene.beneficiaryName, 
+                bene.dateOfBirth, 
+                bene.dateOfDeath, 
+                bene.birthCertificate, 
+                bene.deathCertificate, 
+                bene.relationshipWithApplicant, 
+                bene.inscription, 
+                n.nicheID, 
+                n.blockID, 
+                n.nicheCode, 
+                n.status AS nicheStatus, 
+                n.lastUpdated,
+                p.paymentID,
+                p.amount AS paymentAmount,
+                p.paymentMethod,
+                p.paymentDate,
+                p.paymentStatus,
+                u.fullName AS customerName,
+                u.contactNumber
+            FROM Booking b
+            LEFT JOIN Beneficiary bene ON b.beneficiaryID = bene.beneficiaryID
+            LEFT JOIN Niche n ON b.nicheID = n.nicheID
+            LEFT JOIN Payment p ON b.paymentID = p.paymentID
+            JOIN User u ON b.paidByID = u.userID
+            WHERE b.bookingID = ?
+            `,
+            [req.params.bookingID]
+        );
+
+        if (rows.length === 0) {
+            return res.status(404).json({ message: "Booking not found" });
+        }
+
+        const booking = rows[0];
+        res.json(booking);
+    } catch (err) {
+        console.error("Error fetching booking:", err);
+        res.status(500).json({ message: "Internal server error" });
+    } finally {
+        dbConn.release();
+    }
+});
+
+
+
+
 
 
 
 module.exports = router;
+
+function validateBookingPayload(payload) {
+    const errors = {};
+
+    // Applicant
+    if (!payload.fullName) errors.fullName = "Full Name is required";
+    if (!payload.gender) errors.gender = "Gender is required";
+    if (!payload.nationality) errors.nationality = "Nationality is required";
+
+    if (!/^[STFG]\d{7}[A-Z]$/.test(payload.nationalID)) {
+        errors.nationalID = "Invalid NRIC format (S1234567A)";
+    }
+
+    if (!/^[89]\d{7}$/.test(payload.mobileNumber)) {
+        errors.mobileNumber = "Invalid mobile number (8 digits starting with 8 or 9)";
+    }
+
+    if (!payload.address) errors.address = "Address is required";
+    if (!/^\d{6}$/.test(payload.postalCode)) {
+        errors.postalCode = "Invalid postal code (6 digits)";
+    }
+
+    if (!payload.unitNumber) errors.unitNumber = "Unit Number is required";
+    if (!payload.dob) errors.dob = "Date of Birth is required";
+
+    // Beneficiary
+    if (!payload.beneficiaryName) errors.beneficiaryName = "Beneficiary Name is required";
+    if (!payload.beneficiaryGender) errors.beneficiaryGender = "Beneficiary Gender is required";
+    if (!payload.relationshipWithApplicant) errors.relationshipWithApplicant = "Relationship is required";
+    if (!payload.beneficiaryNationality) errors.beneficiaryNationality = "Beneficiary Nationality is required";
+
+    if (!/^[STFG]\d{7}[A-Z]$/.test(payload.beneficiaryNationalID)) {
+        errors.beneficiaryNationalID = "Invalid Beneficiary NRIC format (S1234567A)";
+    }
+
+    if (!payload.dateOfBirth) errors.dateOfBirth = "Beneficiary Date of Birth is required";
+
+    // Only validate Date of Death if Current booking
+    if (payload.bookingType === "Current") {
+        if (!payload.dateOfDeath) errors.dateOfDeath = "Beneficiary Date of Death is required";
+
+        if (payload.dateOfBirth && payload.dateOfDeath) {
+            const dob = new Date(payload.dateOfBirth);
+            const dod = new Date(payload.dateOfDeath);
+
+            if (dod < dob) {
+                errors.dateOfDeath = "Date of Death cannot be before Date of Birth";
+            }
+        }
+
+        if (!payload.inscription) {
+            errors.inscription = "Inscription is required";
+        }
+
+        if (!payload.deathCertficate) {
+            errors.deathCertficate = "Death Certificate file is required";
+        }
+    }
+
+    // Always validate birth cert (temp removal)
+    //if (!payload.birthCertificate) errors.birthCertificate = "Birth Certificate file is required";
+
+    // Booking
+    if (!payload.nicheID) errors.nicheID = "Niche ID is required";
+    if (!payload.bookingType) errors.bookingType = "Booking Type is required";
+
+    // Payment
+    if (!payload.paymentMethod) errors.paymentMethod = "Payment Method is required";
+
+    if (!payload.paymentAmount || isNaN(payload.paymentAmount)) {
+        errors.paymentAmount = "Valid Payment Amount is required";
+    }
+
+    //if (!payload.paidByID) errors.paidByID = "Paid By ID is required";
+
+    return errors;
+}
+

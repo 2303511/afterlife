@@ -1,11 +1,12 @@
 import React, { useState } from "react";
-import { Button, Form, Row, Col } from "react-bootstrap";
-
+import { Button, Form, Accordion } from "react-bootstrap";
 import ApplicantDetails from './ApplicantDetails';
 import BeneficiaryDetails from './BeneficiaryDetails';
+import { validateFormData } from '../../utils/validation';
+import { applicantRules, applicantFieldLabels, beneficiaryRules, beneficiaryFieldLabels } from '../../utils/validationRules';
 
 export default function BookingForm({ selectedSlot, onCancel, onSubmit }) {
-  const [bookingType, setBookingType] = useState("Current"); // default to 'Current'
+  const [bookingType, setBookingType] = useState("");
 
   const [applicantData, setApplicantData] = useState({
     fullName: "",
@@ -29,97 +30,283 @@ export default function BookingForm({ selectedSlot, onCancel, onSubmit }) {
     dateOfDeath: "",
     relationshipWithApplicant: "",
     inscription: "",
+    address: "",
+    postalCode: "",
+    unitNumber: ""
   });
 
   const [files, setFiles] = useState({
     birthCert: null,
     deathCert: null
   });
-  
+
+  const [errors, setErrors] = useState({
+    bookingType: '',
+    applicant: {},
+    beneficiary: {}
+  });
+
   const onFileChange = (e, type) => {
-    setFiles(prev => ({ ...prev, [type]: e.target.files[0] }));
+    const file = e.target.files[0];
+
+    if (file) {
+      if (!["application/pdf", "image/png", "image/jpeg"].includes(file.type)) {
+        alert("Invalid file type. Only PDF, PNG, JPG allowed.");
+        return;
+      }
+
+      if (file.size > 5 * 1024 * 1024) {
+        alert("File too large. Max 5MB.");
+        return;
+      }
+
+      setFiles(prev => ({ ...prev, [type]: file }));
+    }
   };
 
-  
   const handleApplicantChange = (e) => {
-    setApplicantData({ ...applicantData, [e.target.name]: e.target.value });
+    let { name, value } = e.target;
+
+    if (name === "mobileNumber") {
+      value = value.replace(/\D/g, "");
+    }
+
+    if (name === "unitNumber") {
+      value = value.replace(/[^0-9-]/g, "");
+    }
+
+    if (name === "postalCode") {
+      value = value.replace(/\D/g, "");
+    }
+
+    if (name === "nationalID") {
+      value = value.toUpperCase();
+    }
+
+    setApplicantData({ ...applicantData, [name]: value });
   };
 
   const handleBeneficiaryChange = (e) => {
-    setBeneficiaryData({ ...beneficiaryData, [e.target.name]: e.target.value });
+    let { name, value } = e.target;
+
+    if (name === "postalCode") {
+      value = value.replace(/\D/g, "");
+    }
+
+    if (name === "unitNumber") {
+      value = value.replace(/[^0-9-]/g, "");
+    }
+
+    if (name === "beneficiaryNRIC") {
+      value = value.toUpperCase();
+    }
+
+    setBeneficiaryData({ ...beneficiaryData, [name]: value });
   };
+
+  // Step completion status
+  const isBookingTypeValid = !!bookingType;
+
+  const isApplicantValid = Object.keys(
+    validateFormData(applicantData, applicantRules, applicantFieldLabels)
+  ).length === 0;
+
+  const isBeneficiaryValid = Object.keys(
+    validateFormData(beneficiaryData, beneficiaryRules, beneficiaryFieldLabels)
+  ).length === 0
+    && !!files.birthCert && !!files.deathCert;
 
   const handleSubmit = (e) => {
     e.preventDefault();
-  
+    // Dynamically adjust rules based on bookingType
+    const activeBeneficiaryRules = { ...beneficiaryRules };
+
+    if (bookingType === "PreOrder") {
+      delete activeBeneficiaryRules.dateOfDeath;
+      delete activeBeneficiaryRules.inscription;
+    }
+
+
+    // Validate fields
+    const applicantErrors = validateFormData(applicantData, applicantRules, applicantFieldLabels);
+    const beneficiaryErrors = validateFormData(beneficiaryData, activeBeneficiaryRules, beneficiaryFieldLabels);
+
+    // Business rule: Death after Birth
+    if (beneficiaryData.dateOfBirth && beneficiaryData.dateOfDeath) {
+      const dob = new Date(beneficiaryData.dateOfBirth);
+      const dod = new Date(beneficiaryData.dateOfDeath);
+
+      if (dod < dob) {
+        beneficiaryErrors.dateOfDeath = "Date of Death cannot be before Date of Birth";
+      }
+    }
+
+    // Validate files
+    // Validate files
+    if (!files.birthCert) {
+      beneficiaryErrors.birthCertFile = `${beneficiaryFieldLabels.birthCertFile} is required`;
+    }
+
+    if (bookingType === "Current") {
+      if (!files.deathCert) {
+        beneficiaryErrors.deathCertFile = `${beneficiaryFieldLabels.deathCertFile} is required`;
+      }
+    }
+
+
+    // Validate booking type
+    let bookingTypeError = '';
+    if (!bookingType) {
+      bookingTypeError = 'Booking Type is required';
+    }
+
+    // If errors → stop
+    if (bookingTypeError || Object.keys(applicantErrors).length > 0 || Object.keys(beneficiaryErrors).length > 0) {
+      setErrors({
+        bookingType: bookingTypeError,
+        applicant: applicantErrors,
+        beneficiary: beneficiaryErrors
+      });
+      return;
+    }
+
+    // Build FormData
     const formData = new FormData();
-  
-    // Append applicant fields
-    Object.entries(applicantData).forEach(([key, value]) =>
-      formData.append(`applicant[${key}]`, value)
-    );
-  
-    // Append beneficiary fields
-    Object.entries(beneficiaryData).forEach(([key, value]) =>
-      formData.append(`beneficiary[${key}]`, value)
-    );
-  
-    // Append booking type
+
+    Object.entries(applicantData).forEach(([key, value]) => {
+      formData.append(key, value);
+    });
+
+    // Beneficiary (map NRIC to beneficiaryNationalID)
+    Object.entries(beneficiaryData).forEach(([key, value]) => {
+      if (key === "beneficiaryNRIC") {
+        formData.append("beneficiaryNationalID", value);
+      } else {
+        formData.append(key, value);
+      }
+    });
+
     formData.append("bookingType", bookingType);
-  
-    // Append files
-    if (files.birthCert) formData.append("birthCertFile", files.birthCert);
-    if (files.deathCert) formData.append("deathCertFile", files.deathCert);
-  
-    // Append selected slot ID
     formData.append("nicheID", selectedSlot.nicheID);
-  
-    // Submit to parent
-    onSubmit(formData); 
+
+    formData.append("birthCertFile", files.birthCert);
+    formData.append("deathCertFile", files.deathCert);
+
+    onSubmit(formData);
   };
-  
 
   return (
     <div className="booking-form card p-4 mt-4">
       <div className="d-flex justify-content-between align-items-center mb-3">
         <h4>New Application</h4>
-        <Button variant="outline-danger" onClick={onCancel}>×</Button>
+        <Button variant="outline-danger" onClick={onCancel} aria-label="Cancel Booking Form">×</Button>
       </div>
 
       <h6>Slot ID: {selectedSlot.nicheCode}</h6>
 
       <Form onSubmit={handleSubmit}>
-        <Form.Group className="mb-3">
-          <Form.Label>Booking Type</Form.Label>
-          <div>
-            <Form.Check
-              inline
-              type="radio"
-              label="Current Use"
-              name="bookingType"
-              value="Current"
-              checked={bookingType === "Current"}
-              onChange={(e) => setBookingType(e.target.value)}
-            />
-            <Form.Check
-              inline
-              type="radio"
-              label="Pre-Order"
-              name="bookingType"
-              value="PreOrder"
-              checked={bookingType === "PreOrder"}
-              onChange={(e) => setBookingType(e.target.value)}
-            />
-          </div>
-        </Form.Group>
-
-        <ApplicantDetails formData={applicantData} onChange={handleApplicantChange} />
-        <BeneficiaryDetails formData={beneficiaryData} onChange={handleBeneficiaryChange} onFileChange={onFileChange} />
+        <Accordion defaultActiveKey="0" className="mb-3">
 
 
-        <Button type="submit" variant="success">Confirm Booking</Button>
+          <Accordion.Item eventKey="0">
+            <Accordion.Header>
+              Step 1: Booking Type
+              <span style={{ color: isBookingTypeValid ? "green" : "orange", marginLeft: '0.5rem' }}>
+                {isBookingTypeValid ? "Completed" : "Incomplete"}
+              </span>
+            </Accordion.Header>
+            <Accordion.Body>
+              <Form.Group className="mb-3">
+                <Form.Label id="bookingTypeLabel">Booking Type</Form.Label>
+                <div role="radiogroup" aria-labelledby="bookingTypeLabel">
+                  <Form.Check
+                    inline
+                    type="radio"
+                    label="Current Use"
+                    name="bookingType"
+                    value="Current"
+                    checked={bookingType === "Current"}
+                    onChange={(e) => setBookingType(e.target.value)}
+                    aria-invalid={!!errors.bookingType}
+                  />
+                  <Form.Check
+                    inline
+                    type="radio"
+                    label="Pre-Order"
+                    name="bookingType"
+                    value="PreOrder"
+                    checked={bookingType === "PreOrder"}
+                    onChange={(e) => setBookingType(e.target.value)}
+                    aria-invalid={!!errors.bookingType}
+                  />
+                </div>
+
+                {/* Dynamic explanation */}
+                {bookingType === "Current" && (
+                  <div className="alert alert-info mt-2">
+                    <strong>Current Use:</strong> For immediate use. Upload both birth and death certificates. Niche will be booked and processed for placement.
+                  </div>
+                )}
+
+                {bookingType === "PreOrder" && (
+                  <div className="alert alert-info mt-2">
+                    <strong>Pre-Order:</strong> For future use. Upload birth certificate only. Death certificate and inscription can be added later when applicable.
+                  </div>
+                )}
+                {errors.bookingType && (
+                  <div className="invalid-feedback d-block">
+                    {errors.bookingType}
+                  </div>
+                )}
+              </Form.Group>
+            </Accordion.Body>
+          </Accordion.Item>
+
+          <Accordion.Item eventKey="1">
+            <Accordion.Header>
+              Step 2: Applicant Details
+              <span style={{ color: isApplicantValid ? "green" : "orange", marginLeft: '0.5rem' }}>
+                {isApplicantValid ? "Completed" : "Incomplete"}
+              </span>
+            </Accordion.Header>
+            <Accordion.Body>
+              <ApplicantDetails
+                formData={applicantData}
+                onChange={handleApplicantChange}
+                errors={errors?.applicant || {}}
+              />
+            </Accordion.Body>
+          </Accordion.Item>
+
+          <Accordion.Item eventKey="2">
+            <Accordion.Header>
+              Step 3: Beneficiary Details
+              <span style={{ color: isBeneficiaryValid ? "green" : "orange", marginLeft: '0.5rem' }}>
+                {isBeneficiaryValid ? "Completed" : "Incomplete"}
+              </span>
+            </Accordion.Header>
+            <Accordion.Body>
+              <BeneficiaryDetails
+                formData={beneficiaryData}
+                onChange={handleBeneficiaryChange}
+                onFileChange={onFileChange}
+                errors={errors?.beneficiary || {}}
+                bookingType={bookingType}
+              />
+
+              <Button
+                type="submit"
+                variant="success"
+                aria-label="Confirm Booking and Submit Form"
+                className="mt-4"
+              >
+                Confirm Booking
+              </Button>
+            </Accordion.Body>
+          </Accordion.Item>
+
+        </Accordion>
       </Form>
-
     </div>
   );
 }

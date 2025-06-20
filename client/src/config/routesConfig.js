@@ -10,7 +10,8 @@ import Profile from "../pages/Profile";
 import Dashboard from "../pages/staff/Dashboard";
 import SearchBooking from "../pages/staff/SearchBooking";
 import NicheManagement from "../pages/staff/NicheManagement";
-import AddBooking from "../pages/AddBooking";
+import BookingApproval from "../pages/staff/BookingApproval";
+import PendingApprovals from "../pages/staff/PendingApprovals";
 
 import AdminDashboard from "../pages/admin/AdminDashboard";
 import BuildingManagement from "../pages/admin/BuildingManagement";
@@ -88,16 +89,16 @@ export const staffRoutes = [
     element: <SearchBooking />,
   },
   {
+    label: "Pending Approvals",
+    path: "/pending-approvals",
+    icon: <FaListAlt />,
+    element: <PendingApprovals />,
+  },
+  {
     label: "Niche Management",
     path: "/niche-management",
     icon: <FaMapMarkedAlt />,
     element: <NicheManagement />,
-  },
-  {
-    label: "Add Booking",
-    path: "/add-booking",
-    icon: <FaPlusSquare />,
-    element: <AddBooking />,
   },
 ];
 
@@ -117,12 +118,22 @@ export const adminRoutes = [
   },
 ];
 
+export const hiddenRoutes = [
+  {
+    path: "/booking-approval/:bookingID",
+    element: <BookingApproval />,
+  }
+];
+
+
+
 // Combined all for routing
 export const appRoutes = [
   ...publicRoutes,
   ...userRoutes,
   ...staffRoutes,
   ...adminRoutes,
+  ...hiddenRoutes
 ];
 
 export const publicPaths = publicRoutes.map(route => route.path);

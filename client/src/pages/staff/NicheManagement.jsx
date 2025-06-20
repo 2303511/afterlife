@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
 
 import axios from "axios";
 import '../../styles/Niche-Management.css';
@@ -23,13 +22,10 @@ const statusClass = {
 };
 
 export default function NicheMap() {
-  const navigate = useNavigate();
-
   const [slots, setSlots] = useState([]);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showBooking, setShowBooking] = useState(false);
 
-  const [newSlot, setNewSlot] = useState({ row: "", col: "", status: "available" });
   const [selectedSlotId, setSelectedSlotId] = useState(null);
   const [selectedSlot, setSelectedSlot] = useState(null);
   const [gridDisabled, setGridDisabled] = useState(false);
@@ -190,19 +186,56 @@ export default function NicheMap() {
         { headers: { "Content-Type": "application/json" } }
       );
   
-      console.log("Booking success:", res.data);
+      if (res.data.success) {
+        alert(`Booking submitted! Booking ID: ${res.data.bookingID}`);
   
-      setStep("booking");
-      setShowBooking(false);
-      setSelectedSlot(null);
-      setSelectedSlotId(null);
-      setGridDisabled(false);
-      setBookingFormData(null);
+        // reset states
+        setStep("booking");
+        setShowBooking(false);
+        setSelectedSlot(null);
+        setSelectedSlotId(null);
+        setGridDisabled(false);
+        setBookingFormData(null);
+
+        // refresh niche
+        axios.get(`http://localhost:8888/api/niche/niches/${selectedBlock}`)
+        .then((res) => {
+          const mapped = res.data
+            .sort((a, b) => {
+              if (a.nicheRow !== b.nicheRow) return a.nicheRow - b.nicheRow;
+              return a.nicheColumn - b.nicheColumn;
+            })
+            .map((slot) => ({
+              ...slot,
+              id: slot.nicheID,
+              status: slot.status.toLowerCase()
+            }));
+      
+          setSlots(mapped);
+        })
+        .catch((err) => {
+          console.error("Error refreshing niches:", err);
+        });
+      
+  
+      } else if (res.data.errors) {
+        console.error("Validation errors:", res.data.errors);
+        alert("Validation errors — please check the form.");
+        setStep("booking"); // Go back to form
+      }
+  
     } catch (err) {
-      console.error("Booking failed:", err);
+      if (err.response && err.response.status === 400) {
+        // Backend sent validation errors
+        console.error("Validation errors:", err.response.data.errors);
+        alert("Validation errors — please check the form.");
+        setStep("booking");
+      } else {
+        console.error("Booking failed:", err);
+        alert("Server error — failed to submit booking.");
+      }
     }
   };
-
   
 
   return (
