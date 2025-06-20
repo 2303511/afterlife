@@ -6,6 +6,7 @@ export default function BookingApproval() {
     const { bookingID } = useParams();
     const [booking, setBooking] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
+    const [activeTab, setActiveTab] = useState('death'); // 'death' or 'birth'
 
     useEffect(() => {
         axios.get(`http://localhost:8888/api/booking/approval/${bookingID}`)
@@ -17,14 +18,14 @@ export default function BookingApproval() {
             .finally(() => setIsLoading(false));
     }, [bookingID]);
 
-    if (isLoading) return <div className="p-4">Loading booking details...</div>;
-    if (!booking) return <div className="p-4">Booking not found.</div>;
-
     const formatDate = (isoString) => {
         if (!isoString) return null;
         const date = new Date(isoString);
         return new Intl.DateTimeFormat('en-GB', { dateStyle: 'medium' }).format(date);
     };
+
+    if (isLoading) return <div className="p-4">Loading booking details...</div>;
+    if (!booking) return <div className="p-4">Booking not found.</div>;
 
     return (
         <div className="container py-4">
@@ -56,28 +57,43 @@ export default function BookingApproval() {
                         </div>
                     </div>
 
-                    <div className="mb-2 d-flex gap-2">
-                        {booking.deathCertificate ? (
-                            <a target="_blank" className="btn btn-dark"> {/* href={getCertUrl(booking.deathCertificate)} */}
-                                View Death Certificate
-                            </a>
-                        ) : (
-                            <a className="btn btn-dark disabled" tabIndex="-1" aria-disabled="true">
-                                No Death Certificate
-                            </a>
-                        )}
+                    {/* Certificate Tabs */}
+                    <div className="d-flex gap-4 mb-3 border-bottom">
+                        <span
+                            role="button"
+                            className={`pb-2 ${activeTab === 'death' ? 'fw-bold border-bottom border-dark' : 'text-muted'}`}
+                            onClick={() => setActiveTab('death')}
+                        >
+                            Death Certificate
+                        </span>
 
-                        {booking.birthCertificate ? (
-                            <a target="_blank" className="btn btn-outline-dark"> {/* href={getCertUrl(booking.birthCertificate)}*/}
-                                View Birth Certificate
-                            </a>
-                        ) : (
-                            <a className="btn btn-outline-dark disabled" tabIndex="-1" aria-disabled="true">
-                                No Birth Certificate
-                            </a>
-                        )}
+                        <span
+                            role="button"
+                            className={`pb-2 ${activeTab === 'birth' ? 'fw-bold border-bottom border-dark' : 'text-muted'}`}
+                            onClick={() => setActiveTab('birth')}
+                        >
+                            Birth Certificate
+                        </span>
                     </div>
 
+
+
+                    {/* PDF Viewer Placeholder */}
+                    <div className="border rounded p-5 text-center bg-light">
+                        {activeTab === 'death' ? (
+                            booking.deathCertificate ? (
+                                <p className="text-muted">[ Show Death Certificate PDF here — TODO ]</p>
+                            ) : (
+                                <p className="text-muted">No Death Certificate Available</p>
+                            )
+                        ) : (
+                            booking.birthCertificate ? (
+                                <p className="text-muted">[ Show Birth Certificate PDF here — TODO ]</p>
+                            ) : (
+                                <p className="text-muted">No Birth Certificate Available</p>
+                            )
+                        )}
+                    </div>
                 </div>
 
                 {/* Right column: Beneficiary Info + Actions */}
