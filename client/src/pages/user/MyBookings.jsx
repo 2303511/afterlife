@@ -5,8 +5,8 @@ import "bootstrap/dist/js/bootstrap.bundle.min";
 import CopyableField from "../../components/CopyableField";
 
 export default function MyBookings() {
-	const [userID, setUserID] = useState(null);
-	const [userBookings, setUserBookings] = useState([]); // instead of []
+	const [userID] = useState("e43f9844-a6d8-4428-88ff-1225109d7061");
+	const [userBookings, setUserBookings] = useState([]);
 
 	const [paymentDetail, setPaymentDetail] = useState(null);
 	const [bookingDetail, setBookingDetail] = useState(null);
@@ -53,12 +53,6 @@ export default function MyBookings() {
 			return null;
 		}
 	};
-
-	useEffect(() => {
-		const storedID = "e43f9844-a6d8-4428-88ff-1225109d7061";
-		setUserID(storedID);
-		console.log(`1. userID stored!: ${userID}`);
-	}, [userID]);
 
 	useEffect(() => {
 		if (!userID) return; // Wait until userID is set
@@ -169,7 +163,7 @@ export default function MyBookings() {
 				<nav aria-label="breadcrumb">
 					<ol className="breadcrumb">
 						<li className="breadcrumb-item">
-							<a href="#">Home</a>
+							<a href="/">Home</a>
 						</li>
 						<li className="breadcrumb-item active" aria-current="page">
 							My Bookings
@@ -260,7 +254,7 @@ export default function MyBookings() {
 									</button>
 									<button className="action-btn secondary" onClick={() => handlePaymentDetails(booking.paymentID)}>
 										<span className="btn-icon">🧾</span>
-										Receipt
+										Payment Info
 									</button>
 								</div>
 							</div>
