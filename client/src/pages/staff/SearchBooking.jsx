@@ -5,6 +5,7 @@ import BookingGrid from '../../components/booking/BookingGrid';
 import SearchBar from '../../components/booking/SearchBar';
 import '../../styles/SearchBooking.css';
 import axios from 'axios';
+import { toast } from 'react-toastify';
 
 export default function SearchBooking() {
   const navigate = useNavigate();
@@ -31,8 +32,9 @@ export default function SearchBooking() {
           setBookings(res.data);
         })
         .catch((err) => {
-          console.error("Search failed:", err);
+          //console.error("Search failed:", err);
           setBookings([]);
+          toast.error('Failed to search bookings — please try again.');
         })
         .finally(() => {
           setIsLoading(false);
@@ -50,12 +52,13 @@ export default function SearchBooking() {
 
     axios.get(`http://localhost:8888/api/booking/search?query=${encodeURIComponent(searchInput)}`)
       .then((res) => {
-        console.log(res.data);
+        //console.log(res.data);
         setBookings(res.data);
       })
       .catch((err) => {
-        console.error("Search failed:", err);
+        //console.error("Search failed:", err);
         setBookings([]);
+        toast.error('Failed to search bookings — please try again.');
       })
       .finally(() => {
         setIsLoading(false);
@@ -85,8 +88,11 @@ export default function SearchBooking() {
             : b
         )
       );
+
+      toast.success('Booking approved successfully!');
     } catch (err) {
-      console.error("Failed to approve placement:", err);
+      //console.error("Failed to approve placement:", err);
+      toast.error('Failed to approve booking — please try again.');
     }
   };
 
@@ -108,8 +114,11 @@ export default function SearchBooking() {
             : b
         )
       );
+
+      toast.success('Booking archived successfully!');
     } catch (err) {
-      console.error("Archiving failed:", err);
+      //console.error("Archiving failed:", err);
+      toast.error('Failed to archive booking — please try again.');
     }
   };
 

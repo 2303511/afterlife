@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import BookingGrid from '../../components/booking/BookingGrid';
 import '../../styles/SearchBooking.css';
 import axios from 'axios';
+import { toast } from 'react-toastify';
 
 export default function PendingApprovals() {
   const [pendingBookings, setPendingBookings] = useState([]);
@@ -11,16 +12,17 @@ export default function PendingApprovals() {
     setIsLoading(true);
     axios.get('http://localhost:8888/api/booking/pending')
       .then((res) => {
-        console.log('Pending approvals:', res.data);
+        //console.log('Pending approvals:', res.data);
         setPendingBookings(res.data);
       })
       .catch((err) => {
-        console.error('Failed to load pending approvals:', err);
+        //console.error('Failed to load pending approvals:', err);
+        toast.error('Failed to load pending approvals — please try again.');
       })
       .finally(() => {
         setIsLoading(false);
       });
-  }, []);
+}, []);
 
   return (
     <div className="pending-approvals container mt-4">
