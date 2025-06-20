@@ -66,17 +66,17 @@ export default function BookingForm({ selectedSlot, onCancel, onSubmit }) {
 
   const handleApplicantChange = (e) => {
     let { name, value } = e.target;
-  
+
     // For Mobile Number — only digits
     if (name === "mobileNumber") {
       value = value.replace(/\D/g, ""); // Strip all non-digits
     }
-  
+
     // For Unit Number — digits and hyphen
     if (name === "unitNumber") {
       value = value.replace(/[^0-9\-]/g, "");
     }
-  
+
     // For Postal Code — only digits
     if (name === "postalCode") {
       value = value.replace(/\D/g, "");
@@ -85,30 +85,30 @@ export default function BookingForm({ selectedSlot, onCancel, onSubmit }) {
     if (name === "nationalID") {
       value = value.toUpperCase();
     }
-    
-  
+
+
     setApplicantData({ ...applicantData, [name]: value });
   };
-  
+
 
   const handleBeneficiaryChange = (e) => {
     let { name, value } = e.target;
-  
+
     if (name === "postalCode") {
       value = value.replace(/\D/g, "");
     }
-  
+
     if (name === "unitNumber") {
       value = value.replace(/[^0-9\-]/g, "");
     }
-  
+
     if (name === "beneficiaryNRIC") {
       value = value.toUpperCase(); // Optional: auto-capitalise NRIC
     }
-  
+
     setBeneficiaryData({ ...beneficiaryData, [name]: value });
   };
-  
+
 
   // Helper: calculate step status
   const isBookingTypeValid = !!bookingType;
@@ -256,18 +256,16 @@ export default function BookingForm({ selectedSlot, onCancel, onSubmit }) {
                 onFileChange={onFileChange}
                 errors={errors?.beneficiary || {}}
               />
+              <Button
+                type="submit"
+                variant="success"
+                aria-label="Confirm Booking and Submit Form"
+              >
+                Confirm Booking
+              </Button>
             </Accordion.Body>
           </Accordion.Item>
-
         </Accordion>
-
-        <Button 
-          type="submit" 
-          variant="success" 
-          aria-label="Confirm Booking and Submit Form"
-        >
-          Confirm Booking
-        </Button>
       </Form>
     </div>
   );
