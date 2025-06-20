@@ -1,10 +1,13 @@
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 
 export default function BookingApproval() {
     const navigate = useNavigate();
+    const location = useLocation();
+    const from = location.state?.from;
+
     const { bookingID } = useParams();
     const [booking, setBooking] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
@@ -46,8 +49,11 @@ export default function BookingApproval() {
 
                 // Wait then redirect
                 setTimeout(() => {
-                    navigate(`/search-booking?query=${encodeURIComponent(booking.contactNumber)}&tab=current`);
-
+                    if (from) {
+                        navigate(from);  // go back to the exact previous page
+                    } else {
+                        navigate('/search-booking');  // fallback
+                    }
                 }, 1500);
             } else {
                 toast.error('Failed to approve booking.');

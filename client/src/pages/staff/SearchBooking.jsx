@@ -226,20 +226,6 @@ export default function SearchBooking() {
         </>
       )}
 
-      <div className="pending-bookings-section mt-5">
-        <h3>All Pending Bookings</h3>
-        {pendingBookings.length > 0 ? (
-          <BookingGrid
-            bookings={pendingBookings}
-            currentTab="pending"
-            onApprove={handleApprovePlacement}
-            onArchive={handleArchiveBooking}
-          />
-        ) : (
-          <p className="text-muted">No pending bookings found.</p>
-        )}
-      </div>
-
     </div>
   );
 }

@@ -1,7 +1,8 @@
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 export default function StaffBookingCard({ booking, onArchive, currentTab }) {
     const navigate = useNavigate();
+    const location = useLocation();
 
     const {
         bookingID,
@@ -17,7 +18,9 @@ export default function StaffBookingCard({ booking, onArchive, currentTab }) {
     } = booking;
 
     const handleViewDetails = () => {
-        navigate(`/booking-approval/${bookingID}`);
+        navigate(`/booking-approval/${bookingID}`, {
+            state: { from: location.pathname + location.search }
+        });
     };
 
     return (

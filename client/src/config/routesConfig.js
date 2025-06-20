@@ -11,6 +11,7 @@ import Dashboard from "../pages/staff/Dashboard";
 import SearchBooking from "../pages/staff/SearchBooking";
 import NicheManagement from "../pages/staff/NicheManagement";
 import BookingApproval from "../pages/staff/BookingApproval";
+import PendingApprovals from "../pages/staff/PendingApprovals";
 
 import AdminDashboard from "../pages/admin/AdminDashboard";
 import BuildingManagement from "../pages/admin/BuildingManagement";
@@ -80,6 +81,12 @@ export const staffRoutes = [
     path: "/search-booking",
     icon: <FaListAlt />,
     element: <SearchBooking />,
+  },
+  {
+    label: "Pending Approvals",
+    path: "/pending-approvals",
+    icon: <FaListAlt />,
+    element: <PendingApprovals />,
   },
   {
     label: "Niche Management",
