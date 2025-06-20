@@ -13,9 +13,6 @@ import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 function App() {
-  // localStorage.removeItem("role");
-  // localStorage.clear();
-  
   // localStorage.setItem("role", "user"); // temp, change here to see staff and user navbar changes
   return (
     <Router>
