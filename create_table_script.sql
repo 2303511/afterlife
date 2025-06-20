@@ -50,7 +50,12 @@ CREATE TABLE Block (
 CREATE TABLE User (
     userID CHAR(36) PRIMARY KEY,
     username VARCHAR(255),
+    email VARCHAR(255),
     hashedPassword VARCHAR(255),
+    salt VARCHAR(255), 
+    failLoginCount INT DEFAULT 0, 
+    accountCreatedAt DATETIME DEFAULT CURRENT_TIMESTAMP, 
+    lastLogin DATETIME NULL,
     fullName VARCHAR(255),
     contactNumber VARCHAR(20),
     nric VARCHAR(20),

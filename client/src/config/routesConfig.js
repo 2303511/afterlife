@@ -15,6 +15,7 @@ import AddBooking from "../pages/AddBooking";
 import AdminDashboard from "../pages/admin/AdminDashboard";
 import BuildingManagement from "../pages/admin/BuildingManagement";
 import Login from "../pages/public/Login";
+import Register from "../pages/public/Register";
 import LandingPage from "../pages/public/LandingPage";
 
 // PUBLIC
@@ -36,6 +37,11 @@ export const publicRoutes = [
     label: "Login",
     path: "/login",
     element: <Login />,
+  },
+  {
+    label: "Register",
+    path: "/register",
+    element: <Register />,
   }
 ];
 

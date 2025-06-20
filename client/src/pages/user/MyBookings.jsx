@@ -55,7 +55,8 @@ export default function MyBookings() {
 	};
 
 	useEffect(() => {
-		const storedID = "e43f9844-a6d8-4428-88ff-1225109d7061";
+		// const storedID = "e43f9844-a6d8-4428-88ff-1225109d7061";
+		const storedID = sessionStorage.getItem("userId");
 		setUserID(storedID);
 		console.log(`1. userID stored!: ${userID}`);
 	}, [userID]);

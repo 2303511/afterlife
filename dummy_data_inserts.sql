@@ -41,10 +41,12 @@ INSERT INTO Block (blockID, levelID, blockName) VALUES
 ('19f69cda-fc3f-4732-aef0-54fc58fe4d5d', '126d75d4-79cc-4ccb-b10f-23d4aac48cea', 'North Wing'),
 ('4e5f76b9-0d7f-4f6f-b7ce-6846b4c38911', '126d75d4-79cc-4ccb-b10f-23d4aac48cea', 'South Wing');
 
-INSERT INTO User (userID, username, hashedPassword, fullName, contactNumber, nric, dob, nationality, userAddress, gender, roleID) VALUES
-('e06d0bce-62da-4f1d-bf6e-9c1f090ffcfd', 'hockchye.sg', 'hashedpass1', 'Lim Hock Chye', '81234560', 'S1234560A', '1990-01-01', 'Singaporean', 'Blk 10 Jurong West', 'Male', 'cd73d682-5aca-4bb2-8963-8a197c5fb43b'),
-('be4e4478-4251-47d2-b571-40d35308bc6a', 'ahboon89', 'hashedpass2', 'Tan Ah Boon', '81234561', 'S1234561A', '1991-01-01', 'Singaporean', 'Blk 11 Jurong West', 'Female', 'cd73d682-5aca-4bb2-8963-8a197c5fb43b'),
-('e43f9844-a6d8-4428-88ff-1225109d7061', 'teckleong88', 'hashedpass3', 'Goh Teck Leong', '81234562', 'S1234562A', '1992-01-01', 'Singaporean', 'Blk 12 Jurong West', 'Male', 'cd73d682-5aca-4bb2-8963-8a197c5fb43b');
+INSERT INTO User (userID, username, email, hashedPassword, salt, failLoginCount, accountCreatedAt,lastLogin, fullName, contactNumber, nric, dob, nationality, userAddress, gender, roleID) VALUES
+('28d19716-d0f8-4c90-ace1-60a8143d4c1a', 'test', 'test@mail.com', '$2b$10$61IbBFhjGqPbfNKQ9X1r/.t3IROydH.YTG1FQ0TxyfAiitumZHcW.', '$2b$10$61IbBFhjGqPbfNKQ9X1r/.', 0, '2025-06-18 14:36:11', NULL, NULL, NULL, 'T1234567H', '1993-06-09', 'Singaporean', NULL, 'Female', 'cd73d682-5aca-4bb2-8963-8a197c5fb43b'),
+('79a4e4f0-5d5c-472b-95f7-bc237faffc2a', 'user', 'user@mail.com', '$2b$10$LrFWAJyBZAl7Uf.zoqBcxOvFBfiO9dLabdLlqRhw8eJmp3dGTKjoC', '$2b$10$LrFWAJyBZAl7Uf.zoqBcxO', 0, '2025-06-20 21:33:17', NULL, NULL, NULL, 'T1234567H', '1990-11-21', 'Singaporean', NULL, 'Male', 'cd73d682-5aca-4bb2-8963-8a197c5fb43b'),
+('883bb845-d68c-4222-a6fe-b12dba512e8e', 'admin', 'admin@mail.com', '$2b$10$.ZqnPfVMTAaB/9i5kUERguTNvy.LacvRE9pC/bVeiFMbXK/a3E.yG', '$2b$10$.ZqnPfVMTAaB/9i5kUERgu', 0, '2025-06-20 21:37:03', NULL, NULL, NULL, 'S1234567J', '1980-12-20', 'Singaporean', NULL, 'Female', '65e115aa-94e7-47c9-8ca6-19d799dea2b4'),
+('dc42f08c-71f6-4795-95c4-1a32f54f3f45', 'staff', 'staff@mail.com', '$2b$10$2AVfK1dOEuH.qmH/X9luruJw5XJSiaFC7LUXnETfnquY1ZhLN3qIe', '$2b$10$2AVfK1dOEuH.qmH/X9luru', 0, '2025-06-20 21:43:27', NULL, NULL, NULL, 'T1234567J', '1997-11-18', 'Singaporean', NULL, 'Female', '96ac5a94-f0ee-44a8-86f3-82d65dc4936c');
+
 
 INSERT INTO Niche (nicheID, blockID, nicheColumn, nicheRow, nicheCode, status, lastUpdated) VALUES
 ('693aa513-05cb-43b3-8ad1-12b202b8f82e', '1b048553-e3da-484a-a76a-66108714a29d', 1, 1, '1-1-1b04', 'Available', '2025-06-06 08:18:47'), 
@@ -107,14 +109,14 @@ INSERT INTO Payment (paymentID, amount, paymentMethod, paymentDate, paymentStatu
 ('b64abb07-f0fe-4a78-b003-2608467c06ef', 1666.7, 'Bank Transfer', '2025-06-06', 'Refunded');
 
 INSERT INTO Booking (bookingID, nicheID, paidByID, paymentID, beneficiaryID, bookingType) VALUES
-('4f9a5a8c-3c76-4d93-a462-5b6f91a7a6be', '693aa513-05cb-43b3-8ad1-12b202b8f82e', 'e06d0bce-62da-4f1d-bf6e-9c1f090ffcfd', 'ac4a9159-ba34-44fd-8b5c-935aff4f5852', '8fb6d670-06f0-4d80-bcd2-0611648e9f4f', 'Current'),
-('8c0e2e0a-eeb1-4727-a5f0-31f4fc4e34a2', '564a5355-8bbc-42fb-9f6f-e90430d64e3d', 'e06d0bce-62da-4f1d-bf6e-9c1f090ffcfd', '08f68240-e534-4ce9-b48a-43013b8172b7', '27e6a7a2-82a1-4a55-ac1e-582e6dc4dbc5', 'PreOrder'),
-('1b2cd3a1-7c3e-49d2-aab6-cb0f5dbd1e2f', 'ac1f2a9e-a9f1-45fd-b40d-a2c453ad267e', 'e06d0bce-62da-4f1d-bf6e-9c1f090ffcfd', '2d245a62-09bb-4f8b-81e0-6bbbd5c78770', '1b4a9a6e-653a-45be-aa49-52e26bde8f82', 'Archived'),
-('9db774d7-51c0-4e35-8c0f-e24c9628ed1f', 'ddd6422d-d914-427b-be7e-7be893619811', 'be4e4478-4251-47d2-b571-40d35308bc6a', '8a610402-4352-4322-8baa-06cefdd06546', '4ecb99d7-7c2d-4310-be76-0305513a1490', 'Current'),
-('b492c8a5-6726-4a11-a26e-5bb95f6efdea', '92c8ae2a-d68b-45e3-be65-14f9b344c325', 'be4e4478-4251-47d2-b571-40d35308bc6a', '5277a396-bb15-4c31-9110-91cf4bb2cff9', '0c8517f2-0b84-424d-8854-7cb96e84141e', 'PreOrder'),
-('0d4a2a13-6b5b-4f7a-a3a8-72357f42f2cd', 'a85ff83d-142c-43aa-acb5-275589d9f10c', 'be4e4478-4251-47d2-b571-40d35308bc6a', '0205b357-bf95-4111-829a-9414d1850028', '3a4bf023-58aa-4574-b2af-639ce375d92a', 'Archived'),
-('5e3c2bb4-104f-42d3-9bb6-68c98f06a676', '467aace6-ca13-4939-8469-d68c05063cf7', 'e43f9844-a6d8-4428-88ff-1225109d7061', '4a58ee6c-bb49-42ea-9c76-af3c5ad463ad', '7989e00f-ec52-443d-8ca3-f1642ddd5686', 'Current'),
-('e7d98724-8657-4cb2-9b2a-6a084d539b88', 'd133e0f5-9d31-4b20-898d-00947c1a2b8e', 'e43f9844-a6d8-4428-88ff-1225109d7061', '75c7245d-ce2a-4a33-b9c3-7f9126aad4f0', '6f3fed40-f317-4786-84c5-a093f1ba8724', 'PreOrder'),
-('3372a4e3-7c9f-423a-b4b6-0de6f5cc5dd3', 'ece0289b-54b2-4b0c-b8ba-535f655e2c14', 'e43f9844-a6d8-4428-88ff-1225109d7061', '2e70df2a-bfec-49ee-ab08-c12fd9792202', '3c15e5b3-25e2-404f-adca-c5e360a75f14', 'Archived'),
-('84d29c01-179b-4ae1-a9d0-69c5d0c064e0', '0618b28a-9a84-4feb-a8e4-e79429b1ac9b', 'e43f9844-a6d8-4428-88ff-1225109d7061', 'bc6d0460-914e-40ac-9099-24e8df77f43c', 'd95887dd-c1e4-4598-b908-db696cbb4cd6', 'Archived'),
-('c6d76030-251a-4a4b-8f42-08d3980124d2', '588fde66-908a-4209-9fab-8fc8206b3d14', 'e43f9844-a6d8-4428-88ff-1225109d7061', 'b64abb07-f0fe-4a78-b003-2608467c06ef', 'e2addc40-cf96-403a-a3e1-2188d4617bed', 'Archived');
+('4f9a5a8c-3c76-4d93-a462-5b6f91a7a6be', '693aa513-05cb-43b3-8ad1-12b202b8f82e', '79a4e4f0-5d5c-472b-95f7-bc237faffc2a', 'ac4a9159-ba34-44fd-8b5c-935aff4f5852', '8fb6d670-06f0-4d80-bcd2-0611648e9f4f', 'Current'),
+('8c0e2e0a-eeb1-4727-a5f0-31f4fc4e34a2', '564a5355-8bbc-42fb-9f6f-e90430d64e3d', '79a4e4f0-5d5c-472b-95f7-bc237faffc2a', '08f68240-e534-4ce9-b48a-43013b8172b7', '27e6a7a2-82a1-4a55-ac1e-582e6dc4dbc5', 'PreOrder'),
+('1b2cd3a1-7c3e-49d2-aab6-cb0f5dbd1e2f', 'ac1f2a9e-a9f1-45fd-b40d-a2c453ad267e', '79a4e4f0-5d5c-472b-95f7-bc237faffc2a', '2d245a62-09bb-4f8b-81e0-6bbbd5c78770', '1b4a9a6e-653a-45be-aa49-52e26bde8f82', 'Archived'),
+('9db774d7-51c0-4e35-8c0f-e24c9628ed1f', 'ddd6422d-d914-427b-be7e-7be893619811', '79a4e4f0-5d5c-472b-95f7-bc237faffc2a', '8a610402-4352-4322-8baa-06cefdd06546', '4ecb99d7-7c2d-4310-be76-0305513a1490', 'Current'),
+('b492c8a5-6726-4a11-a26e-5bb95f6efdea', '92c8ae2a-d68b-45e3-be65-14f9b344c325', '79a4e4f0-5d5c-472b-95f7-bc237faffc2a', '5277a396-bb15-4c31-9110-91cf4bb2cff9', '0c8517f2-0b84-424d-8854-7cb96e84141e', 'PreOrder'),
+('0d4a2a13-6b5b-4f7a-a3a8-72357f42f2cd', 'a85ff83d-142c-43aa-acb5-275589d9f10c', '79a4e4f0-5d5c-472b-95f7-bc237faffc2a', '0205b357-bf95-4111-829a-9414d1850028', '3a4bf023-58aa-4574-b2af-639ce375d92a', 'Archived'),
+('5e3c2bb4-104f-42d3-9bb6-68c98f06a676', '467aace6-ca13-4939-8469-d68c05063cf7', '28d19716-d0f8-4c90-ace1-60a8143d4c1a', '4a58ee6c-bb49-42ea-9c76-af3c5ad463ad', '7989e00f-ec52-443d-8ca3-f1642ddd5686', 'Current'),
+('e7d98724-8657-4cb2-9b2a-6a084d539b88', 'd133e0f5-9d31-4b20-898d-00947c1a2b8e', '28d19716-d0f8-4c90-ace1-60a8143d4c1a', '75c7245d-ce2a-4a33-b9c3-7f9126aad4f0', '6f3fed40-f317-4786-84c5-a093f1ba8724', 'PreOrder'),
+('3372a4e3-7c9f-423a-b4b6-0de6f5cc5dd3', 'ece0289b-54b2-4b0c-b8ba-535f655e2c14', '28d19716-d0f8-4c90-ace1-60a8143d4c1a', '2e70df2a-bfec-49ee-ab08-c12fd9792202', '3c15e5b3-25e2-404f-adca-c5e360a75f14', 'Archived'),
+('84d29c01-179b-4ae1-a9d0-69c5d0c064e0', '0618b28a-9a84-4feb-a8e4-e79429b1ac9b', '28d19716-d0f8-4c90-ace1-60a8143d4c1a', 'bc6d0460-914e-40ac-9099-24e8df77f43c', 'd95887dd-c1e4-4598-b908-db696cbb4cd6', 'Archived'),
+('c6d76030-251a-4a4b-8f42-08d3980124d2', '588fde66-908a-4209-9fab-8fc8206b3d14', '28d19716-d0f8-4c90-ace1-60a8143d4c1a', 'b64abb07-f0fe-4a78-b003-2608467c06ef', 'e2addc40-cf96-403a-a3e1-2188d4617bed', 'Archived');

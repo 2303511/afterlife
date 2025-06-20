@@ -1,9 +1,24 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from 'react-router-dom';
 import StatCard from "../../components/staffDashboard/StatCard";
 import "../../styles/Dashboard.css";
 import axios from 'axios';
 
 export default function Dashboard() {
+  const navigate = useNavigate();
+	// TEST: To check if user is authorized
+  useEffect(() => {
+		const checkRole = async () => {
+      const role = localStorage.getItem("role");
+      if (role == "user") {
+				console.log("Unauthorized access");
+				navigate("/my-bookings");
+				return;
+			}
+		};
+		checkRole();
+	}, [navigate]);
+
   const [statsData, setStatsData] = useState({
     totalBookings: 0,
     pendingApproval: 0,
