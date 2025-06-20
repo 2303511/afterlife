@@ -3,7 +3,7 @@ import { MdDashboard, MdAdminPanelSettings, MdApartment} from "react-icons/md";
 
 // Import all route components
 import MyBookings from "../pages/user/MyBookings"; 
-import MyPayments from "../pages/MyPayments";
+import MyPayments from "../pages/user/MyPayments";
 import NicheBooking from "../pages/NicheBooking";
 import Profile from "../pages/Profile";
 
