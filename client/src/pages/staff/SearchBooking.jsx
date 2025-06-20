@@ -148,7 +148,7 @@ export default function SearchBooking() {
 
   return (
     <div className="search-booking">
-      <h1 className="title">Bookings LookUp</h1>
+      <h1 className="title">Bookings Search</h1>
       <p className="subtitle">Search for user bookings by contact number</p>
 
       <SearchBar
