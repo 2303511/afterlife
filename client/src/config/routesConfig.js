@@ -1,4 +1,4 @@
-import { FaClipboardList, FaFileInvoice, FaBookOpen, FaUserCircle, FaListAlt, FaMapMarkedAlt, FaPlusSquare, FaClipboardCheck } from "react-icons/fa";
+import { FaClipboardList, FaFileInvoice, FaBookOpen, FaUserCircle, FaListAlt, FaMapMarkedAlt } from "react-icons/fa";
 import { MdDashboard, MdAdminPanelSettings, MdApartment} from "react-icons/md";
 
 // Import all route components
