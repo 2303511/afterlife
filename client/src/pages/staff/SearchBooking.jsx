@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import StatCard from '../../components/staffDashboard/StatCard';
 import BookingGrid from '../../components/booking/BookingGrid';
 import SearchBar from '../../components/booking/SearchBar';
@@ -6,16 +7,46 @@ import '../../styles/SearchBooking.css';
 import axios from 'axios';
 
 export default function SearchBooking() {
+  const navigate = useNavigate();
+  const location = useLocation();
   const [searchInput, setSearchInput] = useState('');
   const [bookings, setBookings] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
   const [activeTab, setActiveTab] = useState('current');
 
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const query = params.get('query');
+    const tab = params.get('tab') || 'current';
+
+    if (query) {
+      setSearchInput(query);
+      setActiveTab(tab);
+      setIsLoading(true);
+      setHasSearched(true);
+
+      axios.get(`http://localhost:8888/api/booking/search?query=${encodeURIComponent(query)}`)
+        .then((res) => {
+          setBookings(res.data);
+        })
+        .catch((err) => {
+          console.error("Search failed:", err);
+          setBookings([]);
+        })
+        .finally(() => {
+          setIsLoading(false);
+        });
+    }
+  }, [location.search]);
+
   const handleSearch = () => {
     if (!searchInput.trim()) return;
     setIsLoading(true);
     setHasSearched(true);
+
+    // Push to URL
+    navigate(`/search-booking?query=${encodeURIComponent(searchInput)}&tab=${activeTab}`);
 
     axios.get(`http://localhost:8888/api/booking/search?query=${encodeURIComponent(searchInput)}`)
       .then((res) => {
@@ -30,6 +61,7 @@ export default function SearchBooking() {
         setIsLoading(false);
       });
   };
+
 
   const handleKeyPress = (e) => {
     if (e.key === 'Enter') handleSearch();
@@ -68,13 +100,13 @@ export default function SearchBooking() {
   const handleArchiveBooking = async (bookingID) => {
     const booking = bookings.find(b => b.id === bookingID);
     if (!booking) return;
-  
+
     try {
       await axios.post("http://localhost:8888/api/booking/archive", {
         bookingID: bookingID,
         nicheID: booking.nicheID
       });
-  
+
       // for immediate visual changes
       setBookings(prev =>
         prev.map(b =>
@@ -87,7 +119,15 @@ export default function SearchBooking() {
       console.error("Archiving failed:", err);
     }
   };
-  
+
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+    if (searchInput.trim()) {
+      navigate(`/search-booking?query=${encodeURIComponent(searchInput)}&tab=${tab}`);
+    }
+  };
+
+
   const currentBookings = bookings.filter(b => b.bookingType === 'Current');
   const preorderBookings = bookings.filter(b => b.bookingType === 'PreOrder');
   const archivedBookings = bookings.filter(b => b.bookingType === 'Archived');
@@ -124,9 +164,25 @@ export default function SearchBooking() {
       {hasSearched && bookings.length > 0 && !isLoading && (
         <>
           <div className="tabs">
-            <span className={activeTab === 'current' ? 'active' : ''} onClick={() => setActiveTab('current')}>Current</span>
-            <span className={activeTab === 'preorder' ? 'active' : ''} onClick={() => setActiveTab('preorder')}>Preorder</span>
-            <span className={activeTab === 'archived' ? 'active' : ''} onClick={() => setActiveTab('archived')}>Archived</span>
+            <span
+              className={activeTab === 'current' ? 'active' : ''}
+              onClick={() => handleTabChange('current')}
+            >
+              Current
+            </span>
+            <span
+              className={activeTab === 'preorder' ? 'active' : ''}
+              onClick={() => handleTabChange('preorder')}
+            >
+              Preorder
+            </span>
+            <span
+              className={activeTab === 'archived' ? 'active' : ''}
+              onClick={() => handleTabChange('archived')}
+            >
+              Archived
+            </span>
+
           </div>
           <div className="booking-section">
             {activeTab === 'current' && (

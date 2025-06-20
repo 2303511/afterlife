@@ -291,11 +291,14 @@ router.get("/approval/:bookingID", async (req, res) => {
                 p.amount AS paymentAmount,
                 p.paymentMethod,
                 p.paymentDate,
-                p.paymentStatus
+                p.paymentStatus,
+                u.fullName AS customerName,
+                u.contactNumber
             FROM Booking b
             LEFT JOIN Beneficiary bene ON b.beneficiaryID = bene.beneficiaryID
             LEFT JOIN Niche n ON b.nicheID = n.nicheID
             LEFT JOIN Payment p ON b.paymentID = p.paymentID
+            JOIN User u ON b.paidByID = u.userID
             WHERE b.bookingID = ?
             `,
             [req.params.bookingID]
@@ -314,6 +317,7 @@ router.get("/approval/:bookingID", async (req, res) => {
         dbConn.release();
     }
 });
+
 
 
 

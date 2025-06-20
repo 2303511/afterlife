@@ -1,8 +1,10 @@
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import axios from 'axios';
+import { toast } from 'react-toastify';
 
 export default function BookingApproval() {
+    const navigate = useNavigate();
     const { bookingID } = useParams();
     const [booking, setBooking] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
@@ -26,6 +28,38 @@ export default function BookingApproval() {
 
     if (isLoading) return <div className="p-4">Loading booking details...</div>;
     if (!booking) return <div className="p-4">Booking not found.</div>;
+
+    const handleApprove = async () => {
+        try {
+            const res = await axios.post('http://localhost:8888/api/booking/approve', {
+                bookingID: booking.bookingID,
+                nicheID: booking.nicheID
+            });
+
+            if (res.data.success) {
+                toast.success('Booking approved!');
+
+                if (!booking.contactNumber) {
+                    toast.error('Missing contact number — cannot redirect.');
+                    return;
+                }
+
+                // Wait then redirect
+                setTimeout(() => {
+                    navigate(`/search-booking?query=${encodeURIComponent(booking.contactNumber)}&tab=current`);
+
+                }, 1500);
+            } else {
+                toast.error('Failed to approve booking.');
+            }
+        } catch (err) {
+            console.error('Approve failed:', err);
+            toast.error('Server error — could not approve booking.');
+        }
+    };
+
+
+
 
     return (
         <div className="container py-4">
@@ -117,7 +151,7 @@ export default function BookingApproval() {
                     </div>
 
                     {/* Approve button */}
-                    <button className="btn btn-success w-100 mb-3">Approve Request</button>
+                    <button className="btn btn-success w-100 mb-3" onClick={handleApprove}>Approve Request</button>
 
                     {/* Deny form */}
                     <div className="card">
