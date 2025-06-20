@@ -72,7 +72,7 @@ export default function BookingForm({ selectedSlot, onCancel, onSubmit }) {
     }
 
     if (name === "unitNumber") {
-      value = value.replace(/[^0-9\-]/g, "");
+      value = value.replace(/[^0-9-]/g, "");
     }
 
     if (name === "postalCode") {
@@ -94,7 +94,7 @@ export default function BookingForm({ selectedSlot, onCancel, onSubmit }) {
     }
 
     if (name === "unitNumber") {
-      value = value.replace(/[^0-9\-]/g, "");
+      value = value.replace(/[^0-9-]/g, "");
     }
 
     if (name === "beneficiaryNRIC") {

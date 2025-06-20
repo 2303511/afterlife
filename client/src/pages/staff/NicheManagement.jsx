@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
 
 import axios from "axios";
 import '../../styles/Niche-Management.css';
@@ -23,13 +22,10 @@ const statusClass = {
 };
 
 export default function NicheMap() {
-  const navigate = useNavigate();
-
   const [slots, setSlots] = useState([]);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showBooking, setShowBooking] = useState(false);
 
-  const [newSlot, setNewSlot] = useState({ row: "", col: "", status: "available" });
   const [selectedSlotId, setSelectedSlotId] = useState(null);
   const [selectedSlot, setSelectedSlot] = useState(null);
   const [gridDisabled, setGridDisabled] = useState(false);
@@ -193,7 +189,7 @@ export default function NicheMap() {
       if (res.data.success) {
         alert(`Booking submitted! Booking ID: ${res.data.bookingID}`);
   
-        // Reset UI
+        // reset states
         setStep("booking");
         setShowBooking(false);
         setSelectedSlot(null);
@@ -219,8 +215,6 @@ export default function NicheMap() {
       }
     }
   };
-  
-
   
 
   return (
