@@ -5,7 +5,7 @@ import BeneficiaryDetails from './BeneficiaryDetails';
 import { validateFormData } from '../../utils/validation';
 import { applicantRules, applicantFieldLabels, beneficiaryRules, beneficiaryFieldLabels } from '../../utils/validationRules';
 
-export default function BookingForm({ selectedSlot, onCancel, onSubmit }) {
+export default function BookingForm({selectedSlot, onCancel, onSubmit }) {
   const [bookingType, setBookingType] = useState("");
 
   const [applicantData, setApplicantData] = useState({
@@ -118,10 +118,18 @@ export default function BookingForm({ selectedSlot, onCancel, onSubmit }) {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    // Dynamically adjust rules based on bookingType
+    const activeBeneficiaryRules = { ...beneficiaryRules };
+
+    if (bookingType === "PreOrder") {
+      delete activeBeneficiaryRules.dateOfDeath;
+      delete activeBeneficiaryRules.inscription;
+    }
+
 
     // Validate fields
     const applicantErrors = validateFormData(applicantData, applicantRules, applicantFieldLabels);
-    const beneficiaryErrors = validateFormData(beneficiaryData, beneficiaryRules, beneficiaryFieldLabels);
+    const beneficiaryErrors = validateFormData(beneficiaryData, activeBeneficiaryRules, beneficiaryFieldLabels);
 
     // Business rule: Death after Birth
     if (beneficiaryData.dateOfBirth && beneficiaryData.dateOfDeath) {
@@ -134,12 +142,17 @@ export default function BookingForm({ selectedSlot, onCancel, onSubmit }) {
     }
 
     // Validate files
+    // Validate files
     if (!files.birthCert) {
       beneficiaryErrors.birthCertFile = `${beneficiaryFieldLabels.birthCertFile} is required`;
     }
-    if (!files.deathCert) {
-      beneficiaryErrors.deathCertFile = `${beneficiaryFieldLabels.deathCertFile} is required`;
+
+    if (bookingType === "Current") {
+      if (!files.deathCert) {
+        beneficiaryErrors.deathCertFile = `${beneficiaryFieldLabels.deathCertFile} is required`;
+      }
     }
+
 
     // Validate booking type
     let bookingTypeError = '';
@@ -189,6 +202,7 @@ export default function BookingForm({ selectedSlot, onCancel, onSubmit }) {
       <Form onSubmit={handleSubmit}>
         <Accordion defaultActiveKey="0" className="mb-3">
 
+
           <Accordion.Item eventKey="0">
             <Accordion.Header>
               Step 1: Booking Type
@@ -221,6 +235,19 @@ export default function BookingForm({ selectedSlot, onCancel, onSubmit }) {
                     aria-invalid={!!errors.bookingType}
                   />
                 </div>
+
+                {/* Dynamic explanation */}
+                {bookingType === "Current" && (
+                  <div className="alert alert-info mt-2">
+                    <strong>Current Use:</strong> For immediate use. Upload both birth and death certificates. Niche will be booked and processed for placement.
+                  </div>
+                )}
+
+                {bookingType === "PreOrder" && (
+                  <div className="alert alert-info mt-2">
+                    <strong>Pre-Order:</strong> For future use. Upload birth certificate only. Death certificate and inscription can be added later when applicable.
+                  </div>
+                )}
                 {errors.bookingType && (
                   <div className="invalid-feedback d-block">
                     {errors.bookingType}
@@ -259,7 +286,9 @@ export default function BookingForm({ selectedSlot, onCancel, onSubmit }) {
                 onChange={handleBeneficiaryChange}
                 onFileChange={onFileChange}
                 errors={errors?.beneficiary || {}}
+                bookingType={bookingType}
               />
+
               <Button
                 type="submit"
                 variant="success"

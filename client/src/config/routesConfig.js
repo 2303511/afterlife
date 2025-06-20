@@ -10,7 +10,6 @@ import Profile from "../pages/Profile";
 import Dashboard from "../pages/staff/Dashboard";
 import SearchBooking from "../pages/staff/SearchBooking";
 import NicheManagement from "../pages/staff/NicheManagement";
-import AddBooking from "../pages/AddBooking";
 
 import AdminDashboard from "../pages/admin/AdminDashboard";
 import BuildingManagement from "../pages/admin/BuildingManagement";
@@ -86,12 +85,6 @@ export const staffRoutes = [
     path: "/niche-management",
     icon: <FaMapMarkedAlt />,
     element: <NicheManagement />,
-  },
-  {
-    label: "Add Booking",
-    path: "/add-booking",
-    icon: <FaPlusSquare />,
-    element: <AddBooking />,
   },
 ];
 

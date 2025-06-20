@@ -196,6 +196,27 @@ export default function NicheMap() {
         setSelectedSlotId(null);
         setGridDisabled(false);
         setBookingFormData(null);
+
+        // refresh niche grid
+        axios.get(`http://localhost:8888/api/niche/niches/${selectedBlock}`)
+        .then((res) => {
+          const mapped = res.data
+            .sort((a, b) => {
+              if (a.nicheRow !== b.nicheRow) return a.nicheRow - b.nicheRow;
+              return a.nicheColumn - b.nicheColumn;
+            })
+            .map((slot) => ({
+              ...slot,
+              id: slot.nicheID,
+              status: slot.status.toLowerCase()
+            }));
+      
+          setSlots(mapped);
+        })
+        .catch((err) => {
+          console.error("Error refreshing niches:", err);
+        });
+      
   
       } else if (res.data.errors) {
         console.error("Validation errors:", res.data.errors);

@@ -1,7 +1,7 @@
 import React from "react";
 import { Form, Row, Col } from "react-bootstrap";
 
-export default function BeneficiaryDetails({ formData, onChange, onFileChange, errors }) {
+export default function BeneficiaryDetails({ formData, onChange, onFileChange, errors, bookingType }) {
     return (
         <>
             <h5 className="mt-4 mb-3">Beneficiary Details</h5>
@@ -115,18 +115,22 @@ export default function BeneficiaryDetails({ formData, onChange, onFileChange, e
                 </Col>
 
                 <Col md={6}>
-                    <Form.Group className="mb-3">
-                        <Form.Label>Death Certificate</Form.Label>
-                        <Form.Control
-                            type="file"
-                            name="deathCertFile"
-                            onChange={(e) => onFileChange(e, "deathCert")}
-                            isInvalid={!!errors.deathCertFile}
-                        />
-                        <Form.Control.Feedback type="invalid">
-                            {errors.deathCertFile}
-                        </Form.Control.Feedback>
-                    </Form.Group>
+                    {bookingType === "Current" && (
+                        <Form.Group className="mb-3">
+                            <Form.Label>Death Certificate</Form.Label>
+                            <Form.Control
+                                type="file"
+                                name="deathCertFile"
+                                onChange={(e) => onFileChange(e, "deathCert")}
+                                isInvalid={!!errors.deathCertFile}
+                            />
+                            <Form.Control.Feedback type="invalid">
+                                {errors.deathCertFile}
+                            </Form.Control.Feedback>
+                        </Form.Group>
+                    )}
+
+
                 </Col>
             </Row>
 
@@ -148,22 +152,25 @@ export default function BeneficiaryDetails({ formData, onChange, onFileChange, e
                     </Form.Group>
                 </Col>
 
-                <Col md={3}>
-                    <Form.Group className="mb-3">
-                        <Form.Label>Date of Death</Form.Label>
-                        <Form.Control
-                            type="date"
-                            name="dateOfDeath"
-                            value={formData.dateOfDeath}
-                            onChange={onChange}
-                            isInvalid={!!errors.dateOfDeath}
-                            max={new Date().toISOString().split("T")[0]} // to make future dates unselectable
-                        />
-                        <Form.Control.Feedback type="invalid">
-                            {errors.dateOfDeath}
-                        </Form.Control.Feedback>
-                    </Form.Group>
-                </Col>
+                {bookingType === "Current" && (
+                    <Col md={3}>
+                        <Form.Group className="mb-3">
+                            <Form.Label>Date of Death</Form.Label>
+                            <Form.Control
+                                type="date"
+                                name="dateOfDeath"
+                                value={formData.dateOfDeath}
+                                onChange={onChange}
+                                isInvalid={!!errors.dateOfDeath}
+                                max={new Date().toISOString().split("T")[0]}
+                            />
+                            <Form.Control.Feedback type="invalid">
+                                {errors.dateOfDeath}
+                            </Form.Control.Feedback>
+                        </Form.Group>
+                    </Col>
+                )}
+
             </Row>
 
             <Row>
@@ -217,16 +224,19 @@ export default function BeneficiaryDetails({ formData, onChange, onFileChange, e
                 </Col>
             </Row>
 
-            <Form.Group className="mb-3">
-                <Form.Label>Inscription</Form.Label>
-                <Form.Control
-                    as="textarea"
-                    rows={3}
-                    name="inscription"
-                    value={formData.inscription}
-                    onChange={onChange}
-                />
-            </Form.Group>
+            {bookingType === "Current" && (
+                <Form.Group className="mb-3">
+                    <Form.Label>Inscription</Form.Label>
+                    <Form.Control
+                        as="textarea"
+                        rows={3}
+                        name="inscription"
+                        value={formData.inscription}
+                        onChange={onChange}
+                    />
+                </Form.Group>
+            )}
+
         </>
     );
 }
