@@ -67,17 +67,14 @@ export default function BookingForm({ selectedSlot, onCancel, onSubmit }) {
   const handleApplicantChange = (e) => {
     let { name, value } = e.target;
 
-    // phone number only digits
     if (name === "mobileNumber") {
-      value = value.replace(/\D/g, ""); // Strip all non-digits
+      value = value.replace(/\D/g, "");
     }
 
-    // digits and hyphens
     if (name === "unitNumber") {
       value = value.replace(/[^0-9\-]/g, "");
     }
 
-    // only digits
     if (name === "postalCode") {
       value = value.replace(/\D/g, "");
     }
@@ -86,10 +83,8 @@ export default function BookingForm({ selectedSlot, onCancel, onSubmit }) {
       value = value.toUpperCase();
     }
 
-
     setApplicantData({ ...applicantData, [name]: value });
   };
-
 
   const handleBeneficiaryChange = (e) => {
     let { name, value } = e.target;
@@ -103,14 +98,13 @@ export default function BookingForm({ selectedSlot, onCancel, onSubmit }) {
     }
 
     if (name === "beneficiaryNRIC") {
-      value = value.toUpperCase(); 
+      value = value.toUpperCase();
     }
 
     setBeneficiaryData({ ...beneficiaryData, [name]: value });
   };
 
-
-  // helper: calculate step status
+  // Step completion status
   const isBookingTypeValid = !!bookingType;
 
   const isApplicantValid = Object.keys(
@@ -125,21 +119,21 @@ export default function BookingForm({ selectedSlot, onCancel, onSubmit }) {
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    // validate applicant and beneficiary
+    // Validate fields
     const applicantErrors = validateFormData(applicantData, applicantRules, applicantFieldLabels);
     const beneficiaryErrors = validateFormData(beneficiaryData, beneficiaryRules, beneficiaryFieldLabels);
 
-    // business rule validation
+    // Business rule: Death after Birth
     if (beneficiaryData.dateOfBirth && beneficiaryData.dateOfDeath) {
       const dob = new Date(beneficiaryData.dateOfBirth);
       const dod = new Date(beneficiaryData.dateOfDeath);
-    
+
       if (dod < dob) {
         beneficiaryErrors.dateOfDeath = "Date of Death cannot be before Date of Birth";
       }
     }
-    
-    // validate files
+
+    // Validate files
     if (!files.birthCert) {
       beneficiaryErrors.birthCertFile = `${beneficiaryFieldLabels.birthCertFile} is required`;
     }
@@ -147,13 +141,13 @@ export default function BookingForm({ selectedSlot, onCancel, onSubmit }) {
       beneficiaryErrors.deathCertFile = `${beneficiaryFieldLabels.deathCertFile} is required`;
     }
 
-    // validate booking type
+    // Validate booking type
     let bookingTypeError = '';
     if (!bookingType) {
       bookingTypeError = 'Booking Type is required';
     }
 
-    // If any errors, stop submit
+    // If errors → stop
     if (bookingTypeError || Object.keys(applicantErrors).length > 0 || Object.keys(beneficiaryErrors).length > 0) {
       setErrors({
         bookingType: bookingTypeError,
@@ -163,7 +157,7 @@ export default function BookingForm({ selectedSlot, onCancel, onSubmit }) {
       return;
     }
 
-    // no errors → build FormData
+    // Build FormData
     const formData = new FormData();
 
     Object.entries(applicantData).forEach(([key, value]) => {
@@ -270,11 +264,13 @@ export default function BookingForm({ selectedSlot, onCancel, onSubmit }) {
                 type="submit"
                 variant="success"
                 aria-label="Confirm Booking and Submit Form"
+                className="mt-4"
               >
                 Confirm Booking
               </Button>
             </Accordion.Body>
           </Accordion.Item>
+
         </Accordion>
       </Form>
     </div>

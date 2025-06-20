@@ -190,18 +190,36 @@ export default function NicheMap() {
         { headers: { "Content-Type": "application/json" } }
       );
   
-      console.log("Booking success:", res.data);
+      if (res.data.success) {
+        alert(`Booking submitted! Booking ID: ${res.data.bookingID}`);
   
-      setStep("booking");
-      setShowBooking(false);
-      setSelectedSlot(null);
-      setSelectedSlotId(null);
-      setGridDisabled(false);
-      setBookingFormData(null);
+        // Reset UI
+        setStep("booking");
+        setShowBooking(false);
+        setSelectedSlot(null);
+        setSelectedSlotId(null);
+        setGridDisabled(false);
+        setBookingFormData(null);
+  
+      } else if (res.data.errors) {
+        console.error("Validation errors:", res.data.errors);
+        alert("Validation errors — please check the form.");
+        setStep("booking"); // Go back to form
+      }
+  
     } catch (err) {
-      console.error("Booking failed:", err);
+      if (err.response && err.response.status === 400) {
+        // Backend sent validation errors
+        console.error("Validation errors:", err.response.data.errors);
+        alert("Validation errors — please check the form.");
+        setStep("booking");
+      } else {
+        console.error("Booking failed:", err);
+        alert("Server error — failed to submit booking.");
+      }
     }
   };
+  
 
   
 
