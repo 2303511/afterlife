@@ -14,19 +14,6 @@ export default function SearchBooking() {
   const [isLoading, setIsLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
   const [activeTab, setActiveTab] = useState('current');
-  const [pendingBookings, setPendingBookings] = useState([]);
-
-  useEffect(() => {
-    // Fetch all pending bookings on page load (can also do on demand later)
-    axios.get('http://localhost:8888/api/booking/pending')
-      .then((res) => {
-        console.log('All pending:', res.data);
-        setPendingBookings(res.data);
-      })
-      .catch((err) => {
-        console.error('Failed to load pending bookings:', err);
-      });
-  }, []);
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
