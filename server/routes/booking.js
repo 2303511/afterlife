@@ -93,6 +93,7 @@ router.get('/search', async (req, res) => {
 });
 
 // insert user -> beneficiary -> payment -> booking -> update niche status
+// insert user -> beneficiary -> payment -> booking -> update niche status
 router.post("/submitStaffBooking", async (req, res) => {
     const dbConn = await db.getConnection();
     await dbConn.beginTransaction();
@@ -102,14 +103,17 @@ router.post("/submitStaffBooking", async (req, res) => {
             // Applicant
             fullName, gender, nationality, nationalID, mobileNumber, address, postalCode, unitNumber, dob,
 
-            // Beneficiary --> beneficiaryNationality, beneficiaryNationalID (not in table, but inside form)
-            beneficiaryName, beneficiaryGender, beneficiaryNationality, beneficiaryNationalID, dateOfBirth, dateOfDeath,
-            birthCertificate, deathCertficate, relationshipWithApplicant, inscription, beneficiaryRemarks,
+            // Beneficiary
+            beneficiaryName, beneficiaryGender, beneficiaryNationality, beneficiaryNationalID,
+            dateOfBirth, dateOfDeath, birthCertificate, deathCertficate,
+            relationshipWithApplicant, inscription, beneficiaryRemarks,
 
             // Booking
             nicheID, bookingType,
+
             // Payment
             paymentMethod, paymentAmount,
+
             // Meta
             paidByID
         } = req.body;
@@ -122,7 +126,6 @@ router.post("/submitStaffBooking", async (req, res) => {
                 errors: validationErrors
             });
         }
-
 
         const userID = uuidv4();
         const beneficiaryID = uuidv4();
@@ -157,24 +160,27 @@ router.post("/submitStaffBooking", async (req, res) => {
 
         // 4. Insert Payment
         await dbConn.query(`
-        INSERT INTO Payment (paymentID, amount, paymentMethod, paymentDate, paymentStatus)
-        VALUES (?, ?, ?, ?, ?)`,
+            INSERT INTO Payment (paymentID, amount, paymentMethod, paymentDate, paymentStatus)
+            VALUES (?, ?, ?, ?, ?)`,
             [paymentID, paymentAmount, paymentMethod, paymentDate, "Fully Paid"]
         );
 
         // 5. Insert Booking
         await dbConn.query(`
-        INSERT INTO Booking (bookingID, nicheID, beneficiaryID, bookingType, paymentID, paidByID)
-        VALUES (?, ?, ?, ?, ?, ?)`,
+            INSERT INTO Booking (bookingID, nicheID, beneficiaryID, bookingType, paymentID, paidByID)
+            VALUES (?, ?, ?, ?, ?, ?)`,
             [bookingID, nicheID, beneficiaryID, bookingType, paymentID, userID]
         );
 
-        // 6. Update Niche Status
+        // 6. Determine Niche Status
+        const nicheStatus = (bookingType === "Current") ? "Occupied" : "Reserved";
+
+        // 7. Update Niche Status
         await dbConn.query(`
             UPDATE Niche
             SET status = ?, lastUpdated = NOW()
             WHERE nicheID = ?
-            `, ['Reserved', nicheID]);
+        `, [nicheStatus, nicheID]);
 
         await dbConn.commit();
         res.status(201).json({ success: true, bookingID, paymentID });
@@ -187,6 +193,7 @@ router.post("/submitStaffBooking", async (req, res) => {
         dbConn.release();
     }
 });
+
 
 // staff - to approve pending niches aka to put a urn in
 router.post('/approve', async (req, res) => {
