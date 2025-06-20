@@ -74,7 +74,7 @@ router.get('/search', async (req, res) => {
           u.contactNumber,
           be.beneficiaryName,
           p.paymentID,
-          p.amount,
+          p.amount as paymentAmount,
           p.paymentMethod,
           p.paymentDate,
           p.paymentStatus,
@@ -94,6 +94,34 @@ router.get('/search', async (req, res) => {
         res.status(500).send("Internal server error");
     }
 });
+
+// staff - view all pending bookings
+router.get("/pending", async (req, res) => {
+    try {
+        const [rows] = await db.query(`
+            SELECT 
+                b.bookingID, b.bookingType, b.nicheID, b.beneficiaryID,
+                u.fullName AS customerName, u.contactNumber,
+                n.nicheCode, n.status AS nicheStatus, n.lastUpdated,
+                be.beneficiaryName,
+                p.amount AS paymentAmount, p.paymentMethod
+            FROM Booking b
+            JOIN User u ON b.paidByID = u.userID
+            LEFT JOIN Beneficiary be ON b.beneficiaryID = be.beneficiaryID
+            LEFT JOIN Niche n ON b.nicheID = n.nicheID
+            LEFT JOIN Payment p ON b.paymentID = p.paymentID
+            WHERE n.status = 'Pending'
+            ORDER BY n.lastUpdated DESC
+        `);
+
+        res.json(rows);
+    } catch (err) {
+        console.error("Error fetching pending bookings:", err);
+        res.status(500).json({ message: "Internal server error" });
+    }
+});
+
+
 
 
 // insert user -> beneficiary -> payment -> booking -> update niche status

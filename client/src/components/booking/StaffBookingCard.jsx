@@ -12,7 +12,7 @@ export default function StaffBookingCard({ booking, onArchive, currentTab }) {
         nicheCode,
         nicheStatus,
         beneficiaryName,
-        amount,
+        paymentAmount,
         paymentMethod
     } = booking;
 
@@ -37,7 +37,7 @@ export default function StaffBookingCard({ booking, onArchive, currentTab }) {
                 <div className="info-group mb-3">
                     <p className="mb-1"><strong>Niche ID:</strong> {nicheCode || '—'}</p>
                     <p className="mb-1"><strong>Beneficiary:</strong> {beneficiaryName || <span className="text-muted fst-italic">Not assigned</span>}</p>
-                    <p className="mb-1"><strong>Payment:</strong> ${amount || 0} {paymentMethod && <span className="badge bg-light text-dark border ms-2">{paymentMethod}</span>}</p>
+                    <p className="mb-1"><strong>Payment:</strong> ${paymentAmount || 0} {paymentMethod && <span className="badge bg-light text-dark border ms-2">{paymentMethod}</span>}</p>
                 </div>
             </div>
 

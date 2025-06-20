@@ -100,3 +100,9 @@
     gap: 1rem;
     margin-bottom: 2rem;
   }
+
+  .pending-bookings-section {
+    border-top: 1px solid #ddd;
+    padding-top: 2rem;
+  }
+  
