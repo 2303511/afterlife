@@ -5,7 +5,7 @@ import BeneficiaryDetails from './BeneficiaryDetails';
 import { validateFormData } from '../../utils/validation';
 import { applicantRules, applicantFieldLabels, beneficiaryRules, beneficiaryFieldLabels } from '../../utils/validationRules';
 
-export default function BookingForm({selectedSlot, onCancel, onSubmit }) {
+export default function BookingForm({ selectedSlot, onCancel, onSubmit }) {
   const [bookingType, setBookingType] = useState("");
 
   const [applicantData, setApplicantData] = useState({
@@ -174,11 +174,16 @@ export default function BookingForm({selectedSlot, onCancel, onSubmit }) {
     const formData = new FormData();
 
     Object.entries(applicantData).forEach(([key, value]) => {
-      formData.append(`applicant[${key}]`, value);
+      formData.append(key, value);
     });
 
+    // Beneficiary (map NRIC to beneficiaryNationalID)
     Object.entries(beneficiaryData).forEach(([key, value]) => {
-      formData.append(`beneficiary[${key}]`, value);
+      if (key === "beneficiaryNRIC") {
+        formData.append("beneficiaryNationalID", value);
+      } else {
+        formData.append(key, value);
+      }
     });
 
     formData.append("bookingType", bookingType);

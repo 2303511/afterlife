@@ -73,8 +73,11 @@ router.get('/search', async (req, res) => {
           u.fullName AS customerName,
           u.contactNumber,
           be.beneficiaryName,
+          p.paymentID,
           p.amount,
           p.paymentMethod,
+          p.paymentDate,
+          p.paymentStatus,
           n.nicheCode,
           n.status AS nicheStatus
         FROM Booking b
@@ -92,8 +95,9 @@ router.get('/search', async (req, res) => {
     }
 });
 
+
 // insert user -> beneficiary -> payment -> booking -> update niche status
-// insert user -> beneficiary -> payment -> booking -> update niche status
+// assuming that the applicant is someone who doesnt have a account with us, then the staff creates a new user for them.
 router.post("/submitStaffBooking", async (req, res) => {
     const dbConn = await db.getConnection();
     await dbConn.beginTransaction();
@@ -148,13 +152,16 @@ router.post("/submitStaffBooking", async (req, res) => {
             [userID, fullName, gender, nationality, nationalID, mobileNumber, address, dob, roleID]
         );
 
+        // based off booking type whether to insert death date
+        const finalDateOfDeath = (bookingType === "PreOrder" || !dateOfDeath) ? null : dateOfDeath;
+
         // 3. Insert Beneficiary
         await dbConn.query(`
             INSERT INTO Beneficiary (
                 beneficiaryID, beneficiaryName, dateOfBirth, dateOfDeath,
                 birthCertificate, deathCertificate, relationshipWithApplicant, inscription
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-            [beneficiaryID, beneficiaryName, dateOfBirth, dateOfDeath, birthCertificate, deathCertficate,
+            [beneficiaryID, beneficiaryName, dateOfBirth, finalDateOfDeath, birthCertificate, deathCertficate,
                 relationshipWithApplicant, inscription]
         );
 
@@ -174,6 +181,7 @@ router.post("/submitStaffBooking", async (req, res) => {
 
         // 6. Determine Niche Status
         const nicheStatus = (bookingType === "Current") ? "Occupied" : "Reserved";
+        // only have occupied and reserved because staff
 
         // 7. Update Niche Status
         await dbConn.query(`
@@ -257,6 +265,60 @@ router.post('/booking/archive', async (req, res) => {
     }
 });
 
+//bene.beneficiaryNRIC, 
+router.get("/approval/:bookingID", async (req, res) => {
+    const dbConn = await db.getConnection();
+
+    try {
+        const [rows] = await dbConn.query(
+            `
+            SELECT 
+                b.*, 
+                bene.beneficiaryID, 
+                bene.beneficiaryName, 
+                bene.dateOfBirth, 
+                bene.dateOfDeath, 
+                bene.birthCertificate, 
+                bene.deathCertificate, 
+                bene.relationshipWithApplicant, 
+                bene.inscription, 
+                n.nicheID, 
+                n.blockID, 
+                n.nicheCode, 
+                n.status AS nicheStatus, 
+                n.lastUpdated,
+                p.paymentID,
+                p.amount AS paymentAmount,
+                p.paymentMethod,
+                p.paymentDate,
+                p.paymentStatus
+            FROM Booking b
+            LEFT JOIN Beneficiary bene ON b.beneficiaryID = bene.beneficiaryID
+            LEFT JOIN Niche n ON b.nicheID = n.nicheID
+            LEFT JOIN Payment p ON b.paymentID = p.paymentID
+            WHERE b.bookingID = ?
+            `,
+            [req.params.bookingID]
+        );
+
+        if (rows.length === 0) {
+            return res.status(404).json({ message: "Booking not found" });
+        }
+
+        const booking = rows[0];
+        res.json(booking);
+    } catch (err) {
+        console.error("Error fetching booking:", err);
+        res.status(500).json({ message: "Internal server error" });
+    } finally {
+        dbConn.release();
+    }
+});
+
+
+
+
+
 
 module.exports = router;
 
@@ -265,9 +327,7 @@ function validateBookingPayload(payload) {
 
     // Applicant
     if (!payload.fullName) errors.fullName = "Full Name is required";
-
     if (!payload.gender) errors.gender = "Gender is required";
-
     if (!payload.nationality) errors.nationality = "Nationality is required";
 
     if (!/^[STFG]\d{7}[A-Z]$/.test(payload.nationalID)) {
@@ -279,22 +339,17 @@ function validateBookingPayload(payload) {
     }
 
     if (!payload.address) errors.address = "Address is required";
-
     if (!/^\d{6}$/.test(payload.postalCode)) {
         errors.postalCode = "Invalid postal code (6 digits)";
     }
 
     if (!payload.unitNumber) errors.unitNumber = "Unit Number is required";
-
     if (!payload.dob) errors.dob = "Date of Birth is required";
 
     // Beneficiary
     if (!payload.beneficiaryName) errors.beneficiaryName = "Beneficiary Name is required";
-
     if (!payload.beneficiaryGender) errors.beneficiaryGender = "Beneficiary Gender is required";
-
     if (!payload.relationshipWithApplicant) errors.relationshipWithApplicant = "Relationship is required";
-
     if (!payload.beneficiaryNationality) errors.beneficiaryNationality = "Beneficiary Nationality is required";
 
     if (!/^[STFG]\d{7}[A-Z]$/.test(payload.beneficiaryNationalID)) {
@@ -303,25 +358,33 @@ function validateBookingPayload(payload) {
 
     if (!payload.dateOfBirth) errors.dateOfBirth = "Beneficiary Date of Birth is required";
 
-    if (!payload.dateOfDeath) errors.dateOfDeath = "Beneficiary Date of Death is required";
+    // Only validate Date of Death if Current booking
+    if (payload.bookingType === "Current") {
+        if (!payload.dateOfDeath) errors.dateOfDeath = "Beneficiary Date of Death is required";
 
-    // Cross-field check: Date of Death > Date of Birth
-    if (payload.dateOfBirth && payload.dateOfDeath) {
-        const dob = new Date(payload.dateOfBirth);
-        const dod = new Date(payload.dateOfDeath);
+        if (payload.dateOfBirth && payload.dateOfDeath) {
+            const dob = new Date(payload.dateOfBirth);
+            const dod = new Date(payload.dateOfDeath);
 
-        if (dod < dob) {
-            errors.dateOfDeath = "Date of Death cannot be before Date of Birth";
+            if (dod < dob) {
+                errors.dateOfDeath = "Date of Death cannot be before Date of Birth";
+            }
+        }
+
+        if (!payload.inscription) {
+            errors.inscription = "Inscription is required";
+        }
+
+        if (!payload.deathCertficate) {
+            errors.deathCertficate = "Death Certificate file is required";
         }
     }
 
-    if (!payload.birthCertificate) errors.birthCertificate = "Birth Certificate file is required";
-
-    if (!payload.deathCertficate) errors.deathCertficate = "Death Certificate file is required";
+    // Always validate birth cert (temp removal)
+    //if (!payload.birthCertificate) errors.birthCertificate = "Birth Certificate file is required";
 
     // Booking
     if (!payload.nicheID) errors.nicheID = "Niche ID is required";
-
     if (!payload.bookingType) errors.bookingType = "Booking Type is required";
 
     // Payment
@@ -331,7 +394,8 @@ function validateBookingPayload(payload) {
         errors.paymentAmount = "Valid Payment Amount is required";
     }
 
-    if (!payload.paidByID) errors.paidByID = "Paid By ID is required";
+    //if (!payload.paidByID) errors.paidByID = "Paid By ID is required";
 
     return errors;
 }
+

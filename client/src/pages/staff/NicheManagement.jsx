@@ -197,7 +197,7 @@ export default function NicheMap() {
         setGridDisabled(false);
         setBookingFormData(null);
 
-        // refresh niche grid
+        // refresh niche
         axios.get(`http://localhost:8888/api/niche/niches/${selectedBlock}`)
         .then((res) => {
           const mapped = res.data

@@ -10,6 +10,7 @@ import Profile from "../pages/Profile";
 import Dashboard from "../pages/staff/Dashboard";
 import SearchBooking from "../pages/staff/SearchBooking";
 import NicheManagement from "../pages/staff/NicheManagement";
+import BookingApproval from "../pages/staff/BookingApproval";
 
 import AdminDashboard from "../pages/admin/AdminDashboard";
 import BuildingManagement from "../pages/admin/BuildingManagement";
@@ -104,12 +105,22 @@ export const adminRoutes = [
   },
 ];
 
+export const hiddenRoutes = [
+  {
+    path: "/booking-approval/:bookingID",
+    element: <BookingApproval />,
+  }
+];
+
+
+
 // Combined all for routing
 export const appRoutes = [
   ...publicRoutes,
   ...userRoutes,
   ...staffRoutes,
   ...adminRoutes,
+  ...hiddenRoutes
 ];
 
 export const publicPaths = publicRoutes.map(route => route.path);
