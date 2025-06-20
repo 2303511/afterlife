@@ -90,13 +90,6 @@ export default function SearchBooking() {
     }
   };
 
-
-  const handleDeclineBooking = (id) => {
-    /*setBookings(prev =>
-      prev.map(b => b.id === id ? { ...b, status: 'declined' } : b)
-    );*/
-  };
-
   const handleArchiveBooking = async (bookingID) => {
     const booking = bookings.find(b => b.id === bookingID);
     if (!booking) return;
@@ -198,7 +191,6 @@ export default function SearchBooking() {
                 title="Preorder Bookings"
                 bookings={preorderBookings}
                 onApprove={handleApprovePlacement}
-                onDecline={handleDeclineBooking}
                 currentTab={activeTab}
               />
             )}
