@@ -136,9 +136,9 @@ router.post("/submitStaffBooking", async (req, res) => {
             fullName, gender, nationality, nationalID, mobileNumber, address, postalCode, unitNumber, dob,
 
             // Beneficiary
-            beneficiaryName, beneficiaryGender, beneficiaryNationality, beneficiaryNationalID,
+            beneficiaryName, beneficiaryGender, beneficiaryNationality, beneficiaryNationalID, beneficiaryAddress,
             dateOfBirth, dateOfDeath, birthCertificate, deathCertficate,
-            relationshipWithApplicant, inscription, beneficiaryRemarks,
+            relationshipWithApplicant, inscription,
 
             // Booking
             nicheID, bookingType,
@@ -173,11 +173,13 @@ router.post("/submitStaffBooking", async (req, res) => {
         if (!roleRow) throw new Error("Role not found");
         const roleID = roleRow.roleID;
 
+        const fullUserAddress = `${address}, ${unitNumber}, ${postalCode}`;
+
         // 2. Insert User
         await dbConn.query(`
             INSERT INTO User (userID, fullName, gender, nationality, nric, contactNumber, userAddress, dob, roleID)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-            [userID, fullName, gender, nationality, nationalID, mobileNumber, address, dob, roleID]
+            [userID, fullName, gender, nationality, nationalID, mobileNumber, fullUserAddress, dob, roleID]
         );
 
         // based off booking type whether to insert death date
@@ -186,11 +188,11 @@ router.post("/submitStaffBooking", async (req, res) => {
         // 3. Insert Beneficiary
         await dbConn.query(`
             INSERT INTO Beneficiary (
-                beneficiaryID, beneficiaryName, dateOfBirth, dateOfDeath,
+                beneficiaryID, beneficiaryName, gender, nationality, nric, beneficiaryAddress, dateOfBirth, dateOfDeath,
                 birthCertificate, deathCertificate, relationshipWithApplicant, inscription
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-            [beneficiaryID, beneficiaryName, dateOfBirth, finalDateOfDeath, birthCertificate, deathCertficate,
-                relationshipWithApplicant, inscription]
+            [beneficiaryID, beneficiaryName, beneficiaryGender, beneficiaryNationality, beneficiaryNationalID, beneficiaryAddress,
+                dateOfBirth, finalDateOfDeath, birthCertificate, deathCertficate, relationshipWithApplicant, inscription]
         );
 
         // 4. Insert Payment
@@ -402,6 +404,13 @@ function validateBookingPayload(payload) {
                 errors.dateOfDeath = "Date of Death cannot be before Date of Birth";
             }
         }
+
+        if (!payload.beneficiaryAddress) errors.beneficiaryAddress = "Address is required";
+        if (!/^\d{6}$/.test(payload.beneficiaryPostalCode)) {
+            errors.beneficiaryPostalCode = "Invalid postal code (6 digits)";
+        }
+    
+        if (!payload.beneficiaryUnitNumber) errors.beneficiaryUnitNumber = "Unit Number is required";
 
         if (!payload.inscription) {
             errors.inscription = "Inscription is required";

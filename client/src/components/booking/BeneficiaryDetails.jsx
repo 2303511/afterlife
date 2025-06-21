@@ -178,13 +178,13 @@ export default function BeneficiaryDetails({ formData, onChange, onFileChange, e
                     <Form.Group className="mb-3">
                         <Form.Label>Mailing Address</Form.Label>
                         <Form.Control
-                            name="address"
-                            value={formData.address}
+                            name="beneficiaryAddress"
+                            value={formData.beneficiaryAddress}
                             onChange={onChange}
-                            isInvalid={!!errors.address}
+                            isInvalid={!!errors.beneficiaryAddress}
                         />
                         <Form.Control.Feedback type="invalid">
-                            {errors.address}
+                            {errors.beneficiaryAddress}
                         </Form.Control.Feedback>
                     </Form.Group>
                 </Col>
@@ -194,14 +194,14 @@ export default function BeneficiaryDetails({ formData, onChange, onFileChange, e
                         <Form.Label>Postal Code</Form.Label>
                         <Form.Control
                             type="text"
-                            name="postalCode"
-                            value={formData.postalCode}
+                            name="beneficiaryPostalCode"
+                            value={formData.beneficiaryPostalCode}
                             onChange={onChange}
-                            isInvalid={!!errors.postalCode}
+                            isInvalid={!!errors.beneficiaryPostalCode}
                         />
 
                         <Form.Control.Feedback type="invalid">
-                            {errors.postalCode}
+                            {errors.beneficiaryPostalCode}
                         </Form.Control.Feedback>
                     </Form.Group>
                 </Col>
@@ -211,14 +211,14 @@ export default function BeneficiaryDetails({ formData, onChange, onFileChange, e
                         <Form.Label>Unit Number</Form.Label>
                         <Form.Control
                             type="text"
-                            name="unitNumber"
-                            value={formData.unitNumber}
+                            name="beneficiaryUnitNumber"
+                            value={formData.beneficiaryUnitNumber}
                             onChange={onChange}
-                            isInvalid={!!errors.unitNumber}
+                            isInvalid={!!errors.beneficiaryUnitNumber}
                         />
 
                         <Form.Control.Feedback type="invalid">
-                            {errors.unitNumber}
+                            {errors.beneficiaryUnitNumber}
                         </Form.Control.Feedback>
                     </Form.Group>
                 </Col>

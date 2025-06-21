@@ -17,8 +17,7 @@ export default function BookingForm({ selectedSlot, onCancel, onSubmit }) {
     address: "",
     postalCode: "",
     unitNumber: "",
-    dob: "",
-    remarks: ""
+    dob: ""
   });
 
   const [beneficiaryData, setBeneficiaryData] = useState({
@@ -30,9 +29,9 @@ export default function BookingForm({ selectedSlot, onCancel, onSubmit }) {
     dateOfDeath: "",
     relationshipWithApplicant: "",
     inscription: "",
-    address: "",
-    postalCode: "",
-    unitNumber: ""
+    beneficiaryAddress: "",
+    beneficiaryPostalCode: "",
+    beneficiaryUnitNumber: ""
   });
 
   const [files, setFiles] = useState({
@@ -89,11 +88,11 @@ export default function BookingForm({ selectedSlot, onCancel, onSubmit }) {
   const handleBeneficiaryChange = (e) => {
     let { name, value } = e.target;
 
-    if (name === "postalCode") {
+    if (name === "beneficiaryPostalCode") {
       value = value.replace(/\D/g, "");
     }
 
-    if (name === "unitNumber") {
+    if (name === "benficiaryUnitNumber") {
       value = value.replace(/[^0-9-]/g, "");
     }
 
@@ -191,6 +190,10 @@ export default function BookingForm({ selectedSlot, onCancel, onSubmit }) {
 
     formData.append("birthCertFile", files.birthCert);
     formData.append("deathCertFile", files.deathCert);
+
+    /*for (let pair of formData.entries()) {
+      console.log(`${pair[0]}:`, pair[1]);
+    }*/
 
     onSubmit(formData);
   };

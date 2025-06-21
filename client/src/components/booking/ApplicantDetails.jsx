@@ -163,17 +163,6 @@ export default function ApplicantDetails({ formData, onChange, errors }) {
         </Col>
       </Row>
 
-      <Form.Group className="mb-3">
-        <Form.Label>Remarks</Form.Label>
-        <Form.Control
-          as="textarea"
-          rows={3}
-          name="remarks"
-          value={formData.remarks}
-          onChange={onChange}
-        />
-        {/* Remarks is optional → no isInvalid needed */}
-      </Form.Group>
     </>
   );
 }
