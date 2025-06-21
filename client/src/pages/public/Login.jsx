@@ -28,10 +28,10 @@ export default function Login() {
 
 			if (role == "Applicant")
 			{
-				localStorage.setItem("role", "user");
+				sessionStorage.setItem("role", "user");
 				navigate("/my-bookings");
 			} else {
-				localStorage.setItem("role", role.toLowerCase());
+				sessionStorage.setItem("role", role.toLowerCase());
 				navigate("/dashboard");
 			}
 			

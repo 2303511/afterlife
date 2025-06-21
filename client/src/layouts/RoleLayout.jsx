@@ -6,7 +6,7 @@ import PublicLayout from "./PublicLayout";
 import { publicPaths } from "../config/routesConfig";
 
 export default function RoleLayout() {
-    const role = localStorage.getItem("role"); // e.g., "user", "staff", "admin"
+    const role = sessionStorage.getItem("role");
     const { pathname } = useLocation();
   
     // Public pages use PublicLayout or no layout at all

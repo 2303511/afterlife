@@ -53,24 +53,28 @@ export const userRoutes = [
     path: "/my-bookings",
     icon: <FaClipboardList />,
     element: <MyBookings />,
+    requiredRoles: ["user"]
   },
   {
     label: "My Payments",
     path: "/my-payments",
     icon: <FaFileInvoice />,
     element: <MyPayments />,
+    requiredRoles: ["user"]
   },
   {
     label: "Book a Niche",
     path: "/book-niche",
     icon: <FaBookOpen />,
     element: <NicheBooking />,
+    requiredRoles: ["user"]
   },
   {
     label: "My Profile",
     path: "/profile",
     icon: <FaUserCircle />,
     element: <Profile />,
+    requiredRoles: ["user, staff, admin"]
   },
 ];
 
@@ -81,24 +85,28 @@ export const staffRoutes = [
     path: "/dashboard",
     icon: <MdDashboard />,
     element: <Dashboard />,
+    requiredRoles: ["staff"]
   },
   {
     label: "Search Booking",
     path: "/search-booking",
     icon: <FaListAlt />,
     element: <SearchBooking />,
+    requiredRoles: ["staff"]
   },
   {
     label: "Pending Approvals",
     path: "/pending-approvals",
     icon: <FaListAlt />,
     element: <PendingApprovals />,
+    requiredRoles: ["staff"]
   },
   {
     label: "Niche Management",
     path: "/niche-management",
     icon: <FaMapMarkedAlt />,
     element: <NicheManagement />,
+    requiredRoles: ["staff"]
   },
 ];
 
@@ -109,12 +117,14 @@ export const adminRoutes = [
     path: "/admin-dashboard",
     icon: <MdAdminPanelSettings />,
     element: <AdminDashboard />,
+    requiredRoles: ["admin"]
   },
   {
     label: "Building Management",
     path: "/building-management",
     icon: <MdApartment />,
     element: <BuildingManagement />,
+    requiredRoles: ["admin"]
   },
 ];
 
@@ -122,6 +132,7 @@ export const hiddenRoutes = [
   {
     path: "/booking-approval/:bookingID",
     element: <BookingApproval />,
+    requiredRoles: ["staff"]
   }
 ];
 

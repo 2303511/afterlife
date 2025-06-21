@@ -5,7 +5,7 @@ import "../../styles/SideBar.css";
 import logo from "../../img/logo.svg";
 
 export default function StaffNavigation() {
-  const role = localStorage.getItem("role");
+  const [role] = useState(sessionStorage.getItem("role"));
   const routes = role === "admin" ? adminRoutes : staffRoutes;
 
   return (
@@ -21,7 +21,7 @@ export default function StaffNavigation() {
         <div className="sidebar-role mt-2">Logged in as {role}</div>
       </div>
 
-      
+
 
       {/* Navigation Links */}
       <nav className="sidebar-nav">
@@ -51,6 +51,7 @@ export default function StaffNavigation() {
         <button
           className="nav-item footer-nav text-danger"
           onClick={() => {
+            sessionStorage.removeItem("role");
             window.location.href = "/login";
           }}
         >
@@ -59,6 +60,7 @@ export default function StaffNavigation() {
             <span>Logout</span>
           </div>
         </button>
+
       </div>
 
 
