@@ -41,11 +41,11 @@ INSERT INTO Block (blockID, levelID, blockName) VALUES
 ('19f69cda-fc3f-4732-aef0-54fc58fe4d5d', '126d75d4-79cc-4ccb-b10f-23d4aac48cea', 'North Wing'),
 ('4e5f76b9-0d7f-4f6f-b7ce-6846b4c38911', '126d75d4-79cc-4ccb-b10f-23d4aac48cea', 'South Wing');
 
-INSERT INTO User (userID, username, email, hashedPassword, salt, failLoginCount, accountCreatedAt,lastLogin, fullName, contactNumber, nric, dob, nationality, userAddress, gender, roleID) VALUES
-('28d19716-d0f8-4c90-ace1-60a8143d4c1a', 'test', 'test@mail.com', '$2b$10$61IbBFhjGqPbfNKQ9X1r/.t3IROydH.YTG1FQ0TxyfAiitumZHcW.', '$2b$10$61IbBFhjGqPbfNKQ9X1r/.', 0, '2025-06-18 14:36:11', NULL, NULL, NULL, 'T1234567H', '1993-06-09', 'Singaporean', NULL, 'Female', 'cd73d682-5aca-4bb2-8963-8a197c5fb43b'),
-('79a4e4f0-5d5c-472b-95f7-bc237faffc2a', 'user', 'user@mail.com', '$2b$10$LrFWAJyBZAl7Uf.zoqBcxOvFBfiO9dLabdLlqRhw8eJmp3dGTKjoC', '$2b$10$LrFWAJyBZAl7Uf.zoqBcxO', 0, '2025-06-20 21:33:17', NULL, NULL, NULL, 'T1234567H', '1990-11-21', 'Singaporean', NULL, 'Male', 'cd73d682-5aca-4bb2-8963-8a197c5fb43b'),
-('883bb845-d68c-4222-a6fe-b12dba512e8e', 'admin', 'admin@mail.com', '$2b$10$.ZqnPfVMTAaB/9i5kUERguTNvy.LacvRE9pC/bVeiFMbXK/a3E.yG', '$2b$10$.ZqnPfVMTAaB/9i5kUERgu', 0, '2025-06-20 21:37:03', NULL, NULL, NULL, 'S1234567J', '1980-12-20', 'Singaporean', NULL, 'Female', '65e115aa-94e7-47c9-8ca6-19d799dea2b4'),
-('dc42f08c-71f6-4795-95c4-1a32f54f3f45', 'staff', 'staff@mail.com', '$2b$10$2AVfK1dOEuH.qmH/X9luruJw5XJSiaFC7LUXnETfnquY1ZhLN3qIe', '$2b$10$2AVfK1dOEuH.qmH/X9luru', 0, '2025-06-20 21:43:27', NULL, NULL, NULL, 'T1234567J', '1997-11-18', 'Singaporean', NULL, 'Female', '96ac5a94-f0ee-44a8-86f3-82d65dc4936c');
+INSERT INTO User (userID, username, email, hashedPassword, salt, failLoginCount, accountCreatedAt, lastLogin, fullName, contactNumber, nric, dob, nationality, userAddress, gender, roleID) VALUES
+('28d19716-d0f8-4c90-ace1-60a8143d4c1a', 'test', 'test@mail.com', '$2b$10$61IbBFhjGqPbfNKQ9X1r/.t3IROydH.YTG1FQ0TxyfAiitumZHcW.', '$2b$10$61IbBFhjGqPbfNKQ9X1r/.', 0, '2025-06-18 14:36:11', NULL, 'Test User', '91234567', 'T1234567H', '1993-06-09', 'Singaporean', '123 Main Street', 'Female', 'cd73d682-5aca-4bb2-8963-8a197c5fb43b'),
+('79a4e4f0-5d5c-472b-95f7-bc237faffc2a', 'user', 'user@mail.com', '$2b$10$LrFWAJyBZAl7Uf.zoqBcxOvFBfiO9dLabdLlqRhw8eJmp3dGTKjoC', '$2b$10$LrFWAJyBZAl7Uf.zoqBcxO', 0, '2025-06-20 21:33:17', NULL, 'Regular User', '98765432', 'T1234567H', '1990-11-21', 'Singaporean', '456 Clementi Ave 3', 'Male', 'cd73d682-5aca-4bb2-8963-8a197c5fb43b'),
+('883bb845-d68c-4222-a6fe-b12dba512e8e', 'admin', 'admin@mail.com', '$2b$10$.ZqnPfVMTAaB/9i5kUERguTNvy.LacvRE9pC/bVeiFMbXK/a3E.yG', '$2b$10$.ZqnPfVMTAaB/9i5kUERgu', 0, '2025-06-20 21:37:03', NULL, 'Admin User', '81234567', 'S1234567J', '1980-12-20', 'Singaporean', '789 Bukit Timah Road', 'Female', '65e115aa-94e7-47c9-8ca6-19d799dea2b4'),
+('dc42f08c-71f6-4795-95c4-1a32f54f3f45', 'staff', 'staff@mail.com', '$2b$10$2AVfK1dOEuH.qmH/X9luruJw5XJSiaFC7LUXnETfnquY1ZhLN3qIe', '$2b$10$2AVfK1dOEuH.qmH/X9luru', 0, '2025-06-20 21:43:27', NULL, 'Staff Member', '87654321', 'T1234567J', '1997-11-18', 'Singaporean', '22 Tanjong Katong', 'Female', '96ac5a94-f0ee-44a8-86f3-82d65dc4936c');
 
 
 INSERT INTO Niche (nicheID, blockID, nicheColumn, nicheRow, nicheCode, status, lastUpdated) VALUES
@@ -82,18 +82,39 @@ INSERT INTO Niche (nicheID, blockID, nicheColumn, nicheRow, nicheCode, status, l
 ('5291bee8-6652-40cf-84ad-d404565e207f', '4e5f76b9-0d7f-4f6f-b7ce-6846b4c38911', 2, 1, '2-1-4e5f', 'Pending', '2025-06-06 08:18:47'),
 ('8eb32db5-cbec-4809-bd98-e4d2e2e8bdaf', '4e5f76b9-0d7f-4f6f-b7ce-6846b4c38911', 2, 2, '2-2-4e5f', 'Occupied', '2025-06-06 08:18:47');
 
-INSERT INTO Beneficiary (beneficiaryID, beneficiaryName, inscription, dateOfBirth, dateOfDeath, birthCertificate, deathCertificate, relationshipWithApplicant, insertedAt, lastUpdated) VALUES
-('8fb6d670-06f0-4d80-bcd2-0611648e9f4f', 'John Doe', 'In Loving Memory of John Doe', '1950-01-01', '2020-01-01', 'BC1XYZ', 'DC1XYZ', 'Father', '2025-06-06 08:18:47', '2025-06-06 08:18:47'),
-('27e6a7a2-82a1-4a55-ac1e-582e6dc4dbc5', 'Ng Tze Yong', 'In Loving Memory of Ng Tze Yong', '1951-01-01', '2020-01-01', 'BC2XYZ', 'DC2XYZ', 'Mother',  '2025-06-06 08:18:47', '2025-06-06 08:18:47'),
-('1b4a9a6e-653a-45be-aa49-52e26bde8f82', 'Peter Tan', 'In Loving Memory of Peter Tan', '1952-01-01', '2020-01-01', 'BC3XYZ', 'DC3XYZ', 'Father', '2025-06-06 08:18:47', '2025-06-06 08:18:47'),
-('4ecb99d7-7c2d-4310-be76-0305513a1490', 'Earl Greyson', 'In Loving Memory of Earl Greyson', '1945-01-01', '2020-01-01', 'BC12XYZ', 'DC12XYZ', 'Sibling', '2025-06-06 14:25:31', '2025-06-06 14:25:31'),
-('0c8517f2-0b84-424d-8854-7cb96e84141e', 'Mildred Poppins', 'In Loving Memory of Mildred Poppins', '1946-01-01', '2020-01-01', 'BC13XYZ', 'DC13XYZ', 'Mother', '2025-06-06 14:25:31', '2025-06-06 14:25:31'),
-('3a4bf023-58aa-4574-b2af-639ce375d92a', 'Winston Crumble', 'In Loving Memory of Winston Crumble', '1947-01-01', '2020-01-01', 'BC14XYZ', 'DC14XYZ', 'Father', '2025-06-06 14:25:31', '2025-06-06 14:25:31'),
-('7989e00f-ec52-443d-8ca3-f1642ddd5686', 'Betsy Pickle', 'In Loving Memory of Betsy Pickle', '1948-01-01', '2020-01-01', 'BC15XYZ', 'DC15XYZ', 'Sibling', '2025-06-06 14:25:31', '2025-06-06 14:25:31'),
-('6f3fed40-f317-4786-84c5-a093f1ba8724', 'Stanley Whisker', 'In Loving Memory of Stanley Whisker', '1949-01-01', '2020-01-01', 'BC16XYZ', 'DC16XYZ', 'Sibling', '2025-06-06 14:25:31', '2025-06-06 14:25:31'),
-('3c15e5b3-25e2-404f-adca-c5e360a75f14', 'Nora Teacup', 'In Loving Memory of Nora Teacup', '1950-01-01', '2020-01-01', 'BC17XYZ', 'DC17XYZ', 'Mother', '2025-06-06 14:25:31', '2025-06-06 14:25:31'),
-('d95887dd-c1e4-4598-b908-db696cbb4cd6', 'Archie Bloom', 'In Loving Memory of Archie Bloom', '1951-01-01', '2020-01-01', 'BC18XYZ', 'DC18XYZ', 'Sibling', '2025-06-06 14:25:31', '2025-06-06 14:25:31'),
-('e2addc40-cf96-403a-a3e1-2188d4617bed', 'Daisy Marlow', 'In Loving Memory of Daisy Marlow', '1952-01-01', '2020-01-01', 'BC19XYZ', 'DC19XYZ', 'Mother', '2025-06-06 14:25:31', '2025-06-06 14:25:31');
+-- AUTO-FILL missing niches: 10 columns x 8 rows per block
+INSERT INTO Niche (nicheID, blockID, nicheColumn, nicheRow, nicheCode, status)
+SELECT
+    UUID(),
+    b.blockID,
+    c.num AS nicheColumn,
+    r.num AS nicheRow,
+    CONCAT(c.num, '-', r.num, '-', LEFT(b.blockID, 4)),
+    'Available'
+FROM
+    Block b
+    CROSS JOIN (SELECT 1 AS num UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9 UNION SELECT 10) c
+    CROSS JOIN (SELECT 1 AS num UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8) r
+WHERE
+    NOT EXISTS (
+        SELECT 1 FROM Niche n
+        WHERE n.blockID = b.blockID
+          AND n.nicheColumn = c.num
+          AND n.nicheRow = r.num
+    );
+
+INSERT INTO Beneficiary (beneficiaryID, beneficiaryName, gender, nationality, nric, beneficiaryAddress, inscription, dateOfBirth, dateOfDeath, birthCertificate, deathCertificate, relationshipWithApplicant, insertedAt, lastUpdated) VALUES
+('8fb6d670-06f0-4d80-bcd2-0611648e9f4f', 'John Doe', 'Male', 'Singaporean', 'S1234567A', '123 Main Street', 'In Loving Memory of John Doe', '1950-01-01', '2020-01-01', 'BC1XYZ', 'DC1XYZ', 'Father', '2025-06-06 08:18:47', '2025-06-06 08:18:47'),
+('27e6a7a2-82a1-4a55-ac1e-582e6dc4dbc5', 'Ng Tze Yong', 'Female', 'Singaporean', 'S2345678B', '456 Clementi Ave 3', 'In Loving Memory of Ng Tze Yong', '1951-01-01', '2020-01-01', 'BC2XYZ', 'DC2XYZ', 'Mother', '2025-06-06 08:18:47', '2025-06-06 08:18:47'),
+('1b4a9a6e-653a-45be-aa49-52e26bde8f82', 'Peter Tan', 'Male', 'Singaporean', 'S3456789C', '789 Bukit Timah Road', 'In Loving Memory of Peter Tan', '1952-01-01', '2020-01-01', 'BC3XYZ', 'DC3XYZ', 'Father', '2025-06-06 08:18:47', '2025-06-06 08:18:47'),
+('4ecb99d7-7c2d-4310-be76-0305513a1490', 'Earl Greyson', 'Male', 'Singaporean', 'S4567890D', '10 Marina Blvd', 'In Loving Memory of Earl Greyson', '1945-01-01', '2020-01-01', 'BC12XYZ', 'DC12XYZ', 'Sibling', '2025-06-06 14:25:31', '2025-06-06 14:25:31'),
+('0c8517f2-0b84-424d-8854-7cb96e84141e', 'Mildred Poppins', 'Female', 'Singaporean', 'S5678901E', '8 Tanjong Katong', 'In Loving Memory of Mildred Poppins', '1946-01-01', '2020-01-01', 'BC13XYZ', 'DC13XYZ', 'Mother', '2025-06-06 14:25:31', '2025-06-06 14:25:31'),
+('3a4bf023-58aa-4574-b2af-639ce375d92a', 'Winston Crumble', 'Male', 'Singaporean', 'S6789012F', '6 Orchard Road', 'In Loving Memory of Winston Crumble', '1947-01-01', '2020-01-01', 'BC14XYZ', 'DC14XYZ', 'Father', '2025-06-06 14:25:31', '2025-06-06 14:25:31'),
+('7989e00f-ec52-443d-8ca3-f1642ddd5686', 'Betsy Pickle', 'Female', 'Singaporean', 'S7890123G', '99 East Coast Road', 'In Loving Memory of Betsy Pickle', '1948-01-01', '2020-01-01', 'BC15XYZ', 'DC15XYZ', 'Sibling', '2025-06-06 14:25:31', '2025-06-06 14:25:31'),
+('6f3fed40-f317-4786-84c5-a093f1ba8724', 'Stanley Whisker', 'Male', 'Singaporean', 'S8901234H', '15 Holland Ave', 'In Loving Memory of Stanley Whisker', '1949-01-01', '2020-01-01', 'BC16XYZ', 'DC16XYZ', 'Sibling', '2025-06-06 14:25:31', '2025-06-06 14:25:31'),
+('3c15e5b3-25e2-404f-adca-c5e360a75f14', 'Nora Teacup', 'Female', 'Singaporean', 'S9012345I', '27 Commonwealth Dr', 'In Loving Memory of Nora Teacup', '1950-01-01', '2020-01-01', 'BC17XYZ', 'DC17XYZ', 'Mother', '2025-06-06 14:25:31', '2025-06-06 14:25:31'),
+('d95887dd-c1e4-4598-b908-db696cbb4cd6', 'Archie Bloom', 'Male', 'Singaporean', 'S0123456J', '18 Redhill Close', 'In Loving Memory of Archie Bloom', '1951-01-01', '2020-01-01', 'BC18XYZ', 'DC18XYZ', 'Sibling', '2025-06-06 14:25:31', '2025-06-06 14:25:31'),
+('e2addc40-cf96-403a-a3e1-2188d4617bed', 'Daisy Marlow', 'Female', 'Singaporean', 'S6543210K', '5 Bishan St 22', 'In Loving Memory of Daisy Marlow', '1952-01-01', '2020-01-01', 'BC19XYZ', 'DC19XYZ', 'Mother', '2025-06-06 14:25:31', '2025-06-06 14:25:31');
 
 INSERT INTO Payment (paymentID, amount, paymentMethod, paymentDate, paymentStatus) VALUES
 ('ac4a9159-ba34-44fd-8b5c-935aff4f5852', 1619.88, 'Credit Card', '2025-06-06', 'Pending'),

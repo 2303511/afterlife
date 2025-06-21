@@ -92,6 +92,10 @@ CREATE TABLE Payment (
 CREATE TABLE Beneficiary (
     beneficiaryID CHAR(36) PRIMARY KEY,
     beneficiaryName VARCHAR(50),
+    gender ENUM('Male', 'Female', 'Others'),
+    nationality VARCHAR(255),
+    nric VARCHAR(20),
+    beneficiaryAddress TEXT,
     inscription TEXT,
     dateOfBirth DATE,
     dateOfDeath DATE,
