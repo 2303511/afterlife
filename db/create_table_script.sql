@@ -114,6 +114,7 @@ CREATE TABLE Booking (
     paymentID CHAR(36),
     beneficiaryID CHAR(36),
     bookingType ENUM('Current', 'PreOrder', 'Archived'),
+    bookingStatus ENUM('Pending', 'Cancelled', 'Confirmed'),
     FOREIGN KEY (nicheID) REFERENCES Niche(nicheID),
     FOREIGN KEY (paidByID) REFERENCES User(userID),
     FOREIGN KEY (paymentID) REFERENCES Payment(paymentID),
