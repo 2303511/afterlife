@@ -7,38 +7,65 @@ import BeneficiaryDetails from './BeneficiaryDetails';
 import { validateFormData } from '../../utils/validation';
 import { applicantRules, applicantFieldLabels, beneficiaryRules, beneficiaryFieldLabels } from '../../utils/validationRules';
 
-import { ToastContainer, toast } from 'react-toastify';
+import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 
 export default function BookingForm({ selectedSlot, onCancel, onSubmit, isModal=true, width=600}) {
   const [bookingType, setBookingType] = useState("");
 
+  // const [applicantData, setApplicantData] = useState({
+  //   fullName: "",
+  //   gender: "",
+  //   nationality: "",
+  //   nationalID: "",
+  //   mobileNumber: "",
+  //   address: "",
+  //   postalCode: "",
+  //   unitNumber: "",
+  //   dob: ""
+  // });
   const [applicantData, setApplicantData] = useState({
-    fullName: "",
-    gender: "",
-    nationality: "",
-    nationalID: "",
-    mobileNumber: "",
-    address: "",
-    postalCode: "",
-    unitNumber: "",
-    dob: ""
+    fullName: "John Doe",
+    gender: "Male",
+    nationality: "Singaporean",
+    nationalID: "S1234567A",
+    mobileNumber: "91234567",
+    address: "123 Main Street",
+    postalCode: "123456",
+    unitNumber: "01-01",
+    dob: "1990-01-01"
   });
 
+
+  // const [beneficiaryData, setBeneficiaryData] = useState({
+  //   beneficiaryName: "",
+  //   beneficiaryGender: "",
+  //   beneficiaryNationality: "",
+  //   beneficiaryNRIC: "",
+  //   dateOfBirth: "",
+  //   dateOfDeath: "",
+  //   relationshipWithApplicant: "",
+  //   inscription: "",
+  //   beneficiaryAddress: "",
+  //   beneficiaryPostalCode: "",
+  //   beneficiaryUnitNumber: ""
+  // });
+
   const [beneficiaryData, setBeneficiaryData] = useState({
-    beneficiaryName: "",
-    beneficiaryGender: "",
-    beneficiaryNationality: "",
-    beneficiaryNRIC: "",
-    dateOfBirth: "",
+    beneficiaryName: "Jane Doe",
+    beneficiaryGender: "Female",
+    relationshipWithApplicant: "Daughter",
+    beneficiaryNationality: "Singaporean",
+    beneficiaryNRIC: "S1234567A",
+    dateOfBirth: "1995-01-01",
     dateOfDeath: "",
-    relationshipWithApplicant: "",
-    inscription: "",
-    beneficiaryAddress: "",
-    beneficiaryPostalCode: "",
-    beneficiaryUnitNumber: ""
+    beneficiaryAddress: "456 Example Road",
+    beneficiaryPostalCode: "654321",
+    beneficiaryUnitNumber: "02-03",
+    inscription: ""
   });
+
 
   const [files, setFiles] = useState({
     birthCert: null,
@@ -341,14 +368,30 @@ export default function BookingForm({ selectedSlot, onCancel, onSubmit, isModal=
                 width={width}
               />
 
-              <Button
-                type="submit"
-                variant="success"
-                aria-label="Confirm Booking and Submit Form"
-                className="mt-4"
-              >
-                Confirm Booking
-              </Button>
+              {/* if staff, redirect to payment page */}
+              {(sessionStorage.getItem("role") === "staff" || sessionStorage.getItem("role") === "admin") && (
+                <Button
+                  type="submit"
+                  variant="success"
+                  aria-label="Confirm Booking and Submit Form"
+                  className="mt-4"
+                >
+                  Confirm Booking
+                </Button>
+              )}
+
+              {/* if user, proceed to payment. */}
+              {sessionStorage.getItem("role") === "user" && (
+                <Button
+                  type="submit"
+                  variant="success"
+                  aria-label="Confirm Booking and Make Payment"
+                  className="mt-4"
+                >
+                  Make Payment
+                </Button>
+              )}
+              
             </Accordion.Body>
           </Accordion.Item>
 

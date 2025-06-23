@@ -1,0 +1,57 @@
+import React, { useState } from "react";
+import { useStripe, useElements } from "@stripe/react-stripe-js";
+
+// import payment elements
+import { PaymentElement } from "@stripe/react-stripe-js";
+
+export default function CheckoutForm({ onSubmit }) {
+  // import stripe elements
+  const stripe = useStripe();
+  const elements = useElements();
+
+	const [message, setMessage] = useState(null);
+	const [isProcessing, setIsProcessing] = useState(false);
+
+	const handleSubmit = async (e) => {
+		e.preventDefault();
+
+    if (!stripe || !elements) {
+      return; // dont do anything if not initialised
+    }
+
+    setIsProcessing(true); // wait for the user to complete payment
+
+    const { error, paymentIntent } = await stripe.confirmPayment({
+      elements,
+      confirmParams: {
+        return_url: `${window.location.origin}/payment-success` // place to redirect user to the success page
+      },
+    });
+
+    if (error) {
+      setMessage(error.message);
+    } else if (paymentIntent && paymentIntent.status == "succeeded") {
+      // TODO: UPDATE TO DATABASE
+      onSubmit();
+    }
+    
+    setIsProcessing(false);
+	};
+
+	return (
+    <>
+      <div className="container p-3 mt-4">
+        <h3>Payment</h3>
+        <form id="payment-form" className="payment-form mt-4" onSubmit={handleSubmit}>
+          <PaymentElement />
+          <button className="btn btn-elegant btn-md px-3 my-3" disabled={isProcessing} id="submit">
+            <span id="button-text">{isProcessing ? "Processing..." : "Proceed Payment"}</span>
+          </button>
+
+          {/* Show any error or success message */}
+        </form>
+      </div>
+    </>
+
+	);
+}
