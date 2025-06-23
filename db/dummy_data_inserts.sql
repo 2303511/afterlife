@@ -22,8 +22,8 @@ INSERT INTO Role (roleID, roleName) VALUES
 ('96ac5a94-f0ee-44a8-86f3-82d65dc4936c', 'Staff');
 
 INSERT INTO Building (buildingID, buildingName, buildingLocation) VALUES
-('251db174-6bbc-4032-91ca-1af7586608bb', 'Tranquil Hall', 'North Wing'),
-('0a33cd7f-8884-41fb-9ae6-e192ea6651b8', 'Eternal Light', 'South Wing');
+('251db174-6bbc-4032-91ca-1af7586608bb', 'Tranquil Hall', 'Bukit Brown'),
+('0a33cd7f-8884-41fb-9ae6-e192ea6651b8', 'Eternal Light', 'Bukit Brown');
 
 INSERT INTO Level (levelID, buildingID, levelNumber) VALUES
 ('6ce2f7bd-2e9a-4dd7-886b-1cde50e35d06', '251db174-6bbc-4032-91ca-1af7586608bb', 1),
@@ -32,14 +32,14 @@ INSERT INTO Level (levelID, buildingID, levelNumber) VALUES
 ('126d75d4-79cc-4ccb-b10f-23d4aac48cea', '0a33cd7f-8884-41fb-9ae6-e192ea6651b8', 2);
 
 INSERT INTO Block (blockID, levelID, blockName) VALUES
-('1b048553-e3da-484a-a76a-66108714a29d', '6ce2f7bd-2e9a-4dd7-886b-1cde50e35d06', 'North Wing'),
-('77435da1-e7a7-42a9-b62a-4ce60715eea7', '6ce2f7bd-2e9a-4dd7-886b-1cde50e35d06', 'South Wing'),
-('180df4c3-86d7-4a50-a051-df5ab7b01979', 'ca2c29b7-ee1b-4e58-ab90-1b9113522731', 'North Wing'),
-('98232d67-2e53-41d5-94a0-6c52c843c3ca', 'ca2c29b7-ee1b-4e58-ab90-1b9113522731', 'South Wing'),
-('b805aa3e-bd69-4a67-923d-578106f353f1', 'b8c413a8-94fc-4309-a2d4-2481fcadab20', 'North Wing'),
-('179320f9-8ea6-44fd-b67a-40c342a385c5', 'b8c413a8-94fc-4309-a2d4-2481fcadab20', 'South Wing'),
-('19f69cda-fc3f-4732-aef0-54fc58fe4d5d', '126d75d4-79cc-4ccb-b10f-23d4aac48cea', 'North Wing'),
-('4e5f76b9-0d7f-4f6f-b7ce-6846b4c38911', '126d75d4-79cc-4ccb-b10f-23d4aac48cea', 'South Wing');
+('1b048553-e3da-484a-a76a-66108714a29d', '6ce2f7bd-2e9a-4dd7-886b-1cde50e35d06', 'Block A'),
+('77435da1-e7a7-42a9-b62a-4ce60715eea7', '6ce2f7bd-2e9a-4dd7-886b-1cde50e35d06', 'Block B'),
+('180df4c3-86d7-4a50-a051-df5ab7b01979', 'ca2c29b7-ee1b-4e58-ab90-1b9113522731', 'Block A'),
+('98232d67-2e53-41d5-94a0-6c52c843c3ca', 'ca2c29b7-ee1b-4e58-ab90-1b9113522731', 'Block B'),
+('b805aa3e-bd69-4a67-923d-578106f353f1', 'b8c413a8-94fc-4309-a2d4-2481fcadab20', 'Block A'),
+('179320f9-8ea6-44fd-b67a-40c342a385c5', 'b8c413a8-94fc-4309-a2d4-2481fcadab20', 'Block B'),
+('19f69cda-fc3f-4732-aef0-54fc58fe4d5d', '126d75d4-79cc-4ccb-b10f-23d4aac48cea', 'Block A'),
+('4e5f76b9-0d7f-4f6f-b7ce-6846b4c38911', '126d75d4-79cc-4ccb-b10f-23d4aac48cea', 'Block B');
 
 INSERT INTO User (userID, username, email, hashedPassword, salt, failLoginCount, accountCreatedAt, lastLogin, fullName, contactNumber, nric, dob, nationality, userAddress, gender, roleID) VALUES
 ('28d19716-d0f8-4c90-ace1-60a8143d4c1a', 'test', 'test@mail.com', '$2b$10$61IbBFhjGqPbfNKQ9X1r/.t3IROydH.YTG1FQ0TxyfAiitumZHcW.', '$2b$10$61IbBFhjGqPbfNKQ9X1r/.', 0, '2025-06-18 14:36:11', NULL, 'Test User', '91234567', 'T1234567H', '1993-06-09', 'Singaporean', '123 Main Street', 'Female', 'cd73d682-5aca-4bb2-8963-8a197c5fb43b'),

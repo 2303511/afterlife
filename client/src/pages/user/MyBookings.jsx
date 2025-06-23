@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import axios from "axios";
 
 import "bootstrap/dist/js/bootstrap.bundle.min";
@@ -63,22 +64,19 @@ export default function MyBookings() {
 		const init = async () => {
 			const booking = await fetchDetails("booking/getBookingByUserID", "userID", userID);
 			console.log("Bookings fetched:", booking);
-			setUserBookings(booking);
-		};
+			console.log(`length of Bookings: ${booking.length}`);
 
-		init();
-	}, [userID]);
+			if (!booking || !Array.isArray(booking) || booking.length == 0) {
+				console.log("there are no bookings");
+				return
+			};
 
-	useEffect(() => {
-		if (!userBookings || !Array.isArray(userBookings)) return;
-
-		const fetchAll = async () => {
-			console.log("4. fetching all niche details");
+			console.log("3. fetching all niche details");
 			const nicheMap = {};
 			const beneficiaryMap = {};
 			const blockMap = {};
 
-			for (const booking of userBookings) {
+			for (const booking of booking) {
 				const currNicheDetail = await fetchDetails("niche/getNicheByID", "nicheID", booking.nicheID);
 				nicheMap[booking.nicheID] = currNicheDetail;
 
@@ -90,13 +88,15 @@ export default function MyBookings() {
 			}
 
 			console.log("All niche details fetched:", nicheMap);
+
+			setUserBookings(booking);
 			setNicheDetailsMap(nicheMap);
 			setBeneficiaryMap(beneficiaryMap);
 			setBlocksMap(blockMap);
 		};
 
-		fetchAll();
-	}, [userBookings]);
+		init();
+	}, [userID]);
 
 	// claude filtered bookings
 	useEffect(() => {
@@ -144,7 +144,7 @@ export default function MyBookings() {
 		setPaymentDetail(null);
 	};
 
-	if (!userBookings.length) {
+	if (!userBookings) {
 		return (
 			<div style={{ minHeight: "100vh", background: "linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)" }}>
 				<div className="container py-5">
@@ -152,6 +152,19 @@ export default function MyBookings() {
 						<div className="loading-spinner mx-auto mb-4"></div>
 						<h2 className="loading-text">Loading your bookings...</h2>
 					</div>
+				</div>
+			</div>
+		);
+	} else if (userBookings.length == 0) {
+		return (
+			<div className="container py-5">
+				<div className="text-center">
+					<h2 className="loading-text p-3">You have no bookings.</h2>
+					<Link to="/book-niche">
+                        <button className="btn btn-elegant btn-lg rounded-pill px-4">
+                            📝 Make a Booking
+                        </button>
+                    </Link>
 				</div>
 			</div>
 		);
