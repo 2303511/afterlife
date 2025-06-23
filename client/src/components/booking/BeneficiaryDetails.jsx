@@ -255,7 +255,6 @@ export default function BeneficiaryDetails({ formData, onChange, onFileChange, e
                 </Col>
             </Row>
             
-            <h5 className="mt-4 mb-3">Urn Inscription Details</h5>
             {bookingType === "Current" && (
                 <Form.Group className="mb-3">
                     <Form.Label>Inscription</Form.Label>

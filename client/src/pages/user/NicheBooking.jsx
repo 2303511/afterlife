@@ -11,6 +11,7 @@ export default function NicheBooking() {
 	const [selectedBuilding, setSelectedBuilding] = useState("");
 	const [selectedLevel, setSelectedLevel] = useState("");
 	const [selectedBlock, setSelectedBlock] = useState("");
+	const [gridDisabled, setGridDisabled] = useState(false);
 
 	// selectedSlotId = ID of the selected Slot
 	const [selectedSlotId, setSelectedSlotId] = useState(null);
@@ -27,8 +28,16 @@ export default function NicheBooking() {
 		selectedSlotId,
 		setSelectedSlotId,
 		selectedSlot,
-		setSelectedSlot
+		setSelectedSlot,
+        gridDisabled, 
+        setGridDisabled
 	};
+
+    const onCancel = () => {
+        setSelectedSlotId(null); // Deselect any green box
+        setIsForm(false); // show the form segment
+        setGridDisabled(false);
+    }
 
 	return (
 		<Container fluid>
@@ -39,7 +48,7 @@ export default function NicheBooking() {
 				<Col xs={12} md={12} lg={12} xl={4}>
 					{isForm && (
 						<>
-							<FullFormFlow selectedSlot={selectedSlot} />
+							<FullFormFlow selectedSlot={selectedSlot} onCancel={onCancel} />
 						</>
 					)}
 				</Col>

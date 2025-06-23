@@ -4,12 +4,14 @@ import { useStripe, useElements } from "@stripe/react-stripe-js";
 // import payment elements
 import { PaymentElement } from "@stripe/react-stripe-js";
 
-export default function CheckoutForm({ onSubmit }) {
+import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
+export default function CheckoutForm({ onSubmit, bookingID }) {
   // import stripe elements
   const stripe = useStripe();
   const elements = useElements();
 
-	const [message, setMessage] = useState(null);
 	const [isProcessing, setIsProcessing] = useState(false);
 
 	const handleSubmit = async (e) => {
@@ -21,18 +23,16 @@ export default function CheckoutForm({ onSubmit }) {
 
     setIsProcessing(true); // wait for the user to complete payment
 
-    const { error, paymentIntent } = await stripe.confirmPayment({
+    const { error } = await stripe.confirmPayment({
       elements,
       confirmParams: {
-        return_url: `${window.location.origin}/payment-success` // place to redirect user to the success page
+        return_url: `${window.location.origin}/payment-success?bookingID=${bookingID}` // place to redirect user to the success page
       },
     });
 
     if (error) {
-      setMessage(error.message);
-    } else if (paymentIntent && paymentIntent.status == "succeeded") {
-      // TODO: UPDATE TO DATABASE
-      onSubmit();
+      toast.error(error.message);
+      // setMessage(error.message);
     }
     
     setIsProcessing(false);
@@ -48,7 +48,6 @@ export default function CheckoutForm({ onSubmit }) {
             <span id="button-text">{isProcessing ? "Processing..." : "Proceed Payment"}</span>
           </button>
 
-          {/* Show any error or success message */}
         </form>
       </div>
     </>

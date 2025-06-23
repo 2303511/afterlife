@@ -32,10 +32,9 @@ export default function FullNicheMap({
         selectedLevel, setSelectedLevel,
         selectedBlock, setSelectedBlock,
         selectedSlotId, setSelectedSlotId,
-        selectedSlot, setSelectedSlot
+        selectedSlot, setSelectedSlot,
+		gridDisabled, setGridDisabled
     } = buildingState
-
-	const [gridDisabled, setGridDisabled] = useState(false);
 
 	const [buildings, setBuildings] = useState([]);
 	const [levels, setLevels] = useState([]);
@@ -127,12 +126,14 @@ export default function FullNicheMap({
 
             setSelectedSlot(slot);
             setIsForm(slot.status.toLowerCase() === "available"); // show the form segment
+			setGridDisabled(true);
             
 		} else {
 			// Directly open modal for other statuses
 			setSelectedSlot(slot);
 			setSelectedSlotId(null); // Deselect any green box
             setIsForm(false); // show the form segment
+			setGridDisabled(false);
             if (isEdit) {
                 setShowEditModal(true);
             }

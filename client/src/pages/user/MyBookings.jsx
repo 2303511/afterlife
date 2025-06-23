@@ -76,12 +76,12 @@ export default function MyBookings() {
 			const beneficiaryMap = {};
 			const blockMap = {};
 
-			for (const booking of booking) {
-				const currNicheDetail = await fetchDetails("niche/getNicheByID", "nicheID", booking.nicheID);
-				nicheMap[booking.nicheID] = currNicheDetail;
+			for (const b of booking) {
+				const currNicheDetail = await fetchDetails("niche/getNicheByID", "nicheID", b.nicheID);
+				nicheMap[b.nicheID] = currNicheDetail;
 
-				const beneficiaryDetail = await fetchDetails("beneficiary/getBeneficiaryByID", "beneficiaryID", booking.beneficiaryID);
-				beneficiaryMap[booking.beneficiaryID] = beneficiaryDetail;
+				const beneficiaryDetail = await fetchDetails("beneficiary/getBeneficiaryByID", "beneficiaryID", b.beneficiaryID);
+				beneficiaryMap[b.beneficiaryID] = beneficiaryDetail;
 
 				var currBlockDetail = await fetchDetails("block/getBlockByID", "blockID", currNicheDetail.blockID);
 				blockMap[currNicheDetail.blockID] = currBlockDetail;

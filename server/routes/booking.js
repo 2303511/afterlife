@@ -121,6 +121,138 @@ router.get("/pending", async (req, res) => {
     }
 });
 
+// for user to submit their bookings
+router.post("/submitBooking", async (req, res) => {
+    const dbConn = await db.getConnection();
+    await dbConn.beginTransaction();
+
+    try {
+        const {
+            // Applicant
+            fullName, gender, nationality, nationalID, mobileNumber, address, postalCode, unitNumber, dob,
+
+            // Beneficiary
+            beneficiaryName, beneficiaryGender, beneficiaryNationality, beneficiaryNationalID, beneficiaryAddress,
+            dateOfBirth, dateOfDeath, birthCertificate, deathCertficate,
+            relationshipWithApplicant, inscription,
+
+            // Booking
+            nicheID, bookingType,
+
+            // Meta
+            paidByID
+        } = req.body;
+
+        const validationErrors = validateBookingPayload(req.body, isPayment=true);
+
+        if (Object.keys(validationErrors).length > 0) {
+            return res.status(400).json({
+                success: false,
+                errors: validationErrors
+            });
+        }
+
+        const userID = uuidv4();
+        const beneficiaryID = uuidv4();
+        const bookingID = uuidv4();
+
+        // 1. Get roleID
+        const [[roleRow]] = await dbConn.query(
+            "SELECT roleID FROM Role WHERE roleName = ?",
+            ["Applicant"]
+        );
+        if (!roleRow) throw new Error("Role not found");
+        const roleID = roleRow.roleID;
+
+        const fullUserAddress = `${address}, ${unitNumber}, ${postalCode}`;
+
+        // 2. Insert User
+        await dbConn.query(`
+            INSERT INTO User (userID, fullName, gender, nationality, nric, contactNumber, userAddress, dob, roleID)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [userID, fullName, gender, nationality, nationalID, mobileNumber, fullUserAddress, dob, roleID]
+        );
+
+        // based off booking type whether to insert death date
+        const finalDateOfDeath = (bookingType === "PreOrder" || !dateOfDeath) ? null : dateOfDeath;
+
+        // 3. Insert Beneficiary
+        await dbConn.query(`
+            INSERT INTO Beneficiary (
+                beneficiaryID, beneficiaryName, gender, nationality, nric, beneficiaryAddress, dateOfBirth, dateOfDeath,
+                birthCertificate, deathCertificate, relationshipWithApplicant, inscription
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [beneficiaryID, beneficiaryName, beneficiaryGender, beneficiaryNationality, beneficiaryNationalID, beneficiaryAddress,
+                dateOfBirth, finalDateOfDeath, birthCertificate, deathCertficate, relationshipWithApplicant, inscription]
+        );
+
+        // 5. Insert Booking
+        await dbConn.query(`
+            INSERT INTO Booking (bookingID, nicheID, beneficiaryID, bookingType, paidByID, bookingStatus)
+            VALUES (?, ?, ?, ?, ?, ?)`,
+            [bookingID, nicheID, beneficiaryID, bookingType, userID, "Pending"]
+        );
+
+        // 6. Determine Niche Status
+        const nicheStatus = (bookingType === "Current") ? "Occupied" : "Reserved";
+        // only have occupied and reserved because staff
+
+        // 7. Update Niche Status
+        await dbConn.query(`
+            UPDATE Niche
+            SET status = ?, lastUpdated = NOW()
+            WHERE nicheID = ?
+        `, [nicheStatus, nicheID]);
+
+        await dbConn.commit();
+        console.log("User Booking Created");
+        res.status(201).json({ success: true, bookingID });
+
+    } catch (err) {
+        await dbConn.rollback();
+        console.error("submission of booking failed:", err);
+        res.status(500).json({ error: "Failed to submit booking" });
+    } finally {
+        dbConn.release();
+    }
+});
+
+router.post("/updateBookingTransaction", async (req, res) => {
+    const dbConn = await db.getConnection();
+    await dbConn.beginTransaction();
+
+    try {
+        const {paymentMethod, paymentAmount, bookingID} = req.body
+
+        const paymentID = uuidv4();
+        const paymentDate = new Date().toISOString().split("T")[0];
+
+         // insert payment records
+        await dbConn.query(`
+            INSERT INTO Payment (paymentID, amount, paymentMethod, paymentDate, paymentStatus)
+            VALUES (?, ?, ?, ?, ?)`,
+            [paymentID, paymentAmount, paymentMethod, paymentDate, "Fully Paid"]
+        );
+
+        // update booking to be updated
+        // TODO: get booking ID
+        await dbConn.query(`
+            UPDATE Booking
+            SET bookingStatus = ?, paymentID = ?
+            WHERE bookingID = ?;`, ["Confirmed", paymentID, bookingID]);
+
+        await dbConn.commit();
+        res.status(201).json({ success: true, bookingID, paymentID });
+
+    } catch (err) {
+        await dbConn.rollback();
+        console.error("submission of payment transaction:", err);
+        res.status(500).json({ error: "Failed to submit booking" });
+    } finally {
+        dbConn.release();
+    }
+})
+
 
 
 
@@ -150,7 +282,7 @@ router.post("/submitStaffBooking", async (req, res) => {
             paidByID
         } = req.body;
 
-        const validationErrors = validateBookingPayload(req.body);
+        const validationErrors = validateBookingPayload(req.body, isPayment=false);
 
         if (Object.keys(validationErrors).length > 0) {
             return res.status(400).json({
@@ -356,7 +488,7 @@ router.get("/approval/:bookingID", async (req, res) => {
 
 module.exports = router;
 
-function validateBookingPayload(payload) {
+function validateBookingPayload(payload, isPayment) {
     const errors = {};
 
     // Applicant
@@ -429,11 +561,13 @@ function validateBookingPayload(payload) {
     if (!payload.bookingType) errors.bookingType = "Booking Type is required";
 
     // Payment
-    if (!payload.paymentMethod) errors.paymentMethod = "Payment Method is required";
-
-    if (!payload.paymentAmount || isNaN(payload.paymentAmount)) {
-        errors.paymentAmount = "Valid Payment Amount is required";
-    }
+    if (!isPayment) {
+        if (!payload.paymentMethod) errors.paymentMethod = "Payment Method is required";
+    
+        if (!payload.paymentAmount || isNaN(payload.paymentAmount)) {
+            errors.paymentAmount = "Valid Payment Amount is required";
+        }
+    }   
 
     //if (!payload.paidByID) errors.paidByID = "Paid By ID is required";
 

@@ -271,7 +271,7 @@ export default function BookingForm({ selectedSlot, onCancel, onSubmit, isModal=
     <div className="booking-form card p-4 mt-4">
       <div className="d-flex justify-content-between align-items-center mb-3">
         <h4>New Application</h4>
-        { isModal && (<Button variant="outline-danger" onClick={onCancel} aria-label="Cancel Booking Form">×</Button>)}
+        <Button variant="outline-danger" onClick={onCancel} aria-label="Cancel Booking Form">Go Back</Button>
       </div>
 
       <h6>Slot ID: {selectedSlot.nicheCode}</h6>
@@ -386,7 +386,7 @@ export default function BookingForm({ selectedSlot, onCancel, onSubmit, isModal=
                   type="submit"
                   variant="success"
                   aria-label="Confirm Booking and Make Payment"
-                  className="mt-4"
+                  className="btn btn-elegant btn-md px-3 mt-2"
                 >
                   Make Payment
                 </Button>

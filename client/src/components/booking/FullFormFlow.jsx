@@ -13,15 +13,15 @@ import CheckoutForm from "./CheckoutForm";
 // dynamically get the screen size
 import { useResizeDetector } from "react-resize-detector";
 
-export default function FullFormFlow({ selectedSlot }) {
+export default function FullFormFlow({ selectedSlot, onCancel }) {
 	const [step, setStep] = useState("booking"); // or 'payment'
 	const [bookingFormData, setBookingFormData] = useState(null);
 	const [stripePromise, setStripePromise] = useState(null);
 	const [clientSecret, setClientSecret] = useState("");
+	const [bookingID, setBookingID] = useState("");
 
 	// get the form width
 	const { ref, width = 0 } = useResizeDetector();
-	console.log(`in full form, width is ${width}`);
 
 	// handlers
 	function formDataToJson(formData) {
@@ -32,9 +32,13 @@ export default function FullFormFlow({ selectedSlot }) {
 		return json;
 	}
 
-	const handleSubmit = async (paymentData) => {
+	const handleSubmit = async (bookingFormData) => {
 		if (!bookingFormData || !selectedSlot) {
-			console.error("Missing form or slot data");
+			console.error("Missing form data");
+			return;
+		}
+		if (!selectedSlot) {
+			console.error("Missing slot data");
 			return;
 		}
 
@@ -42,23 +46,40 @@ export default function FullFormFlow({ selectedSlot }) {
 
 		const fullPayload = {
 			...formJson,
-			paymentMethod: paymentData.method,
-			paymentAmount: paymentData.amount,
 			nicheID: selectedSlot.nicheID
 		};
 
 		try {
-			const res = await axios.post("/api/booking/submitStaffBooking", fullPayload, { headers: { "Content-Type": "application/json" } });
+			const res = await axios.post("/api/booking/submitBooking", fullPayload, { headers: { "Content-Type": "application/json" } }); // save to db
 
 			if (res.data.success) {
-				alert(`Booking submitted! Booking ID: ${res.data.bookingID}`);
+				// 1. save the bookingID
+				let newBookingID = res.data.bookingID;
+				setBookingID(newBookingID);
 
-				// reset states
-				setStep("booking");
-				setBookingFormData(null);
+				console.log("Booking confirmed! Now fetching Stripe keys...");
 
-				// redirect to booking page
-				// TODO: REDIRECT TO my-bookings
+				// 2. this is going to ask from stripe config
+				const publishableKey = await axios.get("/api/payment/config").then((res) => {
+					return res.data.publishableKey;
+				});
+				console.log(publishableKey);
+				setStripePromise(loadStripe(publishableKey));
+
+				// 3. to get the secret key
+				const secretKey = await axios
+					.post("/api/payment/create-payment-intent", {
+						amount: 100, // TODO: UPDATE THE PRICE OF THE NICHE
+						bookingFormData: bookingFormData
+					})
+					.then((res) => {
+						return res.data.clientSecret; // this is client secret
+					});
+				console.log(secretKey);
+				setClientSecret(secretKey);
+
+				// 4. finally move to payment step:
+				setStep("payment");
 			} else if (res.data.errors) {
 				console.error("Validation errors:", res.data.errors);
 				alert("Validation errors — please check the form.");
@@ -66,7 +87,6 @@ export default function FullFormFlow({ selectedSlot }) {
 			}
 		} catch (err) {
 			if (err.response && err.response.status === 400) {
-				// Backend sent validation errors
 				console.error("Validation errors:", err.response.data.errors);
 				alert("Validation errors — please check the form.");
 				setStep("booking");
@@ -77,57 +97,36 @@ export default function FullFormFlow({ selectedSlot }) {
 		}
 	};
 
-	const handleStripePayment = async () => {
-		// this is going to ask from stripe config
-		const publishableKey = await axios.get("/api/payment/config").then((res) => {
-			return res.data.publishableKey;
-		});
-		console.log(publishableKey);
-		setStripePromise(loadStripe(publishableKey));
-
-		// to get the secret key
-		const secretKey = await axios
-			.post("/api/payment/create-payment-intent", {
-				amount: 100 // TODO: UPDATE THE PRICE OF THE NICHE
-			})
-			.then((res) => {
-				return res.data.clientSecret; // this is client secret
-			});
-		console.log(secretKey);
-		setClientSecret(secretKey);
-	};
-
 	return (
 		<>
 			<div ref={ref}>
 				{step === "booking" && (
 					<BookingForm
 						selectedSlot={selectedSlot}
-						onSubmit={(formData) => {
+						onSubmit={async (formData) => {
 							setBookingFormData(formData); // temporarily store data
 
-							if (sessionStorage.getItem("role") === "user") handleStripePayment();
+							await handleSubmit(formData); // push other details to database first
 							setStep("payment"); // go to payment step
 						}}
 						isModal={false}
 						width={width}
+						onCancel={onCancel}
 					/>
 				)}
 			</div>
-
-			{step === "payment" && sessionStorage.getItem("role") === "staff" && (
-				<PaymentForm
-					onBack={() => setStep("booking")}
-					onSubmit={handleSubmit} // real DB submission happens here
-				/>
-			)}
-			{step === "payment" && sessionStorage.getItem("role") === "user" && !!stripePromise && !!clientSecret && (
-				<Elements stripe={stripePromise} options={{ clientSecret }}>
-					<CheckoutForm 
-						onComplete={handleSubmit}
-					/>
-				</Elements>
-			)}
+			{step === "payment" &&
+				(sessionStorage.getItem("role") === "staff" ? (
+					<PaymentForm onBack={() => setStep("booking")} onSubmit={handleSubmit} />
+				) : (
+					!!stripePromise &&
+					!!clientSecret && (
+						<Elements stripe={stripePromise} options={{ clientSecret }}>
+							<CheckoutForm bookingID={bookingID} />
+						</Elements>
+					)
+				))}
+			;
 		</>
 	);
 }
