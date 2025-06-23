@@ -1,13 +1,19 @@
 import React from "react";
 import { Form, Row, Col } from "react-bootstrap";
 
-export default function ApplicantDetails({ formData, onChange, errors }) {
+import {nationalities} from "../nationalities.js";
+
+export default function ApplicantDetails({ formData, onChange, errors, width=600 }) {
+  // if its for staff, width is bigger so it can accomodate to old width
+  // if its for user bookings, width is smaller so need to resize.
+  const isLargeScreen = width > 500 ? true : false; 
+
   return (
     <>
       <h5 className="mt-4 mb-3">Applicant Details</h5>
 
       <Row>
-        <Col md={8}>
+        <Col sm={12} md={isLargeScreen? 8 : 12}>
           <Form.Group className="mb-3">
             <Form.Label>Full Name</Form.Label>
             <Form.Control
@@ -22,7 +28,7 @@ export default function ApplicantDetails({ formData, onChange, errors }) {
           </Form.Group>
         </Col>
 
-        <Col md={3}>
+        <Col sm={12} md={isLargeScreen ? 4 : 6}>
           <Form.Group className="mb-3">
             <Form.Label>Date of Birth</Form.Label>
             <Form.Control
@@ -38,25 +44,30 @@ export default function ApplicantDetails({ formData, onChange, errors }) {
             </Form.Control.Feedback>
           </Form.Group>
         </Col>
-      </Row>
 
-      <Row>
         <Col md={6}>
           <Form.Group className="mb-3">
             <Form.Label>Nationality</Form.Label>
-            <Form.Control
+            <Form.Select
               name="nationality"
               value={formData.nationality}
               onChange={onChange}
               isInvalid={!!errors.nationality}
-            />
+            >
+               <option value="">Select Nationality</option>
+              {nationalities.map((nation) => (
+                <option key={nation} value={nation}>
+                  {nation}
+                </option>
+              ))}
+            </Form.Select>
             <Form.Control.Feedback type="invalid">
               {errors.nationality}
             </Form.Control.Feedback>
           </Form.Group>
         </Col>
 
-        <Col md={6}>
+        <Col md={isLargeScreen ? 4 : 12}>
           <Form.Group className="mb-3">
             <Form.Label>National ID (NRIC)</Form.Label>
             <Form.Control
@@ -72,10 +83,8 @@ export default function ApplicantDetails({ formData, onChange, errors }) {
             </Form.Control.Feedback>
           </Form.Group>
         </Col>
-      </Row>
 
-      <Row>
-        <Col md={4}>
+        <Col md={isLargeScreen? 4 : 6}>
           <Form.Group className="mb-3">
             <Form.Label>Gender</Form.Label>
             <Form.Select
@@ -94,7 +103,7 @@ export default function ApplicantDetails({ formData, onChange, errors }) {
           </Form.Group>
         </Col>
 
-        <Col md={4}>
+        <Col md={isLargeScreen? 4 : 6}>
           <Form.Group className="mb-3">
             <Form.Label>Mobile Number</Form.Label>
             <Form.Control
@@ -111,10 +120,8 @@ export default function ApplicantDetails({ formData, onChange, errors }) {
             </Form.Control.Feedback>
           </Form.Group>
         </Col>
-      </Row>
 
-      <Row>
-        <Col md={6}>
+        <Col md={isLargeScreen? 6 : 12}>
           <Form.Group className="mb-3">
             <Form.Label>Mailing Address</Form.Label>
             <Form.Control
@@ -129,7 +136,7 @@ export default function ApplicantDetails({ formData, onChange, errors }) {
           </Form.Group>
         </Col>
 
-        <Col md={3}>
+        <Col md={isLargeScreen? 3 : 6}>
           <Form.Group className="mb-3">
             <Form.Label>Postal Code</Form.Label>
             <Form.Control
@@ -146,7 +153,7 @@ export default function ApplicantDetails({ formData, onChange, errors }) {
           </Form.Group>
         </Col>
 
-        <Col md={3}>
+        <Col md={isLargeScreen? 3 : 6}>
           <Form.Group className="mb-3">
             <Form.Label>Unit Number</Form.Label>
             <Form.Control

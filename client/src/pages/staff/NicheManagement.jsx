@@ -22,6 +22,8 @@ const statusClass = {
 };
 
 export default function NicheMap() {
+  const isEdit = useState(sessionStorage.getItem("role")== "staff" ? true : false); // if the user role is staff, then enable edit modal. else, no edit modal.
+  
   const [slots, setSlots] = useState([]);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showBooking, setShowBooking] = useState(false);
@@ -45,7 +47,6 @@ export default function NicheMap() {
   const bookingRef = useRef(null);
   const [step, setStep] = useState("booking"); // or 'payment'
   const [bookingFormData, setBookingFormData] = useState(null);
-
 
   // Fetch buildings on load
   useEffect(() => {
@@ -254,6 +255,7 @@ export default function NicheMap() {
         onBlockChange={(e) => setSelectedBlock(e.target.value)}
         selectedSlot={selectedSlot}
         handleBook={handleBook}
+        isEdit={isEdit}
       />
 
       <NicheLegend statusClass={statusClass} />

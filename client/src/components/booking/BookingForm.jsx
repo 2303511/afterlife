@@ -1,11 +1,17 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
+
 import { Button, Form, Accordion } from "react-bootstrap";
+
 import ApplicantDetails from './ApplicantDetails';
 import BeneficiaryDetails from './BeneficiaryDetails';
 import { validateFormData } from '../../utils/validation';
 import { applicantRules, applicantFieldLabels, beneficiaryRules, beneficiaryFieldLabels } from '../../utils/validationRules';
 
-export default function BookingForm({ selectedSlot, onCancel, onSubmit }) {
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
+
+export default function BookingForm({ selectedSlot, onCancel, onSubmit, isModal=true, width=600}) {
   const [bookingType, setBookingType] = useState("");
 
   const [applicantData, setApplicantData] = useState({
@@ -83,6 +89,12 @@ export default function BookingForm({ selectedSlot, onCancel, onSubmit }) {
     }
 
     setApplicantData({ ...applicantData, [name]: value });
+    const applicantErrors = validateFormData(applicantData, applicantRules, applicantFieldLabels); // validate immediately after the user updated
+    // update errors
+    setErrors((prevErrors) => ({
+      ...prevErrors,
+      applicant: applicantErrors
+    }));
   };
 
   const handleBeneficiaryChange = (e) => {
@@ -101,6 +113,20 @@ export default function BookingForm({ selectedSlot, onCancel, onSubmit }) {
     }
 
     setBeneficiaryData({ ...beneficiaryData, [name]: value });
+
+    // Run validation and update errors immediately:
+    const activeBeneficiaryRules = { ...beneficiaryRules };
+    if (bookingType === "PreOrder") {
+      delete activeBeneficiaryRules.dateOfDeath;
+      delete activeBeneficiaryRules.inscription;
+    }
+
+    const beneficiaryErrors = validateFormData(beneficiaryData, activeBeneficiaryRules, beneficiaryFieldLabels);
+
+    setErrors((prevErrors) => ({
+      ...prevErrors,
+      beneficiary: beneficiaryErrors
+    }));
   };
 
   // Step completion status
@@ -141,7 +167,6 @@ export default function BookingForm({ selectedSlot, onCancel, onSubmit }) {
     }
 
     // Validate files
-    // Validate files
     if (!files.birthCert) {
       beneficiaryErrors.birthCertFile = `${beneficiaryFieldLabels.birthCertFile} is required`;
     }
@@ -160,7 +185,23 @@ export default function BookingForm({ selectedSlot, onCancel, onSubmit }) {
     }
 
     // If errors → stop
-    if (bookingTypeError || Object.keys(applicantErrors).length > 0 || Object.keys(beneficiaryErrors).length > 0) {
+    if (!!bookingTypeError || Object.keys(applicantErrors).length > 0 || Object.keys(beneficiaryErrors).length > 0) {
+      toast.error("Please correct the errors before proceeding.");
+
+      if (Object.keys(applicantErrors).length > 0) {
+        Object.values(applicantErrors).forEach((msg) => {
+          toast.error(`Applicant: ${msg}`);
+        });
+      }
+
+      if (Object.keys(beneficiaryErrors).length > 0) {
+        Object.values(beneficiaryErrors).forEach((msg) => {
+          toast.error(`Beneficiary: ${msg}`);
+        });
+      }
+
+      console.log(`bookingTypeError: ${bookingTypeError}`);
+
       setErrors({
         bookingType: bookingTypeError,
         applicant: applicantErrors,
@@ -194,6 +235,7 @@ export default function BookingForm({ selectedSlot, onCancel, onSubmit }) {
     /*for (let pair of formData.entries()) {
       console.log(`${pair[0]}:`, pair[1]);
     }*/
+    console.log`going to pauyment !!`;   
 
     onSubmit(formData);
   };
@@ -202,7 +244,7 @@ export default function BookingForm({ selectedSlot, onCancel, onSubmit }) {
     <div className="booking-form card p-4 mt-4">
       <div className="d-flex justify-content-between align-items-center mb-3">
         <h4>New Application</h4>
-        <Button variant="outline-danger" onClick={onCancel} aria-label="Cancel Booking Form">×</Button>
+        { isModal && (<Button variant="outline-danger" onClick={onCancel} aria-label="Cancel Booking Form">×</Button>)}
       </div>
 
       <h6>Slot ID: {selectedSlot.nicheCode}</h6>
@@ -277,6 +319,7 @@ export default function BookingForm({ selectedSlot, onCancel, onSubmit }) {
                 formData={applicantData}
                 onChange={handleApplicantChange}
                 errors={errors?.applicant || {}}
+                width={width}
               />
             </Accordion.Body>
           </Accordion.Item>
@@ -295,6 +338,7 @@ export default function BookingForm({ selectedSlot, onCancel, onSubmit }) {
                 onFileChange={onFileChange}
                 errors={errors?.beneficiary || {}}
                 bookingType={bookingType}
+                width={width}
               />
 
               <Button

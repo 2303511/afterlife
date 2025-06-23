@@ -66,13 +66,13 @@ export const applicantFieldLabels = {
     },
     dateOfBirth: { required: true },
     dateOfDeath: { required: true },
-    address: { required: true },
-    postalCode: {
+    beneficiaryAddress: { required: true },
+    beneficiaryPostalCode: {
       required: true,
       pattern: /^\d{6}$/,
       message: "Postal code must be 6 digits"
     },
-    unitNumber: { required: true },
+    beneficiaryUnitNumber: { required: true },
     inscription: { required: false } // optional
   };
   

@@ -1,13 +1,20 @@
 import React from "react";
-import { Form, Row, Col } from "react-bootstrap";
+import { Form, Row, Col, OverlayTrigger, Tooltip } from "react-bootstrap";
+import { BsQuestionCircle } from 'react-icons/bs';
 
-export default function BeneficiaryDetails({ formData, onChange, onFileChange, errors, bookingType }) {
+import {nationalities} from "../nationalities.js";
+
+export default function BeneficiaryDetails({ formData, onChange, onFileChange, errors, bookingType, width=600 }) {
+    // if its for staff, width is bigger so it can accomodate to old width
+    // if its for user bookings, width is smaller so need to resize.
+    const isLargeScreen = width > 500 ? true : false; 
+    
     return (
         <>
             <h5 className="mt-4 mb-3">Beneficiary Details</h5>
 
             <Row>
-                <Col md={6}>
+                <Col md={isLargeScreen? 6 : 12}>
                     <Form.Group className="mb-3">
                         <Form.Label>Full Name</Form.Label>
                         <Form.Control
@@ -22,7 +29,7 @@ export default function BeneficiaryDetails({ formData, onChange, onFileChange, e
                     </Form.Group>
                 </Col>
 
-                <Col md={3}>
+                <Col md={isLargeScreen? 3 : 6}>
                     <Form.Group className="mb-3">
                         <Form.Label>Gender</Form.Label>
                         <Form.Select
@@ -41,9 +48,20 @@ export default function BeneficiaryDetails({ formData, onChange, onFileChange, e
                     </Form.Group>
                 </Col>
 
-                <Col md={3}>
+                <Col md={isLargeScreen? 3 : 6}>
                     <Form.Group className="mb-3">
-                        <Form.Label>Relationship With Applicant</Form.Label>
+                        <Form.Label>
+                            Relationship
+                            <OverlayTrigger
+                                placement="right"
+                                overlay={<Tooltip>Relationship to applicant</Tooltip>}
+                            >
+                                <span role="button" className="ms-1">
+                                    <BsQuestionCircle />
+                                </span>
+                            </OverlayTrigger>
+                        </Form.Label>
+
                         <Form.Select
                             name="relationshipWithApplicant"
                             value={formData.relationshipWithApplicant}
@@ -65,18 +83,25 @@ export default function BeneficiaryDetails({ formData, onChange, onFileChange, e
             </Row>
 
             <Row>
-                <Col md={3}>
+                <Col md={isLargeScreen? 3 : 6}>
                     <Form.Group className="mb-3">
-                        <Form.Label>Nationality</Form.Label>
-                        <Form.Control
-                            name="beneficiaryNationality"
-                            value={formData.beneficiaryNationality}
-                            onChange={onChange}
-                            isInvalid={!!errors.beneficiaryNationality}
-                        />
-                        <Form.Control.Feedback type="invalid">
-                            {errors.beneficiaryNationality}
-                        </Form.Control.Feedback>
+                    <Form.Label>Nationality</Form.Label>
+                    <Form.Select
+                        name="beneficiaryNationality"
+                        value={formData.nationality}
+                        onChange={onChange}
+                        isInvalid={!!errors.nationality}
+                    >
+                        <option value="">Select Nationality</option>
+                        {nationalities.map((nation) => (
+                        <option key={nation} value={nation}>
+                            {nation}
+                        </option>
+                        ))}
+                    </Form.Select>
+                    <Form.Control.Feedback type="invalid">
+                        {errors.nationality}
+                    </Form.Control.Feedback>
                     </Form.Group>
                 </Col>
 
@@ -99,43 +124,8 @@ export default function BeneficiaryDetails({ formData, onChange, onFileChange, e
             </Row>
 
             <Row>
-                <Col md={6}>
-                    <Form.Group className="mb-3">
-                        <Form.Label>Birth Certificate</Form.Label>
-                        <Form.Control
-                            type="file"
-                            name="birthCertFile"
-                            onChange={(e) => onFileChange(e, "birthCert")}
-                            isInvalid={!!errors.birthCertFile}
-                        />
-                        <Form.Control.Feedback type="invalid">
-                            {errors.birthCertFile}
-                        </Form.Control.Feedback>
-                    </Form.Group>
-                </Col>
-
-                <Col md={6}>
-                    {bookingType === "Current" && (
-                        <Form.Group className="mb-3">
-                            <Form.Label>Death Certificate</Form.Label>
-                            <Form.Control
-                                type="file"
-                                name="deathCertFile"
-                                onChange={(e) => onFileChange(e, "deathCert")}
-                                isInvalid={!!errors.deathCertFile}
-                            />
-                            <Form.Control.Feedback type="invalid">
-                                {errors.deathCertFile}
-                            </Form.Control.Feedback>
-                        </Form.Group>
-                    )}
-
-
-                </Col>
-            </Row>
-
-            <Row>
-                <Col md={3}>
+                <h5 className="mt-4 mb-3">Certificate Details</h5>
+                <Col md={isLargeScreen? 3 : 6}>
                     <Form.Group className="mb-3">
                         <Form.Label>Date of Birth</Form.Label>
                         <Form.Control
@@ -153,28 +143,69 @@ export default function BeneficiaryDetails({ formData, onChange, onFileChange, e
                 </Col>
 
                 {bookingType === "Current" && (
-                    <Col md={3}>
+                    <>
+                        {isLargeScreen && (
+                            <Col md={isLargeScreen? 3 : 6}></Col>
+                        )}
+                        
+                        <Col md={isLargeScreen? 3 : 6}>
+                            <Form.Group className="mb-3">
+                                <Form.Label>Date of Death</Form.Label>
+                                <Form.Control
+                                    type="date"
+                                    name="dateOfDeath"
+                                    value={formData.dateOfDeath}
+                                    onChange={onChange}
+                                    isInvalid={!!errors.dateOfDeath}
+                                    max={new Date().toISOString().split("T")[0]}
+                                />
+                                <Form.Control.Feedback type="invalid">
+                                    {errors.dateOfDeath}
+                                </Form.Control.Feedback>
+                            </Form.Group>
+                        </Col>
+                    </>
+                )}
+            </Row>
+
+            <Row>
+                 <Col md={isLargeScreen? 6 : 12}>
+                    <Form.Group className="mb-3">
+                        <Form.Label>Birth Certificate</Form.Label>
+                        <Form.Control
+                            type="file"
+                            name="birthCertFile"
+                            onChange={(e) => onFileChange(e, "birthCert")}
+                            isInvalid={!!errors.birthCertFile}
+                        />
+                        <Form.Control.Feedback type="invalid">
+                            {errors.birthCertFile}
+                        </Form.Control.Feedback>
+                    </Form.Group>
+                </Col>
+
+                <Col md={isLargeScreen? 6 : 12}>
+                    {bookingType === "Current" && (
                         <Form.Group className="mb-3">
-                            <Form.Label>Date of Death</Form.Label>
+                            <Form.Label>Death Certificate</Form.Label>
                             <Form.Control
-                                type="date"
-                                name="dateOfDeath"
-                                value={formData.dateOfDeath}
-                                onChange={onChange}
-                                isInvalid={!!errors.dateOfDeath}
-                                max={new Date().toISOString().split("T")[0]}
+                                type="file"
+                                name="deathCertFile"
+                                onChange={(e) => onFileChange(e, "deathCert")}
+                                isInvalid={!!errors.deathCertFile}
                             />
                             <Form.Control.Feedback type="invalid">
-                                {errors.dateOfDeath}
+                                {errors.deathCertFile}
                             </Form.Control.Feedback>
                         </Form.Group>
-                    </Col>
-                )}
+                    )}
+                </Col>
 
             </Row>
 
             <Row>
-                <Col md={6}>
+                <h5 className="mt-4 mb-3">Address Details</h5>
+                <Col md={isLargeScreen? 6 : 12}>
                     <Form.Group className="mb-3">
                         <Form.Label>Mailing Address</Form.Label>
                         <Form.Control
@@ -189,7 +220,7 @@ export default function BeneficiaryDetails({ formData, onChange, onFileChange, e
                     </Form.Group>
                 </Col>
 
-                <Col md={3}>
+                <Col md={isLargeScreen? 3 : 6}>
                     <Form.Group className="mb-3">
                         <Form.Label>Postal Code</Form.Label>
                         <Form.Control
@@ -206,7 +237,7 @@ export default function BeneficiaryDetails({ formData, onChange, onFileChange, e
                     </Form.Group>
                 </Col>
 
-                <Col md={3}>
+                <Col md={isLargeScreen? 3 : 6}>
                     <Form.Group className="mb-3">
                         <Form.Label>Unit Number</Form.Label>
                         <Form.Control
@@ -223,7 +254,8 @@ export default function BeneficiaryDetails({ formData, onChange, onFileChange, e
                     </Form.Group>
                 </Col>
             </Row>
-
+            
+            <h5 className="mt-4 mb-3">Urn Inscription Details</h5>
             {bookingType === "Current" && (
                 <Form.Group className="mb-3">
                     <Form.Label>Inscription</Form.Label>
