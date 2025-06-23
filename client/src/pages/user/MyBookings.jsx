@@ -193,7 +193,7 @@ export default function MyBookings() {
 							<div className="search-container">
 								<div className="search-input-wrapper">
 									<span className="search-icon">🔍</span>
-									<input type="text" className="search-input" placeholder="Search bookings, names, or blocks..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+									<input type="text" className="search-input" placeholder="Search by Booking ID or Names" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
 								</div>
 							</div>
 						</div>

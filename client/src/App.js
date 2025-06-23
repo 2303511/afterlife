@@ -12,6 +12,7 @@ import { publicRoutes } from "./config/routesConfig";
 
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import PageNotFound from './pages/PageNotFound';
 
 function App() {
   localStorage.setItem("role", "staff"); // temp, change here to see staff and user navbar changes
@@ -42,8 +43,9 @@ function App() {
         {/* Unauthorized page */}
         <Route path="/unauthorized" element={<Unauthorized />} />
         
-         {/* 404 page */}
-        <Route path="*" element={<div>404 Page Not Found</div>} />
+        {/* Page Not Found */}
+        <Route path="*" element={<PublicLayout> {<PageNotFound/>} </PublicLayout>} />
+
       </Routes>
     </Router>
   );
