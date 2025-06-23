@@ -46,7 +46,8 @@ export default function FullFormFlow({ selectedSlot, onCancel }) {
 
 		const fullPayload = {
 			...formJson,
-			nicheID: selectedSlot.nicheID
+			nicheID: selectedSlot.nicheID,
+			paidByID: sessionStorage.getItem("userId")
 		};
 
 		try {

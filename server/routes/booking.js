@@ -152,7 +152,7 @@ router.post("/submitBooking", async (req, res) => {
             });
         }
 
-        const userID = uuidv4();
+        const userID = paidByID;
         const beneficiaryID = uuidv4();
         const bookingID = uuidv4();
 
@@ -166,12 +166,16 @@ router.post("/submitBooking", async (req, res) => {
 
         const fullUserAddress = `${address}, ${unitNumber}, ${postalCode}`;
 
-        // 2. Insert User
-        await dbConn.query(`
-            INSERT INTO User (userID, fullName, gender, nationality, nric, contactNumber, userAddress, dob, roleID)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-            [userID, fullName, gender, nationality, nationalID, mobileNumber, fullUserAddress, dob, roleID]
-        );
+        // 2b. check if user exists.
+        const exists = await dbConn.query("SELECT userID FROM User WHERE userID = ?", [userID]);
+        if (exists.length == 0) {
+            // current user do not exist, create a new user
+            await dbConn.query(`
+                INSERT INTO User (userID, fullName, gender, nationality, nric, contactNumber, userAddress, dob, roleID)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                [userID, fullName, gender, nationality, nationalID, mobileNumber, fullUserAddress, dob, roleID]
+            );
+        } // else, ignore and continue on
 
         // based off booking type whether to insert death date
         const finalDateOfDeath = (bookingType === "PreOrder" || !dateOfDeath) ? null : dateOfDeath;

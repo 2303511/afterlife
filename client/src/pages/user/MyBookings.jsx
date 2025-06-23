@@ -6,7 +6,6 @@ import "bootstrap/dist/js/bootstrap.bundle.min";
 import CopyableField from "../../components/CopyableField";
 
 export default function MyBookings() {
-	// const [userID] = useState("e43f9844-a6d8-4428-88ff-1225109d7061");
 	const [userID] = useState(sessionStorage.getItem("userId"));
 	const [userBookings, setUserBookings] = useState([]);
 
