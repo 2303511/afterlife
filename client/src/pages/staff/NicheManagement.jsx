@@ -61,7 +61,7 @@ export default function NicheMap() {
   // Fetch levels on building change
   useEffect(() => {
     if (!selectedBuilding) return;
-    axios.get(`http://localhost:8888/api/niche/levels/${selectedBuilding}`)
+    axios.get(`/api/niche/levels/${selectedBuilding}`)
       .then(res => {
         setLevels(res.data);
         if (res.data.length > 0) setSelectedLevel(res.data[0].levelID);
@@ -72,7 +72,7 @@ export default function NicheMap() {
   // Fetch blocks on level change
   useEffect(() => {
     if (!selectedLevel) return;
-    axios.get(`http://localhost:8888/api/niche/blocks/${selectedLevel}`)
+    axios.get(`/api/niche/blocks/${selectedLevel}`)
       .then(res => {
         setBlocks(res.data);
         if (res.data.length > 0) setSelectedBlock(res.data[0].blockID);
@@ -84,7 +84,7 @@ export default function NicheMap() {
   useEffect(() => {
     if (!selectedBlock) return;
 
-    axios.get(`http://localhost:8888/api/niche/niches/${selectedBlock}`)
+    axios.get(`/api/niche/niches/${selectedBlock}`)
       .then((res) => {
 
         const mapped = res.data
@@ -156,38 +156,27 @@ export default function NicheMap() {
     }
   };
 
-  function formDataToJson(formData) {
-    const json = {};
-    for (let [key, value] of formData.entries()) {
-      json[key] = value;
-    }
-    return json;
-  }
-  
-
   const handleSubmit = async (paymentData) => {
     if (!bookingFormData || !selectedSlot) {
       console.error("Missing form or slot data");
       return;
     }
   
-    const formJson = formDataToJson(bookingFormData);
+    bookingFormData.append("paymentMethod", paymentData.method);
+    bookingFormData.append("paymentAmount", paymentData.amount);
   
-    const fullPayload = {
-      ...formJson,
-      paymentMethod: paymentData.method,
-      paymentAmount: paymentData.amount,
-      nicheID: selectedSlot.nicheID
-    };
-  
+    /*for (let pair of bookingFormData.entries()) {
+      console.log(`${pair[0]}:`, pair[1]);
+    }*/
     try {
       const res = await axios.post(
-        "http://localhost:8888/api/booking/submitStaffBooking",
-        fullPayload,
-        { headers: { "Content-Type": "application/json" } }
+        "/api/booking/submitStaffBooking",
+        bookingFormData,
+        { headers: { 'Content-Type': 'multipart/form-data' } }
       );
-  
+      
       if (res.data.success) {
+
         alert(`Booking submitted! Booking ID: ${res.data.bookingID}`);
   
         // reset states
@@ -199,7 +188,7 @@ export default function NicheMap() {
         setBookingFormData(null);
 
         // refresh niche
-        axios.get(`http://localhost:8888/api/niche/niches/${selectedBlock}`)
+        axios.get(`/api/niche/niches/${selectedBlock}`)
         .then((res) => {
           const mapped = res.data
             .sort((a, b) => {
@@ -296,10 +285,6 @@ export default function NicheMap() {
           onSubmit={handleSubmit} // real DB submission happens here
         />
       )}
-
-
-
-
 
       <EditSlotModal
         show={showEditModal}

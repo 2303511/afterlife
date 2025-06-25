@@ -11,7 +11,7 @@ import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 
-export default function BookingForm({ selectedSlot, onCancel, onSubmit, isModal=true, width=600}) {
+export default function BookingForm({ selectedSlot, onCancel, onSubmit, isModal = true, width = 600 }) {
   const [bookingType, setBookingType] = useState("");
 
   // const [applicantData, setApplicantData] = useState({
@@ -25,18 +25,6 @@ export default function BookingForm({ selectedSlot, onCancel, onSubmit, isModal=
   //   unitNumber: "",
   //   dob: ""
   // });
-  const [applicantData, setApplicantData] = useState({
-    fullName: "John Doe",
-    gender: "Male",
-    nationality: "Singaporean",
-    nationalID: "S1234567A",
-    mobileNumber: "91234567",
-    address: "123 Main Street",
-    postalCode: "123456",
-    unitNumber: "01-01",
-    dob: "1990-01-01"
-  });
-
 
   // const [beneficiaryData, setBeneficiaryData] = useState({
   //   beneficiaryName: "",
@@ -52,7 +40,19 @@ export default function BookingForm({ selectedSlot, onCancel, onSubmit, isModal=
   //   beneficiaryUnitNumber: ""
   // });
 
-  const [beneficiaryData, setBeneficiaryData] = useState({
+  const [applicantData, setApplicantData] = useState({
+    fullName: "John Doe",
+    gender: "Male",
+    nationality: "Singaporean",
+    nationalID: "S1234567A",
+    mobileNumber: "91234567",
+    address: "123 Main Street",
+    postalCode: "123456",
+    unitNumber: "01-01",
+    dob: "1990-01-01"
+  });
+
+    const [beneficiaryData, setBeneficiaryData] = useState({
     beneficiaryName: "Jane Doe",
     beneficiaryGender: "Female",
     relationshipWithApplicant: "Daughter",
@@ -63,9 +63,8 @@ export default function BookingForm({ selectedSlot, onCancel, onSubmit, isModal=
     beneficiaryAddress: "456 Example Road",
     beneficiaryPostalCode: "654321",
     beneficiaryUnitNumber: "02-03",
-    inscription: ""
+    inscription: "test test"
   });
-
 
   const [files, setFiles] = useState({
     birthCert: null,
@@ -102,27 +101,30 @@ export default function BookingForm({ selectedSlot, onCancel, onSubmit, isModal=
     if (name === "mobileNumber") {
       value = value.replace(/\D/g, "");
     }
-
     if (name === "unitNumber") {
       value = value.replace(/[^0-9-]/g, "");
     }
-
     if (name === "postalCode") {
       value = value.replace(/\D/g, "");
     }
-
     if (name === "nationalID") {
       value = value.toUpperCase();
     }
 
-    setApplicantData({ ...applicantData, [name]: value });
-    const applicantErrors = validateFormData(applicantData, applicantRules, applicantFieldLabels); // validate immediately after the user updated
-    // update errors
+    const nextApplicantData = { ...applicantData, [name]: value };
+    setApplicantData(nextApplicantData);
+
+    const singleFieldError = validateFormData(nextApplicantData, applicantRules, applicantFieldLabels)[name];
+
     setErrors((prevErrors) => ({
       ...prevErrors,
-      applicant: applicantErrors
+      applicant: {
+        ...prevErrors.applicant,
+        [name]: singleFieldError || ""
+      }
     }));
   };
+
 
   const handleBeneficiaryChange = (e) => {
     let { name, value } = e.target;
@@ -130,31 +132,46 @@ export default function BookingForm({ selectedSlot, onCancel, onSubmit, isModal=
     if (name === "beneficiaryPostalCode") {
       value = value.replace(/\D/g, "");
     }
-
-    if (name === "benficiaryUnitNumber") {
+    if (name === "beneficiaryUnitNumber") { // fix typo!
       value = value.replace(/[^0-9-]/g, "");
     }
-
     if (name === "beneficiaryNRIC") {
       value = value.toUpperCase();
     }
 
-    setBeneficiaryData({ ...beneficiaryData, [name]: value });
+    const nextBeneficiaryData = { ...beneficiaryData, [name]: value };
+    setBeneficiaryData(nextBeneficiaryData);
 
-    // Run validation and update errors immediately:
     const activeBeneficiaryRules = { ...beneficiaryRules };
     if (bookingType === "PreOrder") {
       delete activeBeneficiaryRules.dateOfDeath;
       delete activeBeneficiaryRules.inscription;
     }
 
-    const beneficiaryErrors = validateFormData(beneficiaryData, activeBeneficiaryRules, beneficiaryFieldLabels);
+    const allErrors = validateFormData(nextBeneficiaryData, activeBeneficiaryRules, beneficiaryFieldLabels);
+
+    // Add DOB vs DOD check here:
+    if (nextBeneficiaryData.dateOfBirth && nextBeneficiaryData.dateOfDeath) {
+      const dob = new Date(nextBeneficiaryData.dateOfBirth);
+      const dod = new Date(nextBeneficiaryData.dateOfDeath);
+
+      if (dod < dob) {
+        allErrors.dateOfDeath = "Date of Death cannot be before Date of Birth";
+      }
+    }
+
+    const singleFieldError = allErrors[name];
 
     setErrors((prevErrors) => ({
       ...prevErrors,
-      beneficiary: beneficiaryErrors
+      beneficiary: {
+        ...prevErrors.beneficiary,
+        [name]: singleFieldError || ""
+      }
     }));
-  };
+};
+
+
 
   // Step completion status
   const isBookingTypeValid = !!bookingType;
@@ -262,8 +279,10 @@ export default function BookingForm({ selectedSlot, onCancel, onSubmit, isModal=
     /*for (let pair of formData.entries()) {
       console.log(`${pair[0]}:`, pair[1]);
     }*/
-    console.log`going to pauyment !!`;   
-
+    console.log`going to payment !!`;
+    for (let pair of formData.entries()) {
+      console.log(`${pair[0]}:`, pair[1]);
+    }
     onSubmit(formData);
   };
 
@@ -391,7 +410,7 @@ export default function BookingForm({ selectedSlot, onCancel, onSubmit, isModal=
                   Make Payment
                 </Button>
               )}
-              
+
             </Accordion.Body>
           </Accordion.Item>
 

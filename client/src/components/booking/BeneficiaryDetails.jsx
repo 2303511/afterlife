@@ -88,9 +88,9 @@ export default function BeneficiaryDetails({ formData, onChange, onFileChange, e
                     <Form.Label>Nationality</Form.Label>
                     <Form.Select
                         name="beneficiaryNationality"
-                        value={formData.nationality}
+                        value={formData.beneficiaryNationality}
                         onChange={onChange}
-                        isInvalid={!!errors.nationality}
+                        isInvalid={!!errors.beneficiaryNationality}
                     >
                         <option value="">Select Nationality</option>
                         {nationalities.map((nation) => (
@@ -100,7 +100,7 @@ export default function BeneficiaryDetails({ formData, onChange, onFileChange, e
                         ))}
                     </Form.Select>
                     <Form.Control.Feedback type="invalid">
-                        {errors.nationality}
+                        {errors.beneficiaryNationality}
                     </Form.Control.Feedback>
                     </Form.Group>
                 </Col>

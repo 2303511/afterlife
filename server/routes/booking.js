@@ -1,6 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../db');
+const multer = require('multer');
+const upload = multer();
 const { v4: uuidv4 } = require("uuid");
 
 router.get("/", async (req, res) => {
@@ -143,7 +145,7 @@ router.post("/submitBooking", async (req, res) => {
             paidByID
         } = req.body;
 
-        const validationErrors = validateBookingPayload(req.body, isPayment=true);
+        const validationErrors = validateBookingPayload(req.body, isPayment = true);
 
         if (Object.keys(validationErrors).length > 0) {
             return res.status(400).json({
@@ -226,12 +228,12 @@ router.post("/updateBookingTransaction", async (req, res) => {
     await dbConn.beginTransaction();
 
     try {
-        const {paymentMethod, paymentAmount, bookingID} = req.body
+        const { paymentMethod, paymentAmount, bookingID } = req.body
 
         const paymentID = uuidv4();
         const paymentDate = new Date().toISOString().split("T")[0];
 
-         // insert payment records
+        // insert payment records
         await dbConn.query(`
             INSERT INTO Payment (paymentID, amount, paymentMethod, paymentDate, paymentStatus)
             VALUES (?, ?, ?, ?, ?)`,
@@ -262,7 +264,10 @@ router.post("/updateBookingTransaction", async (req, res) => {
 
 // insert user -> beneficiary -> payment -> booking -> update niche status
 // assuming that the applicant is someone who doesnt have a account with us, then the staff creates a new user for them.
-router.post("/submitStaffBooking", async (req, res) => {
+router.post("/submitStaffBooking", upload.fields([
+    { name: 'birthCertFile', maxCount: 1 },
+    { name: 'deathCertFile', maxCount: 1 }
+]), async (req, res) => {
     const dbConn = await db.getConnection();
     await dbConn.beginTransaction();
 
@@ -273,8 +278,7 @@ router.post("/submitStaffBooking", async (req, res) => {
 
             // Beneficiary
             beneficiaryName, beneficiaryGender, beneficiaryNationality, beneficiaryNationalID, beneficiaryAddress,
-            dateOfBirth, dateOfDeath, birthCertificate, deathCertficate,
-            relationshipWithApplicant, inscription,
+            dateOfBirth, dateOfDeath, relationshipWithApplicant, inscription,
 
             // Booking
             nicheID, bookingType,
@@ -286,7 +290,16 @@ router.post("/submitStaffBooking", async (req, res) => {
             paidByID
         } = req.body;
 
-        const validationErrors = validateBookingPayload(req.body, isPayment=false);
+        const birthCertificate = req.files['birthCertFile'] ? req.files['birthCertFile'][0].buffer : null;
+        const deathCertificate = req.files['deathCertFile'] ? req.files['deathCertFile'][0].buffer : null;
+
+        const payload = {
+            ...req.body,
+            birthCertificate,
+            deathCertificate
+        };
+
+        const validationErrors = validateBookingPayload(payload, isPayment = false);
 
         if (Object.keys(validationErrors).length > 0) {
             return res.status(400).json({
@@ -326,9 +339,9 @@ router.post("/submitStaffBooking", async (req, res) => {
             INSERT INTO Beneficiary (
                 beneficiaryID, beneficiaryName, gender, nationality, nric, beneficiaryAddress, dateOfBirth, dateOfDeath,
                 birthCertificate, deathCertificate, relationshipWithApplicant, inscription
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [beneficiaryID, beneficiaryName, beneficiaryGender, beneficiaryNationality, beneficiaryNationalID, beneficiaryAddress,
-                dateOfBirth, finalDateOfDeath, birthCertificate, deathCertficate, relationshipWithApplicant, inscription]
+                dateOfBirth, finalDateOfDeath, birthCertificate, deathCertificate, relationshipWithApplicant, inscription]
         );
 
         // 4. Insert Payment
@@ -338,16 +351,16 @@ router.post("/submitStaffBooking", async (req, res) => {
             [paymentID, paymentAmount, paymentMethod, paymentDate, "Fully Paid"]
         );
 
-        // 5. Insert Booking
+        // 5. Insert Booking — FIXED ORDER!
         await dbConn.query(`
-            INSERT INTO Booking (bookingID, nicheID, beneficiaryID, bookingType, paymentID, paidByID)
-            VALUES (?, ?, ?, ?, ?, ?)`,
-            [bookingID, nicheID, beneficiaryID, bookingType, paymentID, userID]
+            INSERT INTO Booking (bookingID, nicheID, paidByID, paymentID, beneficiaryID, bookingType, bookingStatus)
+            VALUES (?, ?, ?, ?, ?, ?, ?)`,
+            [bookingID, nicheID, userID, paymentID, beneficiaryID, bookingType, "Confirmed"]
         );
+        
 
         // 6. Determine Niche Status
         const nicheStatus = (bookingType === "Current") ? "Occupied" : "Reserved";
-        // only have occupied and reserved because staff
 
         // 7. Update Niche Status
         await dbConn.query(`
@@ -367,6 +380,7 @@ router.post("/submitStaffBooking", async (req, res) => {
         dbConn.release();
     }
 });
+
 
 
 // staff - to approve pending niches aka to put a urn in
@@ -475,7 +489,16 @@ router.get("/approval/:bookingID", async (req, res) => {
         }
 
         const booking = rows[0];
-        res.json(booking);
+
+        // Convert certs to base64
+        const birthCertBase64 = booking.birthCertificate ? booking.birthCertificate.toString('base64') : '';
+        const deathCertBase64 = booking.deathCertificate ? booking.deathCertificate.toString('base64') : '';
+
+        res.json({
+            ...booking,
+            birthCertBase64,
+            deathCertBase64
+        });
     } catch (err) {
         console.error("Error fetching booking:", err);
         res.status(500).json({ message: "Internal server error" });
@@ -490,9 +513,12 @@ router.get("/approval/:bookingID", async (req, res) => {
 
 
 
+
 module.exports = router;
 
 function validateBookingPayload(payload, isPayment) {
+    console.log("Payload received:", payload);
+
     const errors = {};
 
     // Applicant
@@ -540,25 +566,25 @@ function validateBookingPayload(payload, isPayment) {
                 errors.dateOfDeath = "Date of Death cannot be before Date of Birth";
             }
         }
+    }
 
-        if (!payload.beneficiaryAddress) errors.beneficiaryAddress = "Address is required";
-        if (!/^\d{6}$/.test(payload.beneficiaryPostalCode)) {
-            errors.beneficiaryPostalCode = "Invalid postal code (6 digits)";
-        }
-    
-        if (!payload.beneficiaryUnitNumber) errors.beneficiaryUnitNumber = "Unit Number is required";
+    if (!payload.beneficiaryAddress) errors.beneficiaryAddress = "Address is required";
+    if (!/^\d{6}$/.test(payload.beneficiaryPostalCode)) {
+        errors.beneficiaryPostalCode = "Invalid postal code (6 digits)";
+    }
 
-        if (!payload.inscription) {
-            errors.inscription = "Inscription is required";
-        }
+    if (!payload.beneficiaryUnitNumber) errors.beneficiaryUnitNumber = "Unit Number is required";
 
-        if (!payload.deathCertficate) {
-            errors.deathCertficate = "Death Certificate file is required";
-        }
+    if (!payload.inscription) {
+        errors.inscription = "Inscription is required";
+    }
+
+    if (!payload.deathCertificate) {
+        errors.deathCertficate = "Death Certificate file is required";
     }
 
     // Always validate birth cert (temp removal)
-    //if (!payload.birthCertificate) errors.birthCertificate = "Birth Certificate file is required";
+    if (!payload.deathCertificate) errors.birthCertficate = "Birth Certificate file is required";
 
     // Booking
     if (!payload.nicheID) errors.nicheID = "Niche ID is required";
@@ -567,11 +593,11 @@ function validateBookingPayload(payload, isPayment) {
     // Payment
     if (!isPayment) {
         if (!payload.paymentMethod) errors.paymentMethod = "Payment Method is required";
-    
+
         if (!payload.paymentAmount || isNaN(payload.paymentAmount)) {
             errors.paymentAmount = "Valid Payment Amount is required";
         }
-    }   
+    }
 
     //if (!payload.paidByID) errors.paidByID = "Paid By ID is required";
 
