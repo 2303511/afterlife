@@ -100,7 +100,9 @@ CREATE TABLE Beneficiary (
     dateOfBirth DATE,
     dateOfDeath DATE,
     birthCertificate LONGBLOB,
+    birthCertificateMime VARCHAR(100),
     deathCertificate LONGBLOB,
+    deathCertificateMime VARCHAR(100),
     relationshipWithApplicant ENUM('Mother', 'Father', 'Sibling', 'Relative', 'Others'),
     insertedAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     lastUpdated TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
