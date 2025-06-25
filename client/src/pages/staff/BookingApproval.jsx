@@ -14,7 +14,7 @@ export default function BookingApproval() {
     const [activeTab, setActiveTab] = useState('death'); // 'death' or 'birth'
 
     useEffect(() => {
-        axios.get(`http://localhost:8888/api/booking/approval/${bookingID}`)
+        axios.get(`/api/booking/approval/${bookingID}`)
             .then(res => {
                 console.log("Booking fetched:", res.data);
                 setBooking(res.data);
@@ -34,7 +34,7 @@ export default function BookingApproval() {
 
     const handleApprove = async () => {
         try {
-            const res = await axios.post('http://localhost:8888/api/booking/approve', {
+            const res = await axios.post('/api/booking/approve', {
                 bookingID: booking.bookingID,
                 nicheID: booking.nicheID
             });
@@ -121,19 +121,33 @@ export default function BookingApproval() {
                     {/* PDF Viewer Placeholder */}
                     <div className="border rounded p-5 text-center bg-light">
                         {activeTab === 'death' ? (
-                            booking.deathCertificate ? (
-                                <p className="text-muted">[ Show Death Certificate PDF here — TODO ]</p>
+                            booking.deathCertBase64 ? (
+                                <iframe
+                                    src={`data:${booking.deathCertMime};base64,${booking.deathCertBase64}`}
+                                    title="Death Certificate"
+                                    width="100%"
+                                    height="600px"
+                                    style={{ border: 'none' }}
+                                />
                             ) : (
                                 <p className="text-muted">No Death Certificate Available</p>
                             )
                         ) : (
-                            booking.birthCertificate ? (
-                                <p className="text-muted">[ Show Birth Certificate PDF here — TODO ]</p>
+                            booking.birthCertBase64 ? (
+                                <iframe
+                                    src={`data:${booking.birthCertMime};base64,${booking.birthCertBase64}`}
+                                    title="Birth Certificate"
+                                    width="100%"
+                                    height="600px"
+                                    style={{ border: 'none' }}
+                                />
                             ) : (
                                 <p className="text-muted">No Birth Certificate Available</p>
                             )
                         )}
                     </div>
+
+
                 </div>
 
                 {/* Right column: Beneficiary Info + Actions */}

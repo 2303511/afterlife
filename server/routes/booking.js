@@ -291,12 +291,17 @@ router.post("/submitStaffBooking", upload.fields([
         } = req.body;
 
         const birthCertificate = req.files['birthCertFile'] ? req.files['birthCertFile'][0].buffer : null;
+        const birthCertificateMime = req.files['birthCertFile'] ? req.files['birthCertFile'][0].mimetype : null;
+
         const deathCertificate = req.files['deathCertFile'] ? req.files['deathCertFile'][0].buffer : null;
+        const deathCertificateMime = req.files['deathCertFile'] ? req.files['deathCertFile'][0].mimetype : null;
 
         const payload = {
             ...req.body,
             birthCertificate,
-            deathCertificate
+            birthCertificateMime,
+            deathCertificate,
+            deathCertificateMime
         };
 
         const validationErrors = validateBookingPayload(payload, isPayment = false);
@@ -334,14 +339,19 @@ router.post("/submitStaffBooking", upload.fields([
         // based off booking type whether to insert death date
         const finalDateOfDeath = (bookingType === "PreOrder" || !dateOfDeath) ? null : dateOfDeath;
 
-        // 3. Insert Beneficiary
+        // 3. Insert Beneficiary (updated with MIME)
         await dbConn.query(`
             INSERT INTO Beneficiary (
                 beneficiaryID, beneficiaryName, gender, nationality, nric, beneficiaryAddress, dateOfBirth, dateOfDeath,
-                birthCertificate, deathCertificate, relationshipWithApplicant, inscription
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                birthCertificate, birthCertificateMime,
+                deathCertificate, deathCertificateMime,
+                relationshipWithApplicant, inscription
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [beneficiaryID, beneficiaryName, beneficiaryGender, beneficiaryNationality, beneficiaryNationalID, beneficiaryAddress,
-                dateOfBirth, finalDateOfDeath, birthCertificate, deathCertificate, relationshipWithApplicant, inscription]
+                dateOfBirth, finalDateOfDeath,
+                birthCertificate, birthCertificateMime,
+                deathCertificate, deathCertificateMime,
+                relationshipWithApplicant, inscription]
         );
 
         // 4. Insert Payment
@@ -351,13 +361,12 @@ router.post("/submitStaffBooking", upload.fields([
             [paymentID, paymentAmount, paymentMethod, paymentDate, "Fully Paid"]
         );
 
-        // 5. Insert Booking — FIXED ORDER!
+        // 5. Insert Booking
         await dbConn.query(`
             INSERT INTO Booking (bookingID, nicheID, paidByID, paymentID, beneficiaryID, bookingType, bookingStatus)
             VALUES (?, ?, ?, ?, ?, ?, ?)`,
             [bookingID, nicheID, userID, paymentID, beneficiaryID, bookingType, "Confirmed"]
         );
-        
 
         // 6. Determine Niche Status
         const nicheStatus = (bookingType === "Current") ? "Occupied" : "Reserved";
@@ -380,6 +389,7 @@ router.post("/submitStaffBooking", upload.fields([
         dbConn.release();
     }
 });
+
 
 
 
@@ -460,6 +470,8 @@ router.get("/approval/:bookingID", async (req, res) => {
                 bene.dateOfDeath, 
                 bene.birthCertificate, 
                 bene.deathCertificate, 
+                bene.birthCertificateMime,
+                bene.deathCertificateMime,
                 bene.relationshipWithApplicant, 
                 bene.inscription, 
                 n.nicheID, 
@@ -494,11 +506,17 @@ router.get("/approval/:bookingID", async (req, res) => {
         const birthCertBase64 = booking.birthCertificate ? booking.birthCertificate.toString('base64') : '';
         const deathCertBase64 = booking.deathCertificate ? booking.deathCertificate.toString('base64') : '';
 
+        const birthCertMime = booking.birthCertificateMime || '';
+        const deathCertMime = booking.deathCertificateMime || '';
+
         res.json({
             ...booking,
             birthCertBase64,
-            deathCertBase64
+            deathCertBase64,
+            birthCertMime,
+            deathCertMime
         });
+        console.log(birthCertMime);
     } catch (err) {
         console.error("Error fetching booking:", err);
         res.status(500).json({ message: "Internal server error" });
