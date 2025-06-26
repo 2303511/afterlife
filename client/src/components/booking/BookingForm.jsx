@@ -12,7 +12,8 @@ import 'react-toastify/dist/ReactToastify.css';
 
 
 export default function BookingForm({ selectedSlot, onCancel, onSubmit, isModal = true, width = 600 }) {
-  const [bookingType, setBookingType] = useState("");
+  // const [bookingType, setBookingType] = useState("");
+  const [bookingType, setBookingType] = useState("PreOrder");
 
   // const [applicantData, setApplicantData] = useState({
   //   fullName: "",
@@ -55,7 +56,7 @@ export default function BookingForm({ selectedSlot, onCancel, onSubmit, isModal 
     const [beneficiaryData, setBeneficiaryData] = useState({
     beneficiaryName: "Jane Doe",
     beneficiaryGender: "Female",
-    relationshipWithApplicant: "Daughter",
+    relationshipWithApplicant: "Mother",
     beneficiaryNationality: "Singaporean",
     beneficiaryNRIC: "S1234567A",
     dateOfBirth: "1995-01-01",

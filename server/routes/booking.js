@@ -232,7 +232,7 @@ router.post("/submitBooking", upload.fields([
         `, [nicheStatus, nicheID]);
 
         await dbConn.commit();
-        console.log("User Booking Created");
+        console.log("\n\nUser Booking Created\n\n\n\n");
         res.status(201).json({ success: true, bookingID });
 
     } catch (err) {
@@ -244,6 +244,7 @@ router.post("/submitBooking", upload.fields([
     }
 });
 
+// after the user completes payment, need to update the booking to fully paid. 
 router.post("/updateBookingTransaction", async (req, res) => {
     const dbConn = await db.getConnection();
     await dbConn.beginTransaction();
@@ -262,7 +263,6 @@ router.post("/updateBookingTransaction", async (req, res) => {
         );
 
         // update booking to be updated
-        // TODO: get booking ID
         await dbConn.query(`
             UPDATE Booking
             SET bookingStatus = ?, paymentID = ?
@@ -618,12 +618,12 @@ function validateBookingPayload(payload, isPayment) {
         errors.inscription = "Inscription is required";
     }
 
-    if (!payload.deathCertificate) {
+    if (payload.bookingType === "Current" && !payload.deathCertificate) {
         errors.deathCertficate = "Death Certificate file is required";
     }
 
     // Always validate birth cert (temp removal)
-    if (!payload.deathCertificate) errors.birthCertficate = "Birth Certificate file is required";
+    if (!payload.birthCertificate) errors.birthCertficate = "Birth Certificate file is required";
 
     // Booking
     if (!payload.nicheID) errors.nicheID = "Niche ID is required";

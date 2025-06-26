@@ -46,6 +46,8 @@ export default function FullFormFlow({ selectedSlot, onCancel }) {
 			return;
 		}
 
+		bookingFormData.append('paidByID', sessionStorage.getItem("userId"));
+
 		try {
 			const res = await axios.post("/api/booking/submitBooking", bookingFormData,  { headers: { 'Content-Type': 'multipart/form-data' } }); // save to db
 
@@ -96,8 +98,8 @@ export default function FullFormFlow({ selectedSlot, onCancel }) {
 				// alert("Validation errors — please check the form.");
 				setStep("booking"); // ensure that the steps remains on booking, do not proceeed to payment
 			} else {
-				toast.error("Booking failed:", err);
-				alert("Server error — failed to submit booking.");
+				toast.error(`Booking failed: ${err}`);
+				// alert("Server error — failed to submit booking.");
 			}
 		}
 	};

@@ -181,7 +181,7 @@ export default function NicheMap() {
       
       if (res.data.success) {
 
-        alert(`Booking submitted! Booking ID: ${res.data.bookingID}`);
+        toast.info(`Booking submitted! Booking ID: ${res.data.bookingID}`);
   
         // reset states
         setStep("booking");
@@ -214,7 +214,7 @@ export default function NicheMap() {
   
       } else if (res.data.errors) {
         res.data.errors.map((err) => {
-          toast.error(err);
+          toast.error(`NicheManagement res.data not success: ${err}`);
         })
         
         setStep("booking"); // Go back to form
@@ -224,13 +224,13 @@ export default function NicheMap() {
       if (err.response && err.response.status === 400) {
         // Backend sent validation errors
         for (const [key, value] of Object.entries(err.response.data.errors)) {
-          toast.error(value);
+          toast.error(`NicheManagement try catch: ${value}`);
         }
 
         setStep("booking");
       } else {
         console.error("Booking failed:", err);
-        alert("Server error — failed to submit booking.");
+        toast.error(`Server error — failed to submit booking: ${err}`);
       }
     }
   };

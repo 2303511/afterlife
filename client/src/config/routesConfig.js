@@ -74,7 +74,7 @@ export const userRoutes = [
     path: "/profile",
     icon: <FaUserCircle />,
     element: <Profile />,
-    requiredRoles: ["user, staff, admin"]
+    requiredRoles: ["user", "staff", "admin"]
   },
 ];
 
