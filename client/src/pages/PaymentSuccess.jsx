@@ -10,25 +10,30 @@ import "../styles/AfterLife-Theme.css";
 
 export default function PaymentSuccess() {
 	const [searchParams] = useSearchParams();
-	const bookingID = searchParams.get("bookingID");
-
-	console.log("Booking ID from URL:", bookingID);
-
+	
 	useEffect(() => {
 		const updateTransaction = async () => {
-			try {
-				const res = await axios.post("/api/booking/updateBookingTransaction", {
-					paymentMethod: "Credit Card",
-					paymentAmount: 100,
-					bookingID
-				});
+			// if there is no payment made, immediately redirect
+			if (!searchParams.get("bookingID")) {
+				window.location.href = "/my-bookings";
+			} else {
+				const bookingID = searchParams.get("bookingID");
+				console.log("Booking ID from URL:", bookingID);
 
-				if (!res.data.success) {
-					toast.error("Failed to update transaction.");
+				try {
+					const res = await axios.post("/api/booking/updateBookingTransaction", {
+						paymentMethod: "Credit Card",
+						paymentAmount: 100, //TODO PUT DYNAMIC VALUES LTR
+						bookingID
+					});
+
+					if (!res.data.success) {
+						toast.error("Failed to update transaction.");
+					}
+				} catch (err) {
+					console.error("Error updating transaction:", err);
+					toast.error("Server error while updating transaction.");
 				}
-			} catch (err) {
-				console.error("Error updating transaction:", err);
-				toast.error("Server error while updating transaction.");
 			}
 		};
 

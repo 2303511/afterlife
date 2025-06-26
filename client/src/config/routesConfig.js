@@ -6,7 +6,6 @@ import MyBookings from "../pages/user/MyBookings";
 import MyPayments from "../pages/user/MyPayments";
 import NicheBooking from "../pages/user/NicheBooking";
 import Profile from "../pages/Profile";
-import PaymentSuccess from "../pages/PaymentSuccess";
 
 import Dashboard from "../pages/staff/Dashboard";
 import SearchBooking from "../pages/staff/SearchBooking";
@@ -44,14 +43,7 @@ export const publicRoutes = [
     label: "Register",
     path: "/register",
     element: <Register />,
-  },
-  {
-    label: "Payment Success",
-    path: "/payment-success",
-    element: <PaymentSuccess />,
-    requiredRoles: ["user, staff, admin"]
   }
-  
 ];
 
 // USER
