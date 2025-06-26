@@ -220,7 +220,7 @@ export default function BeneficiaryDetails({ formData, onChange, onFileChange, e
                     </Form.Group>
                 </Col>
 
-                {/* <Col md={isLargeScreen? 3 : 6}>
+                <Col md={isLargeScreen? 3 : 6}>
                     <Form.Group className="mb-3">
                         <Form.Label>Postal Code</Form.Label>
                         <Form.Control
@@ -252,7 +252,7 @@ export default function BeneficiaryDetails({ formData, onChange, onFileChange, e
                             {errors.beneficiaryUnitNumber}
                         </Form.Control.Feedback>
                     </Form.Group>
-                </Col> */}
+                </Col>
             </Row>
             
             {bookingType === "Current" && (

@@ -7,8 +7,8 @@ export const applicantFieldLabels = {
     nationalID: "NRIC",
     mobileNumber: "Mobile Number",
     address: "Mailing Address",
-    // postalCode: "Postal Code",
-    // unitNumber: "Unit Number",
+    postalCode: "Postal Code",
+    unitNumber: "Unit Number",
     dob: "Date of Birth",
     remarks: "Remarks"
   };
@@ -28,12 +28,12 @@ export const applicantFieldLabels = {
       message: "Mobile number must start with 8 or 9 and be 8 digits"
     },
     address: { required: true },
-    // postalCode: {
-    //   required: true,
-    //   pattern: /^\d{6}$/,
-    //   message: "Postal code must be 6 digits"
-    // },
-    // unitNumber: { required: true },
+    postalCode: {
+      required: true,
+      pattern: /^\d{6}$/,
+      message: "Postal code must be 6 digits"
+    },
+    unitNumber: { required: true },
     dob: { required: true },
     remarks: { required: false }
   };
@@ -47,8 +47,8 @@ export const applicantFieldLabels = {
     dateOfBirth: "Date of Birth",
     dateOfDeath: "Date of Death",
     address: "Mailing Address",
-    // postalCode: "Postal Code",
-    // unitNumber: "Unit Number",
+    postalCode: "Postal Code",
+    unitNumber: "Unit Number",
     birthCertFile: "Birth Certificate",
     deathCertFile: "Death Certificate",
     inscription: "Inscription"
@@ -67,12 +67,12 @@ export const applicantFieldLabels = {
     dateOfBirth: { required: true },
     dateOfDeath: { required: true },
     beneficiaryAddress: { required: true },
-    // beneficiaryPostalCode: {
-    //   required: true,
-    //   pattern: /^\d{6}$/,
-    //   message: "Postal code must be 6 digits"
-    // },
-    // beneficiaryUnitNumber: { required: true },
+    beneficiaryPostalCode: {
+      required: true,
+      pattern: /^\d{6}$/,
+      message: "Postal code must be 6 digits"
+    },
+    beneficiaryUnitNumber: { required: true },
     inscription: { required: false } // optional
   };
   
