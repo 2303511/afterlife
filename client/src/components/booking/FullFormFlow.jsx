@@ -13,6 +13,10 @@ import CheckoutForm from "./CheckoutForm";
 // dynamically get the screen size
 import { useResizeDetector } from "react-resize-detector";
 
+// for error toasts
+import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
 export default function FullFormFlow({ selectedSlot, onCancel }) {
 	const [step, setStep] = useState("booking"); // or 'payment'
 	const [bookingFormData, setBookingFormData] = useState(null);
@@ -33,12 +37,12 @@ export default function FullFormFlow({ selectedSlot, onCancel }) {
 	}
 
 	const handleSubmit = async (bookingFormData) => {
-		if (!bookingFormData || !selectedSlot) {
-			console.error("Missing form data");
+		if (!bookingFormData) {
+			toast.error("Missing form data");
 			return;
 		}
 		if (!selectedSlot) {
-			console.error("Missing slot data");
+			toast.error("Missing slot data");
 			return;
 		}
 
@@ -52,39 +56,47 @@ export default function FullFormFlow({ selectedSlot, onCancel }) {
 
 				console.log("Booking confirmed! Now fetching Stripe keys...");
 
-				// 2. this is going to ask from stripe config
+				// 2. FETCH STRIPE KEYS !
+				// 2a. this is going to ask from stripe config
 				const publishableKey = await axios.get("/api/payment/config").then((res) => {
 					return res.data.publishableKey;
 				});
 				console.log(publishableKey);
 				setStripePromise(loadStripe(publishableKey));
 
-				// 3. to get the secret key
+				// 2b. to get the secret key
 				const secretKey = await axios
 					.post("/api/payment/create-payment-intent", {
 						amount: 100, // TODO: UPDATE THE PRICE OF THE NICHE
 						bookingFormData: bookingFormData
 					})
 					.then((res) => {
-						return res.data.clientSecret; // this is client secret
+						return res.data.clientSecret; // this is client secret for stripe
 					});
 				console.log(secretKey);
 				setClientSecret(secretKey);
 
-				// 4. finally move to payment step:
+				// 3. finally move to payment step:
 				setStep("payment");
 			} else if (res.data.errors) {
-				console.error("Validation errors:", res.data.errors);
-				alert("Validation errors — please check the form.");
-				setStep("booking"); // Go back to form
+				res.data.errors.map((err) => {
+					toast.error(err);
+				})
+
+				// alert("Validation errors — please check the form.");
+				setStep("booking"); // ensure that the steps remains on booking, do not proceeed to payment
+
 			}
 		} catch (err) {
 			if (err.response && err.response.status === 400) {
-				console.error("Validation errors:", err.response.data.errors);
-				alert("Validation errors — please check the form.");
-				setStep("booking");
+				for (const [key, value] of Object.entries(err.response.data.errors)) {
+					toast.error(value);
+				}
+
+				// alert("Validation errors — please check the form.");
+				setStep("booking"); // ensure that the steps remains on booking, do not proceeed to payment
 			} else {
-				console.error("Booking failed:", err);
+				toast.error("Booking failed:", err);
 				alert("Server error — failed to submit booking.");
 			}
 		}
@@ -98,9 +110,7 @@ export default function FullFormFlow({ selectedSlot, onCancel }) {
 						selectedSlot={selectedSlot}
 						onSubmit={async (formData) => {
 							setBookingFormData(formData); // temporarily store data
-
 							await handleSubmit(formData); // push other details to database first
-							setStep("payment"); // go to payment step
 						}}
 						isModal={false}
 						width={width}

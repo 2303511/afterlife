@@ -10,6 +10,10 @@ import EditSlotModal from "../../components/niche/EditSlotModal";
 import BookingForm from "../../components/booking/BookingForm";
 import PaymentForm from "../../components/booking/PaymentForm";
 
+// for error toasts
+import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
 
 const statusClass = {
   available: "status-available",
@@ -209,16 +213,20 @@ export default function NicheMap() {
       
   
       } else if (res.data.errors) {
-        console.error("Validation errors:", res.data.errors);
-        alert("Validation errors — please check the form.");
+        res.data.errors.map((err) => {
+          toast.error(err);
+        })
+        
         setStep("booking"); // Go back to form
       }
   
     } catch (err) {
       if (err.response && err.response.status === 400) {
         // Backend sent validation errors
-        console.error("Validation errors:", err.response.data.errors);
-        alert("Validation errors — please check the form.");
+        for (const [key, value] of Object.entries(err.response.data.errors)) {
+          toast.error(value);
+        }
+
         setStep("booking");
       } else {
         console.error("Booking failed:", err);
