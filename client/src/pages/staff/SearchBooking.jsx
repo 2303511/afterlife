@@ -21,13 +21,15 @@ export default function SearchBooking() {
     const query = params.get('query');
     const tab = params.get('tab') || 'current';
 
+
+
     if (query) {
       setSearchInput(query);
       setActiveTab(tab);
       setIsLoading(true);
       setHasSearched(true);
 
-      axios.get(`http://localhost:8888/api/booking/search?query=${encodeURIComponent(query)}`)
+      axios.get(`/api/booking/search?query=${encodeURIComponent(query)}`)
         .then((res) => {
           setBookings(res.data);
         })
@@ -42,27 +44,28 @@ export default function SearchBooking() {
     }
   }, [location.search]);
 
+  const isValidInput = (input) => {
+    const phoneRegex = /^\d{8}$/; // Adjust to match local phone number format
+    return phoneRegex.test(input.trim());
+  };
+  
   const handleSearch = () => {
-    if (!searchInput.trim()) return;
+    if (!isValidInput(searchInput)) {
+      toast.error('Please enter a valid 8-digit contact number.');
+      return;
+    }
+
     setIsLoading(true);
     setHasSearched(true);
-
-    // Push to URL
     navigate(`/search-booking?query=${encodeURIComponent(searchInput)}&tab=${activeTab}`);
 
-    axios.get(`http://localhost:8888/api/booking/search?query=${encodeURIComponent(searchInput)}`)
-      .then((res) => {
-        //console.log(res.data);
-        setBookings(res.data);
-      })
-      .catch((err) => {
-        //console.error("Search failed:", err);
+    axios.get(`/api/booking/search?query=${encodeURIComponent(searchInput)}`)
+      .then((res) => setBookings(res.data))
+      .catch(() => {
         setBookings([]);
         toast.error('Failed to search bookings — please try again.');
       })
-      .finally(() => {
-        setIsLoading(false);
-      });
+      .finally(() => setIsLoading(false));
   };
 
 
@@ -75,7 +78,7 @@ export default function SearchBooking() {
     if (!booking) return;
 
     try {
-      await axios.post("http://localhost:8888/api/booking/approve", {
+      await axios.post("/api/booking/approve", {
         bookingID: bookingID,
         nicheID: booking.nicheID
       });
@@ -101,7 +104,7 @@ export default function SearchBooking() {
     if (!booking) return;
 
     try {
-      await axios.post("http://localhost:8888/api/booking/archive", {
+      await axios.post("/api/booking/archive", {
         bookingID: bookingID,
         nicheID: booking.nicheID
       });
