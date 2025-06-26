@@ -124,7 +124,10 @@ router.get("/pending", async (req, res) => {
 });
 
 // for user to submit their bookings
-router.post("/submitBooking", async (req, res) => {
+router.post("/submitBooking", upload.fields([
+    { name: 'birthCertFile', maxCount: 1 },
+    { name: 'deathCertFile', maxCount: 1 }
+]), async (req, res) => {
     const dbConn = await db.getConnection();
     await dbConn.beginTransaction();
 
@@ -135,8 +138,7 @@ router.post("/submitBooking", async (req, res) => {
 
             // Beneficiary
             beneficiaryName, beneficiaryGender, beneficiaryNationality, beneficiaryNationalID, beneficiaryAddress,
-            dateOfBirth, dateOfDeath, birthCertificate, deathCertficate,
-            relationshipWithApplicant, inscription,
+            dateOfBirth, dateOfDeath, relationshipWithApplicant, inscription,
 
             // Booking
             nicheID, bookingType,
@@ -145,7 +147,21 @@ router.post("/submitBooking", async (req, res) => {
             paidByID
         } = req.body;
 
-        const validationErrors = validateBookingPayload(req.body, isPayment = true);
+        const birthCertificate = req.files['birthCertFile'] ? req.files['birthCertFile'][0].buffer : null;
+        const birthCertificateMime = req.files['birthCertFile'] ? req.files['birthCertFile'][0].mimetype : null;
+
+        const deathCertificate = req.files['deathCertFile'] ? req.files['deathCertFile'][0].buffer : null;
+        const deathCertificateMime = req.files['deathCertFile'] ? req.files['deathCertFile'][0].mimetype : null;
+
+        const payload = {
+            ...req.body,
+            birthCertificate,
+            birthCertificateMime,
+            deathCertificate,
+            deathCertificateMime
+        };
+
+        const validationErrors = validateBookingPayload(payload, isPayment = true);
 
         if (Object.keys(validationErrors).length > 0) {
             return res.status(400).json({
@@ -186,10 +202,15 @@ router.post("/submitBooking", async (req, res) => {
         await dbConn.query(`
             INSERT INTO Beneficiary (
                 beneficiaryID, beneficiaryName, gender, nationality, nric, beneficiaryAddress, dateOfBirth, dateOfDeath,
-                birthCertificate, deathCertificate, relationshipWithApplicant, inscription
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                birthCertificate, birthCertificateMime,
+                deathCertificate, deathCertificateMime,
+                relationshipWithApplicant, inscription
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [beneficiaryID, beneficiaryName, beneficiaryGender, beneficiaryNationality, beneficiaryNationalID, beneficiaryAddress,
-                dateOfBirth, finalDateOfDeath, birthCertificate, deathCertficate, relationshipWithApplicant, inscription]
+                dateOfBirth, finalDateOfDeath,
+                birthCertificate, birthCertificateMime,
+                deathCertificate, deathCertificateMime,
+                relationshipWithApplicant, inscription]
         );
 
         // 5. Insert Booking

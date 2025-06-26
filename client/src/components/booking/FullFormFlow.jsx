@@ -42,16 +42,8 @@ export default function FullFormFlow({ selectedSlot, onCancel }) {
 			return;
 		}
 
-		const formJson = formDataToJson(bookingFormData);
-
-		const fullPayload = {
-			...formJson,
-			nicheID: selectedSlot.nicheID,
-			paidByID: sessionStorage.getItem("userId")
-		};
-
 		try {
-			const res = await axios.post("/api/booking/submitBooking", fullPayload, { headers: { "Content-Type": "application/json" } }); // save to db
+			const res = await axios.post("/api/booking/submitBooking", bookingFormData,  { headers: { 'Content-Type': 'multipart/form-data' } }); // save to db
 
 			if (res.data.success) {
 				// 1. save the bookingID
