@@ -128,6 +128,7 @@ export default function BookingApproval() {
                                     width="100%"
                                     height="600px"
                                     style={{ border: 'none' }}
+                                    allowFullScreen
                                 />
                             ) : (
                                 <p className="text-muted">No Death Certificate Available</p>
@@ -140,6 +141,7 @@ export default function BookingApproval() {
                                     width="100%"
                                     height="600px"
                                     style={{ border: 'none' }}
+                                    allowFullScreen
                                 />
                             ) : (
                                 <p className="text-muted">No Birth Certificate Available</p>
