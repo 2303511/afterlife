@@ -42,7 +42,7 @@ export default function PaymentSuccess() {
 
 	return (
 		<>
-			<section className="hero-gradient py-5 min-vh-100 d-flex align-items-center">
+			<section className="py-5 min-vh-100 d-flex align-items-center">
 				<div className="container text-center py-5">
 					<img src={logo || "https://via.placeholder.com/80x80/6c757d/ffffff?text=AL"} alt="AfterLife logo" className="mb-4 rounded-circle shadow" style={{ width: "80px", height: "80px" }} />
 					<h1 className="display-3 fw-bold text-success mb-3">✅ Payment Successful</h1>
