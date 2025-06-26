@@ -140,7 +140,7 @@ export default function ApplicantDetails({ formData, onChange, errors, width = 6
 					</Form.Group>
 				</Col>
 
-				{/* <Col md={isLargeScreen ? 3 : 6}>
+				<Col md={isLargeScreen ? 3 : 6}>
 					<Form.Group className="mb-3">
 						<Form.Label>Postal Code</Form.Label>
 						<Form.Control type="text" name="postalCode" value={formData.postalCode} onChange={onChange} isInvalid={!!errors.postalCode} />
@@ -155,7 +155,7 @@ export default function ApplicantDetails({ formData, onChange, errors, width = 6
 						<Form.Control type="text" name="unitNumber" value={formData.unitNumber} onChange={onChange} isInvalid={!!errors.unitNumber} />
 						<Form.Control.Feedback type="invalid">{errors.unitNumber}</Form.Control.Feedback>
 					</Form.Group>
-				</Col> */}
+				</Col>
 			</Row>
 
 			{/* modal to select user */}
