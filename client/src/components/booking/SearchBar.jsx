@@ -4,12 +4,17 @@ export default function SearchBar({ value, onChange, onSearch, onKeyPress, isLoa
   return (
     <div className="search-bar">
       <input
-        type="text"
+        type="tel"
+        inputMode="numeric"
+        pattern="[0-9]*"
         placeholder="Enter user's phone number.."
         value={value}
-        onChange={onChange}
-        onKeyPress={onKeyPress}
+        onChange={(e) => {
+          const onlyNums = e.target.value.replace(/\D/g, '');
+          onChange({ target: { value: onlyNums } });
+        }}
       />
+
       <button onClick={onSearch} disabled={!value.trim() || isLoading}>
         {isLoading ? 'Searching...' : 'Search'}
       </button>
