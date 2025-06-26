@@ -1,5 +1,4 @@
 import React, { useState, useRef } from "react";
-
 import { Button, Form, Accordion } from "react-bootstrap";
 
 import ApplicantDetails from './ApplicantDetails';
@@ -10,22 +9,21 @@ import { applicantRules, applicantFieldLabels, beneficiaryRules, beneficiaryFiel
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
-
 export default function BookingForm({ selectedSlot, onCancel, onSubmit, isModal = true, width = 600 }) {
   // const [bookingType, setBookingType] = useState("");
   const [bookingType, setBookingType] = useState("PreOrder");
 
-  // const [applicantData, setApplicantData] = useState({
-  //   fullName: "",
-  //   gender: "",
-  //   nationality: "",
-  //   nationalID: "",
-  //   mobileNumber: "",
-  //   address: "",
-  //   postalCode: "",
-  //   unitNumber: "",
-  //   dob: ""
-  // });
+  const [applicantData, setApplicantData] = useState({
+    fullName: "",
+    gender: "",
+    nationality: "",
+    nationalID: "",
+    mobileNumber: "",
+    address: "",
+    postalCode: "",
+    unitNumber: "",
+    dob: ""
+  });
 
   // const [beneficiaryData, setBeneficiaryData] = useState({
   //   beneficiaryName: "",
@@ -41,19 +39,19 @@ export default function BookingForm({ selectedSlot, onCancel, onSubmit, isModal 
   //   beneficiaryUnitNumber: ""
   // });
 
-  const [applicantData, setApplicantData] = useState({
-    fullName: "John Doe",
-    gender: "Male",
-    nationality: "Singaporean",
-    nationalID: "S1234567A",
-    mobileNumber: "91234567",
-    address: "123 Main Street",
-    postalCode: "123456",
-    unitNumber: "01-01",
-    dob: "1990-01-01"
-  });
+  // const [applicantData, setApplicantData] = useState({
+  //   fullName: "John Doe",
+  //   gender: "Male",
+  //   nationality: "Singaporean",
+  //   nationalID: "S1234567A",
+  //   mobileNumber: "91234567",
+  //   address: "123 Main Street",
+  //   postalCode: "123456",
+  //   unitNumber: "01-01",
+  //   dob: "1990-01-01"
+  // });
 
-    const [beneficiaryData, setBeneficiaryData] = useState({
+  const [beneficiaryData, setBeneficiaryData] = useState({
     beneficiaryName: "Jane Doe",
     beneficiaryGender: "Female",
     relationshipWithApplicant: "Mother",
@@ -96,6 +94,7 @@ export default function BookingForm({ selectedSlot, onCancel, onSubmit, isModal 
     }
   };
 
+  // handlers
   const handleApplicantChange = (e) => {
     let { name, value } = e.target;
 
@@ -171,7 +170,6 @@ export default function BookingForm({ selectedSlot, onCancel, onSubmit, isModal 
       }
     }));
 };
-
 
 
   // Step completion status
@@ -299,7 +297,7 @@ export default function BookingForm({ selectedSlot, onCancel, onSubmit, isModal 
       <Form onSubmit={handleSubmit}>
         <Accordion defaultActiveKey="0" className="mb-3">
 
-
+          {/* booking type */}
           <Accordion.Item eventKey="0">
             <Accordion.Header>
               Step 1: Booking Type
@@ -353,13 +351,15 @@ export default function BookingForm({ selectedSlot, onCancel, onSubmit, isModal 
               </Form.Group>
             </Accordion.Body>
           </Accordion.Item>
-
+          
+          {/* applicant details */}
           <Accordion.Item eventKey="1">
             <Accordion.Header>
               Step 2: Applicant Details
               <span style={{ color: isApplicantValid ? "green" : "orange", marginLeft: '0.5rem' }}>
                 {isApplicantValid ? "Completed" : "Incomplete"}
               </span>
+
             </Accordion.Header>
             <Accordion.Body>
               <ApplicantDetails
@@ -367,10 +367,12 @@ export default function BookingForm({ selectedSlot, onCancel, onSubmit, isModal 
                 onChange={handleApplicantChange}
                 errors={errors?.applicant || {}}
                 width={width}
+                setApplicantData={setApplicantData}
               />
             </Accordion.Body>
           </Accordion.Item>
-
+          
+          {/* beneficiary details */}
           <Accordion.Item eventKey="2">
             <Accordion.Header>
               Step 3: Beneficiary Details

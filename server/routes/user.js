@@ -124,4 +124,18 @@ router.post("/login", async (req, res) => {
 	}
 });
 
+router.post("/getUserByID", async (req, res) => {
+	let userID = req.body.userID;
+
+	try {
+		const [user] = await db.query("SELECT * FROM User WHERE userID = ?", [userID]);
+		if (user.length === 0) return res.status(404).json({ error: 'User not found' });
+
+		res.json(user[0]); // return user details
+	} catch (err) {
+		console.error(err);
+		res.status(500).json({ error: `Failed to fetch user with ID ${userID}` });
+	}
+});
+
 module.exports = router;
