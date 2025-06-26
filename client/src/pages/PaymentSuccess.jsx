@@ -62,13 +62,6 @@ export default function PaymentSuccess() {
 					</div>
 				</div>
 			</section>
-
-			<footer className="bg-dark text-light py-4">
-				<div className="container text-center">
-					<p className="mb-2">© 2024 AfterLife. All rights reserved.</p>
-					<p className="small">Designed with care and respect for every family.</p>
-				</div>
-			</footer>
 		</>
 	);
 }
