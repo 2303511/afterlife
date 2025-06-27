@@ -1,7 +1,18 @@
 const express = require("express");
 const cors = require("cors");
-const app = express();
+const session = require("express-session");
+const MySQLStore = require("express-mysql-session")(session);
 require("dotenv").config();
+
+const app = express();
+
+// Session Store (MYSQL)
+const sessionStore = new MySQLStore({
+    host:     process.env.DB_HOST,
+    user:     process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_NAME,
+});
 
 // TODO: import all routes here
 const usersRoute = require("./routes/user");
@@ -15,8 +26,28 @@ const stripeRoute = require("./routes/stripe");
 const emailRoutes = require('./routes/email');
 
 
-app.use(cors());
+app.use(
+    cors({ 
+        credentials: true 
+    }));
+
 app.use(express.json());
+
+app.use(
+    session({
+        name: "sid",  // cookie name
+        secret: process.env.SESS_SECRET,
+        store: sessionStore,
+        resave: false,
+        saveUninitialized: false,
+        cookie: {
+        httpOnly: true,
+        sameSite: "lax",
+        secure: process.env.NODE_ENV === "production",
+        maxAge: 1000 * 60 * 60 * 2,  // 2 hr
+        },
+    })
+);
 
 // TODO: Define routes
 app.use("/api/user", usersRoute);
@@ -32,17 +63,6 @@ app.use('/api/email', emailRoutes);
 app.get("/api", (req, res) => {
 	console.log("API is working!");
 	res.send("API is working!");
-});
-
-app.post("/api/login", (req, res) => {
-    console.log("Login route hit");
-
-    const userDetails = req.body;
-    console.log("User details:", userDetails);
-
-    // TODO: Implement login logic here
-
-    res.send("Login route is working!");
 });
 
 const port = 8888;

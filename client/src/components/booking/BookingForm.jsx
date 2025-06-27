@@ -1,5 +1,6 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Button, Form, Accordion } from "react-bootstrap";
+import axios from "axios";
 
 import ApplicantDetails from './ApplicantDetails';
 import BeneficiaryDetails from './BeneficiaryDetails';
@@ -75,6 +76,18 @@ export default function BookingForm({ selectedSlot, onCancel, onSubmit, isModal 
     applicant: {},
     beneficiary: {}
   });
+
+  const [user, setUser] = useState(undefined);
+
+  useEffect(() => {
+    axios.get("/api/user/me", { withCredentials: true })
+      .then(res => {
+        setUser(res.data);
+      })
+      .catch(err => console.error("Failed to fetch session:", err));
+  }, []);
+
+  if (user === undefined) return null; 
 
   const onFileChange = (e, type) => {
     const file = e.target.files[0];
@@ -391,7 +404,7 @@ export default function BookingForm({ selectedSlot, onCancel, onSubmit, isModal 
               />
 
               {/* if staff, redirect to payment page */}
-              {(sessionStorage.getItem("role") === "staff" || sessionStorage.getItem("role") === "admin") && (
+              {(user?.role === "staff" || user?.role === "admin") && (
                 <Button
                   type="submit"
                   variant="success"
@@ -403,7 +416,7 @@ export default function BookingForm({ selectedSlot, onCancel, onSubmit, isModal 
               )}
 
               {/* if user, proceed to payment. */}
-              {sessionStorage.getItem("role") === "user" && (
+              {user?.role === "user" && (
                 <Button
                   type="submit"
                   variant="success"

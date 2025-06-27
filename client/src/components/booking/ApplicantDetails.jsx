@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button, Modal, Form, Row, Col } from "react-bootstrap";
 
 import { nationalities } from "../nationalities.js";
@@ -27,9 +27,21 @@ export default function ApplicantDetails({ formData, onChange, errors, width = 6
 		};
 	};
 
+	const [userSession, setUser] = useState(undefined);
+
+	useEffect(() => {
+		axios.get("/api/user/me", { withCredentials: true })
+		.then(res => {
+			setUser(res.data);
+		})
+		.catch(err => console.error("Failed to fetch session:", err));
+	}, []);
+
+	if (userSession === undefined) return null; 
+
 	// handlers
 	const handleLoadDetails = async (userID) => {
-		if (!userID) userID = sessionStorage.getItem("userId");
+		if (!userID) userID = userSession?.userID;
 
 		try {
 			const res = await axios.post("/api/user/getUserByID", { userID });

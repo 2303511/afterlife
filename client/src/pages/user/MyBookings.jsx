@@ -6,7 +6,6 @@ import "bootstrap/dist/js/bootstrap.bundle.min";
 import CopyableField from "../../components/CopyableField";
 
 export default function MyBookings() {
-	const [userID] = useState(sessionStorage.getItem("userId"));
 	const [userBookings, setUserBookings] = useState([]);
 
 	const [paymentDetail, setPaymentDetail] = useState(null);
@@ -22,6 +21,9 @@ export default function MyBookings() {
 	const [filteredBookings, setFilteredBookings] = useState([]);
 	const [activeFilter, setActiveFilter] = useState("All");
 	const [searchTerm, setSearchTerm] = useState("");
+
+	// for user session 
+	const [user, setUser] = useState(undefined);
 
 	const bookingTypeToStatusClass = {
 		Current: "status-current",
@@ -54,6 +56,16 @@ export default function MyBookings() {
 			return null;
 		}
 	};
+
+	useEffect(() => {
+		axios.get("/api/user/me", { withCredentials: true })
+		.then(res => {
+			setUser(res.data);
+		})
+		.catch(err => console.error("Failed to fetch session:", err));
+	}, []);
+
+	const userID = user?.userID;
 
 	useEffect(() => {
 		if (!userID) return; // Wait until userID is set

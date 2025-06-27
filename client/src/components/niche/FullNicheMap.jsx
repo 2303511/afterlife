@@ -25,7 +25,17 @@ export default function FullNicheMap({
 	isBookButtonDisabled = false,
 	setIsBookButtonDisabled = () => {}
 }) {
-    const [isEdit] = useState(sessionStorage.getItem("role") === "staff"); // if the user role is staff, then enable edit modal. else, no edit modal.
+	const [user, setUser] = useState(undefined);
+
+	useEffect(() => {
+		axios.get("/api/user/me", { withCredentials: true })
+		.then(res => {
+			setUser(res.data);
+		})
+		.catch(err => console.error("Failed to fetch session:", err));
+	}, []);
+
+    const [isEdit] = useState(user?.role === "staff"); // if the user role is staff, then enable edit modal. else, no edit modal.
 	const [slots, setSlots] = useState([]);
 	const [showEditModal, setShowEditModal] = useState(false);
 
@@ -127,7 +137,7 @@ export default function FullNicheMap({
                 }
             });
 
-			if (sessionStorage.getItem("role") === "user") {
+			if (user.role === "user") {
 				setIsForm(slot.status.toLowerCase() === "available"); // show the form segment
 			}
 

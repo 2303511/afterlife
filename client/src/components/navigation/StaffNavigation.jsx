@@ -1,11 +1,22 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { staffRoutes, adminRoutes } from "../../config/routesConfig";
 import "../../styles/SideBar.css";
 import logo from "../../img/logo.svg";
+import axios from "axios";
 
 export default function StaffNavigation() {
-  const [role] = useState(sessionStorage.getItem("role"));
+  const [user, setUser] = useState(undefined);
+
+  useEffect(() => {
+    axios.get("/api/user/me", { withCredentials: true })
+    .then(res => {
+      setUser(res.data);
+    })
+    .catch(err => console.error("Failed to fetch session:", err));
+  }, []);
+
+  const [role] = useState(user?.role);
   const routes = role === "admin" ? adminRoutes : staffRoutes;
 
   return (
@@ -51,8 +62,7 @@ export default function StaffNavigation() {
         <button
           className="nav-item footer-nav text-danger"
           onClick={() => {
-            sessionStorage.removeItem("role");
-            window.location.href = "/login";
+            window.location.href = "/logout";
           }}
         >
           <div className="nav-item-content">

@@ -14,10 +14,19 @@ function mainContent() {
 export default function AllBookings() {
 	const [userID, setUserID] = useState(null);
 	const [userRole, setUserRole] = useState(null);
+	const [user, setUser] = useState(undefined);
 
 	useEffect(() => {
-		const storedID = sessionStorage.getItem("userID");
-		const storedRole = sessionStorage.getItem("userRole");
+		axios.get("/api/user/me", { withCredentials: true })
+		.then(res => {
+			setUser(res.data);
+		})
+		.catch(err => console.error("Failed to fetch session:", err));
+	}, []);
+
+	useEffect(() => {
+		const storedID = user?.userID;
+		const storedRole = user?.role;
 
 		console.log("userRole:", userRole, typeof userRole);
 
