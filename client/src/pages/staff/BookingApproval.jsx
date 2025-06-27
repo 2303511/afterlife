@@ -12,6 +12,8 @@ export default function BookingApproval() {
     const [booking, setBooking] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
     const [activeTab, setActiveTab] = useState('death'); // 'death' or 'birth'
+    const [denialReason, setDenialReason] = useState('');
+
 
     useEffect(() => {
         axios.get(`/api/booking/approval/${bookingID}`)
@@ -64,8 +66,36 @@ export default function BookingApproval() {
         }
     };
 
+    const handleDeny = async () => {
+        if (!denialReason.trim()) {
+            toast.error("Please provide a reason for denial.");
+            return;
+        }
 
+        try {
+            const res = await axios.post('/api/email/sendDeniedRequest', {
+                to: booking.email,
+                reason: denialReason
+            });
 
+            if (res.data.success) {
+                toast.success("Denial email sent.");
+
+                setTimeout(() => {
+                    if (from) {
+                        navigate(from);
+                    } else {
+                        navigate('/search-booking');
+                    }
+                }, 1500);
+            } else {
+                toast.error("Email failed to send.");
+              }
+        } catch (err) {
+            console.error("Email error:", err);
+            toast.error("Failed to send email.");
+        }
+    };
 
     return (
         <div className="container py-4">
@@ -176,13 +206,17 @@ export default function BookingApproval() {
                     <button className="btn btn-success w-100 mb-3" onClick={handleApprove}>Approve Request</button>
 
                     {/* Deny form */}
-                    <div className="card">
-                        <div className="card-body">
-                            <h6 className="card-title mb-2">Deny Request</h6>
-                            <textarea className="form-control mb-2" placeholder="Reason..."></textarea>
-                            <button className="btn btn-danger w-100">Submit Denial</button>
-                        </div>
-                    </div>
+                    <textarea
+                        className="form-control mb-2"
+                        placeholder="Reason..."
+                        value={denialReason}
+                        onChange={(e) => setDenialReason(e.target.value)}
+                    ></textarea>
+
+                    <button className="btn btn-danger w-100" onClick={handleDeny}>
+                        Submit Denial
+                    </button>
+
                 </div>
             </div>
         </div>
