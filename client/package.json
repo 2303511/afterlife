@@ -27,7 +27,7 @@
     "stripe": "^18.2.1",
     "web-vitals": "^2.1.4"
   },
-  "proxy": "http://localhost:8888",
+  "proxy": "http://backend:8888",
   "scripts": {
     "start": "PORT=8080 react-scripts start",
     "build": "react-scripts build",
