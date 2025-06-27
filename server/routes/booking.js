@@ -412,6 +412,134 @@ router.get("/approval/:bookingID", async (req, res) => {
     }
 });
 
+// insert user -> beneficiary -> payment -> booking -> update niche status
+// assuming that the applicant is someone who doesnt have a account with us, then the staff creates a new user for them.
+router.post("/submitStaffBooking", upload.fields([
+    { name: 'birthCertFile', maxCount: 1 },
+    { name: 'deathCertFile', maxCount: 1 }
+]), async (req, res) => {
+    const dbConn = await db.getConnection();
+    await dbConn.beginTransaction();
+
+    try {
+        const {
+            // Applicant
+            fullName, gender, nationality, nationalID, mobileNumber, address, postalCode, unitNumber, dob,
+
+            // Beneficiary
+            beneficiaryName, beneficiaryGender, beneficiaryNationality, beneficiaryNationalID, beneficiaryAddress,
+            dateOfBirth, dateOfDeath, relationshipWithApplicant, inscription,
+
+            // Booking
+            nicheID, bookingType,
+
+            // Payment
+            paymentMethod, paymentAmount,
+
+            // Meta
+            paidByID
+        } = req.body;
+
+        const birthCertificate = req.files['birthCertFile'] ? req.files['birthCertFile'][0].buffer : null;
+        const birthCertificateMime = req.files['birthCertFile'] ? req.files['birthCertFile'][0].mimetype : null;
+
+        const deathCertificate = req.files['deathCertFile'] ? req.files['deathCertFile'][0].buffer : null;
+        const deathCertificateMime = req.files['deathCertFile'] ? req.files['deathCertFile'][0].mimetype : null;
+
+        const payload = {
+            ...req.body,
+            birthCertificate,
+            birthCertificateMime,
+            deathCertificate,
+            deathCertificateMime
+        };
+
+        const validationErrors = validateBookingPayload(payload, isPayment = false);
+
+        if (Object.keys(validationErrors).length > 0) {
+            return res.status(400).json({
+                success: false,
+                errors: validationErrors
+            });
+        }
+
+        const userID = uuidv4();
+        const beneficiaryID = uuidv4();
+        const bookingID = uuidv4();
+        const paymentID = uuidv4();
+        const paymentDate = new Date().toISOString().split("T")[0];
+
+        // 1. Get roleID
+        const [[roleRow]] = await dbConn.query(
+            "SELECT roleID FROM Role WHERE roleName = ?",
+            ["Applicant"]
+        );
+        if (!roleRow) throw new Error("Role not found");
+        const roleID = roleRow.roleID;
+
+        const fullUserAddress = `${address}, ${unitNumber}, ${postalCode}`;
+
+        // 2. Insert User
+        await dbConn.query(`
+            INSERT INTO User (userID, fullName, gender, nationality, nric, contactNumber, userAddress, dob, roleID)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [userID, fullName, gender, nationality, nationalID, mobileNumber, fullUserAddress, dob, roleID]
+        );
+
+        // based off booking type whether to insert death date
+        const finalDateOfDeath = (bookingType === "PreOrder" || !dateOfDeath) ? null : dateOfDeath;
+
+        // 3. Insert Beneficiary (updated with MIME)
+        await dbConn.query(`
+            INSERT INTO Beneficiary (
+                beneficiaryID, beneficiaryName, gender, nationality, nric, beneficiaryAddress, dateOfBirth, dateOfDeath,
+                birthCertificate, birthCertificateMime,
+                deathCertificate, deathCertificateMime,
+                relationshipWithApplicant, inscription
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [beneficiaryID, beneficiaryName, beneficiaryGender, beneficiaryNationality, beneficiaryNationalID, beneficiaryAddress,
+                dateOfBirth, finalDateOfDeath,
+                birthCertificate, birthCertificateMime,
+                deathCertificate, deathCertificateMime,
+                relationshipWithApplicant, inscription]
+        );
+
+        // 4. Insert Payment
+        await dbConn.query(`
+            INSERT INTO Payment (paymentID, amount, paymentMethod, paymentDate, paymentStatus)
+            VALUES (?, ?, ?, ?, ?)`,
+            [paymentID, paymentAmount, paymentMethod, paymentDate, "Fully Paid"]
+        );
+
+        // 5. Insert Booking
+        await dbConn.query(`
+            INSERT INTO Booking (bookingID, nicheID, paidByID, paymentID, beneficiaryID, bookingType, bookingStatus)
+            VALUES (?, ?, ?, ?, ?, ?, ?)`,
+            [bookingID, nicheID, userID, paymentID, beneficiaryID, bookingType, "Confirmed"]
+        );
+
+        // 6. Determine Niche Status
+        const nicheStatus = (bookingType === "Current") ? "Occupied" : "Reserved";
+
+        // 7. Update Niche Status
+        await dbConn.query(`
+            UPDATE Niche
+            SET status = ?, lastUpdated = NOW()
+            WHERE nicheID = ?
+        `, [nicheStatus, nicheID]);
+
+        await dbConn.commit();
+        res.status(201).json({ success: true, bookingID, paymentID });
+
+    } catch (err) {
+        await dbConn.rollback();
+        console.error("submission of booking failed:", err);
+        res.status(500).json({ error: "Failed to submit booking" });
+    } finally {
+        dbConn.release();
+    }
+});
+
 module.exports = router;
 
 function validateBookingPayload(payload, isPayment) {
