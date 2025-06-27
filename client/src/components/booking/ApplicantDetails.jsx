@@ -87,10 +87,10 @@ export default function ApplicantDetails({ formData, onChange, errors, width = 6
 
 			if (!!res.data) {
 				setApplicantData(userDetails);
-				toast.info(`Successfully loaded details for User with UserID ${userID}`);
+				// toast.info(`Successfully loaded details for User with UserID ${userID}`);
 				// onChange(userDetails); // update the form data
 			} else {
-				toast.error(`Error retrieving data for User with UserID ${userID}`);
+				// toast.error(`Error retrieving data for User with UserID ${userID}`);
 			}
 		} catch (err) {
 			toast.error("Failed to load user data.");
