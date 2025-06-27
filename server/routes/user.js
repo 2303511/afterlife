@@ -29,8 +29,8 @@ async function getUserRole(userID) {
 	try {
 		const [role] = await db.query(`
 			SELECT roleName 
-			FROM role r 
-			INNER JOIN user u ON u.roleID = r.roleID 
+			FROM Role r 
+			INNER JOIN User u ON u.roleID = r.roleID 
 			WHERE u.userID = ?
 		`, [userID]);
 		
@@ -157,6 +157,21 @@ router.post("/getUserByID", async (req, res) => {
 		res.status(500).json({ error: `Failed to fetch user with ID ${userID}` });
 	}
 });
+
+router.post("/getUserByNRIC", async (req, res) => {
+	let userNRIC = req.body.nric;
+
+	try {
+		const [user] = await db.query("SELECT * FROM User WHERE nric = ?", [userNRIC]);
+		if (user.length === 0) return res.status(404).json({ message: `User with NRIC ${userNRIC} not found` });
+		
+		console.log(`User with NRIC ${userNRIC} fetched!`);
+		res.json(user[0]); // return user details
+	} catch (err) {
+		console.error(err);
+		res.status(500).json({ error: `Failed to fetch user with ID ${userNRIC}` });
+	}
+})
 
 // Logout
 router.post("/logout", (req, res) => {
