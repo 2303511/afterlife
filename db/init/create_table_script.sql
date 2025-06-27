@@ -1,3 +1,4 @@
+DROP SCHEMA IF EXISTS `AfterLifeDB`; -- If the schema exsists, then the code will end at line 2 and no tables will be created :(
 CREATE SCHEMA `AfterLifeDB`;
 USE AfterLifeDB;
 
