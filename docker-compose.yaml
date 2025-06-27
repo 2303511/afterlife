@@ -1,9 +1,21 @@
 services:
+  reverse-proxy:
+    image: nginx:latest
+    ports:
+      - "80:80"
+    volumes:
+      - ./reverse_proxy/nginx.conf:/etc/nginx/nginx.conf
+    depends_on:
+      - frontend
+      - backend
   frontend:
     build: ./client
     command: npm start
-    ports:
-      - "80:80"
+    environment:
+      - HOST=0.0.0.0
+      - PORT=8080
+    expose:
+      - "8080"
     depends_on:
       - backend
 
@@ -12,12 +24,17 @@ services:
     command: npm run dev # with nodemon
     volumes:
       - ./server:/index
-    ports:
-      - "8888:8888"
+    expose:
+      - "8888"
     environment:
-      - DB_HOST=db
-      - DB_USER=root
-      - DB_PASS=yourpass
+      - DB_HOST=${DB_HOST}
+      - DB_USER=${DB_USER}
+      - DB_PASS=${DB_PASSWORD}
+      - DB_NAME=${DB_NAME}
+      - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
+      - MAIL_USER=${MAIL_USER}
+      - MAIL_PASS=${MAIL_PASS}
+      - MAIL_SERVICE=${MAIL_SERVICE}
     depends_on:
       - db
 
@@ -25,11 +42,15 @@ services:
     image: mysql:8.0
     restart: always
     environment:
-      MYSQL_ROOT_PASSWORD: yourpass
+      - MYSQL_ROOT_PASSWORD=${DB_ROOT_PASSWORD}
+      - MYSQL_USER=${DB_USER}
+      - MYSQL_PASSWORD=${DB_PASSWORD}
+      - MYSQL_DATABASE=${DB_NAME}
     volumes:
+      - ./db/init:/docker-entrypoint-initdb.d
       - db_data:/var/lib/mysql
-    ports:
-      - "3306:3306"
+    expose:
+      - "3306"
 
 volumes:
   db_data:
