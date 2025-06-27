@@ -23,5 +23,5 @@ jobs:
         ssh -i id_rsa ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
           cd ${{ secrets.EC2_PROJECT_PATH }}
           git pull origin main
-          docker compose -f docker-compose.yaml build
+          sudo docker compose -f docker-compose.yaml build
         EOF
