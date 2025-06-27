@@ -22,7 +22,7 @@ async function getUserRole(userID) {
 		const [role] = await db.query(`
 			SELECT roleName 
 			FROM Role r 
-			INNER JOIN user u ON u.roleID = r.roleID 
+			INNER JOIN User u ON u.roleID = r.roleID 
 			WHERE u.userID = ?
 		`, [userID]);
 		
