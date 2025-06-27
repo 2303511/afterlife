@@ -13,8 +13,11 @@ export default function LocationSelector({
   onBlockChange,
   selectedSlot,
   handleBook,
-  isEdit = true
+  isEdit = true,
+  isBookButtonDisabled = false
 }) {
+  const isStaff = sessionStorage.getItem("role") === "staff";
+
   return (
     <div className="d-flex gap-3 mb-3">
       <Form.Select value={selectedBuilding} onChange={onBuildingChange} style={{ width: "200px" }}>
@@ -41,12 +44,10 @@ export default function LocationSelector({
         ))}
       </Form.Select>
 
-      {selectedSlot && isEdit && selectedSlot.status === "available" && (
-        <div className="text-center my-3">
-          <button className="btn btn-primary" onClick={handleBook}>
-            Book This Niche
-          </button>
-        </div>
+      {!isBookButtonDisabled && selectedSlot?.status === "available" && isStaff && (
+        <Button variant="primary" onClick={handleBook}>
+          Book This Niche
+        </Button>
       )}
 
     </div>

@@ -20,7 +20,10 @@ const statusClass = {
 
 export default function FullNicheMap({
     setIsForm,
-    buildingState
+    buildingState,
+	handleBook = () => {},
+	isBookButtonDisabled = false,
+	setIsBookButtonDisabled = () => {}
 }) {
     const [isEdit] = useState(sessionStorage.getItem("role") === "staff"); // if the user role is staff, then enable edit modal. else, no edit modal.
 	const [slots, setSlots] = useState([]);
@@ -124,9 +127,13 @@ export default function FullNicheMap({
                 }
             });
 
+			if (sessionStorage.getItem("role") === "user") {
+				setIsForm(slot.status.toLowerCase() === "available"); // show the form segment
+			}
+
             setSelectedSlot(slot);
-            setIsForm(slot.status.toLowerCase() === "available"); // show the form segment
 			setGridDisabled(true);
+			setIsBookButtonDisabled(false);
             
 		} else {
 			// Directly open modal for other statuses
@@ -160,8 +167,9 @@ export default function FullNicheMap({
 				onLevelChange={(e) => setSelectedLevel(e.target.value)}
 				onBlockChange={(e) => setSelectedBlock(e.target.value)}
 				selectedSlot={selectedSlot}
-				handleBook={() => {}} // dont need to do anything
+				handleBook={handleBook} // dont need to do anything
                 isEdit={isEdit}
+				isBookButtonDisabled={isBookButtonDisabled}
 			/>
 
 			<NicheLegend statusClass={statusClass} />

@@ -17,7 +17,7 @@ import { useResizeDetector } from "react-resize-detector";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
-export default function FullFormFlow({ selectedSlot, onCancel }) {
+export default function FullFormFlow({ selectedSlot, onCancel, setIsBookButtonDisabled, setIsForm }) {
 	const [step, setStep] = useState("booking"); // or 'payment'
 	const [bookingFormData, setBookingFormData] = useState(null);
 	const [paymentData, setPaymentData] = useState(null);
@@ -115,7 +115,12 @@ export default function FullFormFlow({ selectedSlot, onCancel }) {
 			{step === "payment" &&
 				(sessionStorage.getItem("role") === "staff" ? (
 					// display the option for cash, cheque, or card
-					<PaymentForm onBack={() => setStep("booking")} bookingID={bookingID} />
+					<PaymentForm
+						onBack={() => {
+							setStep("booking");							
+						}}
+						bookingID={bookingID}
+					/>
 				) : (
 					!!stripePromise &&
 					!!clientSecret && (
