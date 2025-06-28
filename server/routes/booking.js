@@ -44,7 +44,7 @@ router.get("/getBookingByUserID", async (req, res) => {
 });
 
 router.get("/getBookingByBookingID", async (req, res) => {
-    console.log("Fetching bookings for booking with ID:", req.query.bookingID);
+    console.log("Fetching bookings for booking with ID:", req.query);
     const bookingID = req.query.bookingID;
 
     try {

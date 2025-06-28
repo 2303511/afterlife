@@ -77,6 +77,7 @@ export default function BookingForm({ selectedSlot, onCancel, onSubmit, isModal 
     beneficiary: {}
   });
 
+  // user session
   const [user, setUser] = useState(undefined);
 
   useEffect(() => {
@@ -89,6 +90,7 @@ export default function BookingForm({ selectedSlot, onCancel, onSubmit, isModal 
 
   if (user === undefined) return null; 
 
+  // when the new file is uploaded
   const onFileChange = (e, type) => {
     const file = e.target.files[0];
 

@@ -17,6 +17,8 @@ import { useResizeDetector } from "react-resize-detector";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
+import { retrieveSession } from "../../utils/retrieveSession";
+
 export default function FullFormFlow({ selectedSlot, onCancel, setIsBookButtonDisabled, setIsForm }) {
 	const [step, setStep] = useState("booking"); // or 'payment'
 	const [bookingFormData, setBookingFormData] = useState(null);
@@ -28,18 +30,20 @@ export default function FullFormFlow({ selectedSlot, onCancel, setIsBookButtonDi
 	// get the form width
 	const { ref, width = 0 } = useResizeDetector();
 
+	// for user session
 	const [user, setUser] = useState(undefined);
-
 	useEffect(() => {
-	axios.get("/api/user/me", { withCredentials: true })
-		.then(res => {
-		setUser(res.data);
-		})
-		.catch(err => console.error("Failed to fetch session:", err));
+		const init = async () => {
+			let currentUser = await retrieveSession();
+
+			if (!!currentUser) setUser(currentUser)
+			else {
+				toast.error(`Failed to find user in session`);
+				return null
+			}
+		}
+		init();
 	}, []);
-
-	if (user === undefined) return null;   
-
 
 	// handlers
 	const handleSubmit = async (bookingFormData) => {
