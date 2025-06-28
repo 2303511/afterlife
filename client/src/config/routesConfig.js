@@ -2,22 +2,29 @@ import { FaClipboardList, FaFileInvoice, FaBookOpen, FaUserCircle, FaListAlt, Fa
 import { MdDashboard, MdAdminPanelSettings, MdApartment} from "react-icons/md";
 
 // Import all route components
+// user pages
 import MyBookings from "../pages/user/MyBookings"; 
 import MyPayments from "../pages/user/MyPayments";
 import NicheBooking from "../pages/user/NicheBooking";
 import Profile from "../pages/Profile";
 
+// staff pages
 import Dashboard from "../pages/staff/Dashboard";
 import SearchBooking from "../pages/staff/SearchBooking";
 import NicheManagement from "../pages/staff/NicheManagement";
 import BookingApproval from "../pages/staff/BookingApproval";
 import PendingApprovals from "../pages/staff/PendingApprovals";
 
+// admin pages
 import AdminDashboard from "../pages/admin/AdminDashboard";
 import BuildingManagement from "../pages/admin/BuildingManagement";
 import Login from "../pages/public/Login";
 import Register from "../pages/public/Register";
 import LandingPage from "../pages/public/LandingPage";
+
+// hidden pages
+import RequestUrnPlacement from "../pages/user/RequestUrnPlacement";
+import PaymentSuccess from '../pages/PaymentSuccess';
 
 // PUBLIC
 export const publicRoutes = [
@@ -133,7 +140,18 @@ export const hiddenRoutes = [
     path: "/booking-approval/:bookingID",
     element: <BookingApproval />,
     requiredRoles: ["staff"]
-  }
+  },
+  {
+    path: "/payment-success",
+    element: <PaymentSuccess />,
+    requiredRoles: ["user", "staff"]
+  },
+  {
+    label: "RequestUrnPlacement",
+    path: "/req-urn-placement",
+    element: <RequestUrnPlacement />,
+    requiredRoles: ["user"]
+  },
 ];
 
 
