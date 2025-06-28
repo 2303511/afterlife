@@ -28,6 +28,19 @@ export default function FullFormFlow({ selectedSlot, onCancel, setIsBookButtonDi
 	// get the form width
 	const { ref, width = 0 } = useResizeDetector();
 
+	const [user, setUser] = useState(undefined);
+
+	useEffect(() => {
+	axios.get("/api/user/me", { withCredentials: true })
+		.then(res => {
+		setUser(res.data);
+		})
+		.catch(err => console.error("Failed to fetch session:", err));
+	}, []);
+
+	if (user === undefined) return null;   
+
+
 	// handlers
 	const handleSubmit = async (bookingFormData) => {
 		if (!bookingFormData) {
@@ -39,7 +52,7 @@ export default function FullFormFlow({ selectedSlot, onCancel, setIsBookButtonDi
 			return;
 		}
 
-		await bookingFormData.append("paidByID", sessionStorage.getItem("userId"));
+		await bookingFormData.append("paidByID", user?.userID);
 
 		try {
 			const res = await axios.post("/api/booking/submitBooking", bookingFormData, { headers: { "Content-Type": "multipart/form-data" } }); // save to db
@@ -113,7 +126,7 @@ export default function FullFormFlow({ selectedSlot, onCancel, setIsBookButtonDi
 				)}
 			</div>
 			{step === "payment" &&
-				(sessionStorage.getItem("role") === "staff" ? (
+				(user?.role === "staff" ? (
 					// display the option for cash, cheque, or card
 					<PaymentForm
 						onBack={() => {

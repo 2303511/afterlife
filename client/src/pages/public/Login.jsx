@@ -18,25 +18,22 @@ export default function Login() {
             const response = await axios.post('/api/user/login', form, {
 				headers: {
 					"Content-Type": "application/json"
-				}
+				},
+				withCredentials: true
             });
 
-			// Save session data
-			sessionStorage.setItem("userId", response.data.user.userID);
+			const role = response.data.role;
 
-			const role = response.data.user.role;
+			console.log("in log in, user role is:", role);
 
-			if (role == "Applicant")
+			if (role == "user")
 			{
-				sessionStorage.setItem("role", "user");
 				navigate("/my-bookings");
-			} else {
-				sessionStorage.setItem("role", role.toLowerCase());
+			} else if (role == "staff") {
 				navigate("/dashboard");
+			} else if (role == "admin") {
+				navigate("/admin-dashboard");
 			}
-			
-			// const role = localStorage.getItem("role");
-			// console.log("this is the role:", role);
 
             return response.data;
         } catch (error) {

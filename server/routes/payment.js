@@ -24,7 +24,7 @@ router.get('/getPaymentByID', async (req, res) => {
     }
 
     try {
-        const [payment] = await db.query('SELECT * FROM payment WHERE paymentID = ?', [paymentID]);
+        const [payment] = await db.query('SELECT * FROM Payment WHERE paymentID = ?', [paymentID]);
         console.log('Payment fetched:', payment);
         
         if (payment.length === 0) {
@@ -48,7 +48,7 @@ router.get('/getPaymentByUserID', async (req, res) => {
     }
 
     try {
-        const [payment] = await db.query('SELECT * FROM payment WHERE userID = ?', [userID]);
+        const [payment] = await db.query('SELECT * FROM Payment WHERE userID = ?', [userID]);
         console.log(`Payment Fetched: ${payment}`);
         
         if (payment.length === 0) {

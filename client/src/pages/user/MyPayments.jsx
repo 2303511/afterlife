@@ -5,11 +5,21 @@ import CopyableField from "../../components/CopyableField";
 
 // src/pages/MyPayments.js
 export default function MyPayments() {
-	const [userID] = useState(sessionStorage.getItem("userId"));
 	const [payments, setPayments] = useState([]);
-
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState(null);
+	const [user, setUser] = useState(null);
+		
+	useEffect(() => {
+		axios.get("/api/user/me", { withCredentials: true })
+		.then(res => {
+			setUser(res.data);
+		})
+		.catch(err => console.error("Failed to fetch session:", err));
+	}, []); 
+
+	const [userID] = useState(user?.userID);
+
 
 	// getter for all
 	const fetchDetails = async (endpoint, idLabel, indivID) => {

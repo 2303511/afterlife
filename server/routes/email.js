@@ -2,6 +2,23 @@ const express = require('express');
 const router = express.Router();
 const sendMail = require('../utils/mailer');
 
+router.post('/sendMail', async (req, res) => {
+  const { to, subject, mailContent } = req.body;
+
+  try {
+    await sendMail(
+      to,
+      subject, 
+      mailContent
+    );
+
+    res.json({ success: true, message: 'Email sent successfully!' }); // ✅ return success
+  } catch (err) {
+    console.error('Email error:', err);
+    res.status(500).json({ success: false, error: 'Failed to send email' });
+  }
+});
+
 router.post('/sendDeniedRequest', async (req, res) => {
   const { to, reason } = req.body;
 

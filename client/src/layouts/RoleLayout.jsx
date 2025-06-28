@@ -1,4 +1,6 @@
 // src/components/RoleLayout.js
+import { useEffect, useState } from "react";
+import axios from 'axios';
 import { Outlet, useLocation, Navigate } from "react-router-dom";
 import UserLayout from "./UserLayout";
 import StaffLayout from "./StaffLayout";
@@ -8,8 +10,21 @@ import { publicPaths } from "../config/routesConfig";
 import Unauthorized from "../pages/Unauthorized";
 
 export default function RoleLayout() {
-    const role = sessionStorage.getItem("role");
     const { pathname } = useLocation();
+    const [user, setUser] = useState(undefined);
+
+    useEffect(() => {
+      axios.get("/api/user/me", { withCredentials: true })
+        .then(res => {
+          setUser(res.data);
+        })
+        .catch(err => console.error("Failed to fetch session:", err));
+    }, []);
+
+    if (user === undefined) return null;  
+    const role = user?.role;  
+
+    console.log("this is role (in rolelayout):", role);
 
     if (pathname === "/" && role === "user") {
         return <Navigate to="/my-bookings" replace />;
