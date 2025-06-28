@@ -1,18 +1,20 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 
 import "bootstrap/dist/js/bootstrap.bundle.min";
 import CopyableField from "../../components/CopyableField";
 
 export default function MyBookings() {
+	const navigate = useNavigate();
+
 	const [userBookings, setUserBookings] = useState([]);
 
 	const [paymentDetail, setPaymentDetail] = useState(null);
 	const [bookingDetail, setBookingDetail] = useState(null);
 	const [nicheDetail, setNicheDetail] = useState(null);
 	const [beneficiaryDetail, setBeneficiaryDetail] = useState(null);
-	
+
 	const [nicheDetailsMap, setNicheDetailsMap] = useState({}); // key: booking.nicheID
 	const [beneficiaryMap, setBeneficiaryMap] = useState({}); // key: booking.beneficiaryID
 	const [blocksMap, setBlocksMap] = useState({}); // key: currNicheDetail.blockID
@@ -57,6 +59,7 @@ export default function MyBookings() {
 		}
 	};
 
+	// TO RETRIEVE SESSION
 	useEffect(() => {
 		axios.get("/api/user/me", { withCredentials: true })
 		.then(res => {
@@ -79,7 +82,7 @@ export default function MyBookings() {
 
 			if (!booking || !Array.isArray(booking) || booking.length == 0) {
 				console.log("there are no bookings");
-				return
+				return;
 			};
 
 			console.log("3. fetching all niche details");
@@ -172,10 +175,8 @@ export default function MyBookings() {
 				<div className="text-center">
 					<h2 className="loading-text p-3">You have no bookings.</h2>
 					<Link to="/book-niche">
-                        <button className="btn btn-elegant btn-lg rounded-pill px-4">
-                            📝 Make a Booking
-                        </button>
-                    </Link>
+						<button className="btn btn-elegant btn-lg rounded-pill px-4">📝 Make a Booking</button>
+					</Link>
 				</div>
 			</div>
 		);
@@ -249,7 +250,7 @@ export default function MyBookings() {
 										{booking.bookingType}
 									</div>
 									<div className="booking-id">#{booking.bookingID}</div>
-									<CopyableField value={booking.bookingID}/>
+									<CopyableField value={booking.bookingID} />
 								</div>
 
 								<div className="booking-card-body">
@@ -315,7 +316,7 @@ export default function MyBookings() {
 										<span className="detail-label">Payment ID</span>
 										<div className="detail-value-with-copy">
 											<span className="detail-value">{paymentDetail.paymentID}</span>
-											<CopyableField value={paymentDetail.paymentID}/>
+											<CopyableField value={paymentDetail.paymentID} />
 										</div>
 									</div>
 									<div className="modal-detail-item">
@@ -366,12 +367,14 @@ export default function MyBookings() {
 										<span className="detail-label">Booking ID</span>
 										<div className="detail-value-with-copy">
 											<span className="detail-value">{bookingDetail.bookingID}</span>
-											<CopyableField value={bookingDetail.bookingID}/>
+											<CopyableField value={bookingDetail.bookingID} />
 										</div>
 									</div>
 									<div className="modal-detail-item">
 										<span className="detail-label">Niche Location</span>
-										<span className="detail-value">Column-Row: {nicheDetail.nicheColumn}-{nicheDetail.nicheRow}</span>
+										<span className="detail-value">
+											Column-Row: {nicheDetail.nicheColumn}-{nicheDetail.nicheRow}
+										</span>
 									</div>
 									<div className="modal-detail-item">
 										<span className="detail-label">Beneficiary Name</span>
@@ -386,13 +389,18 @@ export default function MyBookings() {
 										<span className="detail-value">{beneficiaryDetail.dateOfBirth}</span>
 									</div>
 									<div className="modal-detail-item">
-										<span className="detail-label">Date of Deatil</span>
+										<span className="detail-label">Date of Death</span>
 										<span className="detail-value">{beneficiaryDetail.dateOfDeath}</span>
 									</div>
 								</div>
 							</div>
 
 							<div className="modal-footer">
+								{bookingDetail.bookingType == "PreOrder" && (
+									<button className="modal-btn primary" onClick={() => navigate(`/req-urn-placement?bookingID=${bookingDetail.bookingID}`)}>
+										Request Urn Placement
+									</button>
+								)}
 								<button className="modal-btn secondary" onClick={closeModal}>
 									Close
 								</button>
@@ -400,9 +408,7 @@ export default function MyBookings() {
 						</div>
 					</div>
 				)}
-
 			</div>
-
 		</>
 	);
 }
