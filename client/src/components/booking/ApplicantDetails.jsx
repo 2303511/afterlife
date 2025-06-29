@@ -25,6 +25,7 @@ export default function ApplicantDetails({ formData, onChange, errors, width = 6
 
 		return {
 			fullName: user.fullName || "",
+			email: user.email || "",
 			gender: user.gender || "",
 			nationality: user.nationality || "",
 			nationalID: user.nric || "", // ← mapping nric to nationalID
