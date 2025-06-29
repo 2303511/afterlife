@@ -55,6 +55,8 @@ router.post("/register", async (req, res) => {
 		nationality,
 		address,
 		gender,
+		postalcode, 
+		unitnumber,
 		roleID
 	} = req.body;
 
@@ -70,6 +72,8 @@ router.post("/register", async (req, res) => {
 		// Role - Applicant
 		const [rows] = await db.query("SELECT roleID FROM Role WHERE roleName = ?", ['Applicant']);
 		const roleID = rows[0].roleID;
+
+		let finalAddress = `${address}, ${unitnumber}, ${postalcode}`;
 		
 		// Insert user 
 		const [result] = await db.query(
@@ -87,7 +91,7 @@ router.post("/register", async (req, res) => {
 				nric,
 				dob,
 				nationality,
-				address,
+				finalAddress,
 				gender,
 				roleID,
 			]
