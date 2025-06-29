@@ -35,7 +35,7 @@ router.get("/getBeneficiaryByID", async (req, res) => {
 });
 
 router.post("/place-urn", upload.single("deathCertFile"), async (req, res) => {
-    const { beneficiaryID, dateOfDeath, inscription } = req.body;
+    const { nicheID, beneficiaryID, dateOfDeath, inscription } = req.body;
     const deathCertificate = req.file?.buffer || null;
     const deathCertificateMime = req.file?.mimetype || null;
 
@@ -49,6 +49,25 @@ router.post("/place-urn", upload.single("deathCertFile"), async (req, res) => {
 
         if (result.affectedRows === 0) {
             return res.status(404).json({ error: "Beneficiary not found." });
+        }
+
+        const [updateNiche, updateBooking] = await Promise.all([
+            db.query(
+                `UPDATE Niche SET status = ? WHERE nicheID = ?`,
+                ["Pending", nicheID]
+            ),
+            db.query(
+                `UPDATE Booking SET bookingStatus = ? WHERE bookingID = ?`,
+                ["Pending", bookingID]
+            )
+        ]);
+
+        if (updateNiche[0].affectedRows === 0) {
+            return res.status(404).json({ error: "Niche not found." });
+        }
+
+        if (updateBooking[0].affectedRows === 0) {
+            return res.status(404).json({ error: "Booking not found." });
         }
 
         res.json({ message: "Urn placement details updated successfully." });

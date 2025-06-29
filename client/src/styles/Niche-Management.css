@@ -69,16 +69,19 @@
 .status-booked    { background-color: #007bff; }
 .status-blocked   { background-color: #6c757d; }
   
-.status-current {
+.status-current,
+.status-confirmed {
 	background-color: #c3e6cb;
 	color: #155724;
 }
 
+.status-pending,
 .status-preorder {
 	background-color: #ffeaa7;
 	color: #856404;
 }
 
+.status-cancelled,
 .status-archived {
 	background-color: #f5c6cb;
 	color: #721c24;

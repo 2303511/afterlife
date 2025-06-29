@@ -7,6 +7,8 @@ import axios from "axios";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
+import { useNavigate } from "react-router-dom";
+
 export default function RequestUrnPlacement() {
 	// to get the current booking ID
 	const [searchParams] = useSearchParams();
@@ -20,6 +22,9 @@ export default function RequestUrnPlacement() {
 
 	// to handle errors
 	const [errors, setErrors] = useState({});
+	
+	// to navigate pages after successful form submission
+	const navigate = useNavigate();
 
 	const fetchBooking = async (bookingID) => {
 		try {
@@ -61,6 +66,7 @@ export default function RequestUrnPlacement() {
 		if (currentBooking != null) form.append("beneficiaryID", currentBooking.beneficiaryID); // make sure currentBooking is set
 		else toast.error("Problems retrieving booking details");
 
+		form.append("nicheID", currentBooking.nicheID);
 		form.append("dateOfDeath", formData.dateOfDeath);
 		form.append("inscription", formData.inscription); // optional
 		form.append("deathCertFile", formData.deathCertFile); // ✅ match `multer.single("deathCertFile")`
@@ -71,6 +77,7 @@ export default function RequestUrnPlacement() {
 				withCredentials: true // ✅ if your session uses cookies
 			});
 			toast.success("Urn placement request submitted!");
+			navigate("/my-bookings");
 		} catch (err) {
 			toast.error("Something went wrong :(");
 			console.error(err);

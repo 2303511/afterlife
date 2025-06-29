@@ -110,7 +110,7 @@ router.get("/pending", async (req, res) => {
     try {
         const [rows] = await db.query(`
             SELECT 
-                b.bookingID, b.bookingType, b.nicheID, b.beneficiaryID,
+                b.bookingID, b.bookingType, b.bookingStatus, b.nicheID, b.beneficiaryID,
                 u.fullName AS customerName, u.contactNumber,
                 n.nicheCode, n.status AS nicheStatus, n.lastUpdated,
                 be.beneficiaryName,
@@ -120,7 +120,7 @@ router.get("/pending", async (req, res) => {
             LEFT JOIN Beneficiary be ON b.beneficiaryID = be.beneficiaryID
             LEFT JOIN Niche n ON b.nicheID = n.nicheID
             LEFT JOIN Payment p ON b.paymentID = p.paymentID
-            WHERE n.status = 'Pending'
+            WHERE b.bookingStatus = 'Pending'
             ORDER BY n.lastUpdated DESC
         `);
 
@@ -250,22 +250,41 @@ router.post("/submitBooking", upload.fields([
                 relationshipWithApplicant, inscription]
         );
 
-        // Insert Booking
-        await dbConn.query(`
-        INSERT INTO Booking (bookingID, nicheID, beneficiaryID, bookingType, paidByID, bookingStatus)
-        VALUES (?, ?, ?, ?, ?, ?)`,
-            [bookingID, nicheID, beneficiaryID, bookingType, finalUserID, "Pending"]
-        );
-
+        
         // Update Niche Status
-        const nicheStatus = (bookingType === "Current") ? "Occupied" : "Reserved";
-        await dbConn.query(`
-        UPDATE Niche
-        SET status = ?, lastUpdated = NOW()
-        WHERE nicheID = ?`,
-            [nicheStatus, nicheID]
-        );
+        if (userRole == "user") {
+            // Insert Booking
+            await dbConn.query(`
+            INSERT INTO Booking (bookingID, nicheID, beneficiaryID, bookingType, paidByID, bookingStatus)
+            VALUES (?, ?, ?, ?, ?, ?)`,
+                [bookingID, nicheID, beneficiaryID, bookingType, finalUserID, "Pending"]
+            );
 
+            // update niche status
+            await dbConn.query(
+                `UPDATE Niche
+                SET status = ?, lastUpdated = NOW()
+                WHERE nicheID = ?`,
+                ["Pending", nicheID]
+            );
+        } else {
+            // Insert Booking
+            await dbConn.query(`
+            INSERT INTO Booking (bookingID, nicheID, beneficiaryID, bookingType, paidByID, bookingStatus)
+            VALUES (?, ?, ?, ?, ?, ?)`,
+                [bookingID, nicheID, beneficiaryID, bookingType, finalUserID, "Confirmed"]
+            );
+
+            // update niche status accordingly (already fixed, dont need to vet)
+            let nicheStatus = (bookingType === "Current") ? "Occupied" : "Reserved";
+            await dbConn.query(
+                `UPDATE Niche
+                SET status = ?, lastUpdated = NOW()
+                WHERE nicheID = ?`,
+                    [nicheStatus, nicheID]
+            );
+        }
+        
         await dbConn.commit();
         console.log("Booking submitted");
         res.status(201).json({ success: true, bookingID });
@@ -301,8 +320,8 @@ router.post("/updateBookingTransaction", async (req, res) => {
         // update booking to be updated
         await dbConn.query(`
             UPDATE Booking
-            SET bookingStatus = ?, paymentID = ?
-            WHERE bookingID = ?;`, ["Confirmed", paymentID, bookingID]);
+            SET paymentID = ?
+            WHERE bookingID = ?;`, [paymentID, bookingID]);
 
         await dbConn.commit();
         res.status(201).json({ success: true, bookingID, paymentID });
@@ -321,7 +340,7 @@ router.post("/updateBookingTransaction", async (req, res) => {
 
 // staff - to approve pending niches aka to put a urn in
 router.post('/approve', async (req, res) => {
-    const { bookingID, nicheID } = req.body;
+    const { bookingID, nicheID, bookingType } = req.body;
 
     const dbConn = await db.getConnection();
     await dbConn.beginTransaction();
@@ -329,14 +348,17 @@ router.post('/approve', async (req, res) => {
     try {
         // 1. Update booking type
         await dbConn.query(
-            `UPDATE Booking SET bookingType = ? WHERE bookingID = ?`,
-            ['Current', bookingID]
+            `UPDATE Booking 
+                SET bookingType = ?, bookingStatus = ?
+                WHERE bookingID = ?`,
+            ['Current', 'Confirmed', bookingID]
         );
 
         // 2. Update niche status
+        let nicheStatus = bookingType=="PreOrder" ? "Reserved" : "Occupied";
         await dbConn.query(
             `UPDATE Niche SET status = ?, lastUpdated = NOW() WHERE nicheID = ?`,
-            ['Occupied', nicheID]
+            [nicheStatus, nicheID]
         );
 
         await dbConn.commit();
