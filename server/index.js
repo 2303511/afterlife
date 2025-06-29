@@ -37,7 +37,9 @@ app.use(
 app.use(express.json());
 
 // for console.logging api calls
-app.use(morgan('dev')); // logs concise colored output
+morgan.token("clean-url", (req) => req.baseUrl + req.path);
+app.use(morgan("[:date] :method :clean-url :status :response-time ms - :res[content-length]"));
+// app.use(morgan('dev')); // logs concise colored output
 
 app.use(
     session({
