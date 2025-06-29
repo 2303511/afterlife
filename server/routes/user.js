@@ -14,7 +14,6 @@ router.get("/me", (req, res) => {
 
 // GET all users
 router.get("/", async (req, res) => {
-	console.log("Fetching all users");
 	try {
 		const [users] = await db.query("SELECT * FROM User");
 		res.json(users);
@@ -165,7 +164,6 @@ router.post("/getUserByNRIC", async (req, res) => {
 		const [user] = await db.query("SELECT * FROM User WHERE nric = ?", [userNRIC]);
 		if (user.length === 0) return res.status(404).json({ message: `User with NRIC ${userNRIC} not found` });
 		
-		console.log(`User with NRIC ${userNRIC} fetched!`);
 		res.json(user[0]); // return user details
 	} catch (err) {
 		console.error(err);

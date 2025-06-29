@@ -4,6 +4,9 @@ const session = require("express-session");
 const MySQLStore = require("express-mysql-session")(session);
 require("dotenv").config();
 
+// to log api calls
+const morgan = require('morgan');
+
 const app = express();
 
 // Session Store (MYSQL)
@@ -33,6 +36,9 @@ app.use(
 
 app.use(express.json());
 
+// for console.logging api calls
+app.use(morgan('dev')); // logs concise colored output
+
 app.use(
     session({
         name: "sid",  // cookie name
@@ -59,11 +65,6 @@ app.use("/api/block", blockRoute);
 app.use("/api/dashboard", dashboardRoute);
 app.use("/api/payment", stripeRoute);
 app.use('/api/email', emailRoutes);
-
-app.get("/api", (req, res) => {
-	console.log("API is working!");
-	res.send("API is working!");
-});
 
 const port = 8888;
 app.listen(port, () => {

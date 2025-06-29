@@ -6,7 +6,6 @@ const upload = multer();
 const { v4: uuidv4 } = require("uuid");
 
 router.get("/", async (req, res) => {
-    console.log("Fetching bookings for user:", req.query.userID);
     const userID = req.query.userID;
 
     if (!userID) {
@@ -23,7 +22,6 @@ router.get("/", async (req, res) => {
 });
 
 router.get("/getBookingByUserID", async (req, res) => {
-    console.log("Fetching bookings for user with ID:", req.query.userID);
     const userID = req.query.userID;
 
     try {
@@ -33,7 +31,6 @@ router.get("/getBookingByUserID", async (req, res) => {
             return res.json([]); // Return empty array if no bookings found
         }
 
-        console.log("Bookings found:", bookings);
         res.json(bookings);
 
     } catch (err) {
@@ -44,7 +41,6 @@ router.get("/getBookingByUserID", async (req, res) => {
 });
 
 router.get("/getBookingByBookingID", async (req, res) => {
-    console.log("Fetching bookings for booking with ID:", req.query);
     const bookingID = req.query.bookingID;
 
     try {
@@ -54,7 +50,6 @@ router.get("/getBookingByBookingID", async (req, res) => {
             return res.json([]); // Return empty array if no bookings found
         }
 
-        console.log("Bookings found:", bookings);
         res.json(bookings);
 
     } catch (err) {
@@ -460,7 +455,6 @@ router.get("/approval/:bookingID", async (req, res) => {
 module.exports = router;
 
 function validateBookingPayload(payload, isPayment) {
-    console.log("Payload received:", payload);
 
     const errors = {};
 
