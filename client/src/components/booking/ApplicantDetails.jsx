@@ -20,6 +20,9 @@ export default function ApplicantDetails({ formData, onChange, errors, width = 6
 	const [userPreview, setUserPreview] = useState(null);
 	const [loading, setLoading] = useState(false);
 
+	// user session
+	const [user, setUser] = useState(null);
+
 	const mapUserToApplicant = (user) => {
 		const [address = "", unitNumber = "", postalCode = ""] = user.userAddress.split(", ");
 
@@ -36,9 +39,6 @@ export default function ApplicantDetails({ formData, onChange, errors, width = 6
 			dob: user.dob ? user.dob.split("T")[0] : "" // format to YYYY-MM-DD
 		};
 	};
-
-	// user session
-	const [userSession, setUser] = useState(undefined);
 
 	// if the current user is a user, auto load the details in
 	useEffect(() => {
@@ -122,7 +122,7 @@ export default function ApplicantDetails({ formData, onChange, errors, width = 6
 			<div className="d-flex justify-content-between align-items-center mt-4 mb-3">
 				<h5 className="mb-0">Applicant Details</h5>
 
-				{sessionStorage.getItem("role") == "staff" && <Button onClick={() => setShowModal(true)}>Load My Details</Button>}
+				{user?.role == "staff" && <Button onClick={() => setShowModal(true)}>Load My Details</Button>}
 			</div>
 
 			<Row>
