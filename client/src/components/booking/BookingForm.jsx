@@ -14,17 +14,18 @@ export default function BookingForm({ selectedSlot, onCancel, onSubmit, isModal 
   // const [bookingType, setBookingType] = useState("");
   const [bookingType, setBookingType] = useState("PreOrder");
 
-  const [applicantData, setApplicantData] = useState({
+  /*const [applicantData, setApplicantData] = useState({
     fullName: "",
     gender: "",
     nationality: "",
     nationalID: "",
     mobileNumber: "",
+    email:"",
     address: "",
     postalCode: "",
     unitNumber: "",
     dob: ""
-  });
+  });*/
 
   // const [beneficiaryData, setBeneficiaryData] = useState({
   //   beneficiaryName: "",
@@ -40,17 +41,18 @@ export default function BookingForm({ selectedSlot, onCancel, onSubmit, isModal 
   //   beneficiaryUnitNumber: ""
   // });
 
-  // const [applicantData, setApplicantData] = useState({
-  //   fullName: "John Doe",
-  //   gender: "Male",
-  //   nationality: "Singaporean",
-  //   nationalID: "S1234567A",
-  //   mobileNumber: "91234567",
-  //   address: "123 Main Street",
-  //   postalCode: "123456",
-  //   unitNumber: "01-01",
-  //   dob: "1990-01-01"
-  // });
+	
+  const [applicantData, setApplicantData] = useState({
+    fullName: "John Doe",
+    gender: "Male",
+    nationality: "Singaporean",
+    nationalID: "S1234567A",
+    mobileNumber: "91234567",
+    address: "123 Main Street",
+    postalCode: "123456",
+    unitNumber: "01-01",
+    dob: "1990-01-01"
+  });
 
   const [beneficiaryData, setBeneficiaryData] = useState({
     beneficiaryName: "Jane Doe",
@@ -258,8 +260,6 @@ export default function BookingForm({ selectedSlot, onCancel, onSubmit, isModal 
         });
       }
 
-      console.log(`bookingTypeError: ${bookingTypeError}`);
-
       setErrors({
         bookingType: bookingTypeError,
         applicant: applicantErrors,
@@ -290,13 +290,13 @@ export default function BookingForm({ selectedSlot, onCancel, onSubmit, isModal 
     formData.append("birthCertFile", files.birthCert);
     formData.append("deathCertFile", files.deathCert);
 
+    formData.append("userRole", user?.role); // e.g., "user", "staff", "admin"
+
+    //console.log("going to payment !!");
     /*for (let pair of formData.entries()) {
       console.log(`${pair[0]}:`, pair[1]);
     }*/
-    console.log`going to payment !!`;
-    for (let pair of formData.entries()) {
-      console.log(`${pair[0]}:`, pair[1]);
-    }
+
     onSubmit(formData);
   };
 

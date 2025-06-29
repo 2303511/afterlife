@@ -43,7 +43,7 @@ export default function ApplicantDetails({ formData, onChange, errors, width = 6
 	useEffect(() => {
 		const init = async () => {
 			let currSession = await retrieveSession();
-	
+
 			if (!!currSession) setUser(currSession);
 			else {
 				toast.error(`Failed to find user in session`);
@@ -220,6 +220,23 @@ export default function ApplicantDetails({ formData, onChange, errors, width = 6
 						<Form.Control.Feedback type="invalid">{errors.mobileNumber}</Form.Control.Feedback>
 					</Form.Group>
 				</Col>
+
+				<Col md={isLargeScreen ? 6 : 12}>
+					<Form.Group className="mb-3">
+						<Form.Label>Email Address</Form.Label>
+						<Form.Control
+							type="email"
+							name="email"
+							value={formData.email}
+							onChange={onChange}
+							isInvalid={!!errors.email}
+							readOnly={fieldDisabled}
+							style={fieldDisabled ? { backgroundColor: "#e9ecef", cursor: "not-allowed" } : {}}
+						/>
+						<Form.Control.Feedback type="invalid">{errors.email}</Form.Control.Feedback>
+					</Form.Group>
+				</Col>
+
 
 				<Col md={isLargeScreen ? 6 : 12}>
 					<Form.Group className="mb-3">
