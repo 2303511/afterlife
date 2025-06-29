@@ -3,6 +3,7 @@ import { Button, Modal, Form, Row, Col } from "react-bootstrap";
 
 import { nationalities } from "../nationalities.js";
 import axios from "axios";
+import { retrieveSession } from "../../utils/retrieveSession.js";
 
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -35,24 +36,28 @@ export default function ApplicantDetails({ formData, onChange, errors, width = 6
 		};
 	};
 
+	// user session
 	const [userSession, setUser] = useState(undefined);
-
-	useEffect(() => {
-		axios.get("/api/user/me", { withCredentials: true })
-		.then(res => {
-			setUser(res.data);
-		})
-		.catch(err => console.error("Failed to fetch session:", err));
-	}, []);
 
 	// if the current user is a user, auto load the details in
 	useEffect(() => {
-		if (userSession?.role === "user") {
-			const userID = userSession?.userID;
-			const fetchUserDetails = async () => await handleLoadDetails(userID);
-			fetchUserDetails();
-			setFieldDisabled(true); // ← you meant to set this to true, to disable editing
-		}
+		const init = async () => {
+			let currSession = await retrieveSession();
+	
+			if (!!currSession) setUser(currSession);
+			else {
+				toast.error(`Failed to find user in session`);
+				return null
+			}
+
+			if (currSession?.role === "user") {
+				const userID = currSession?.userID;
+				const fetchUserDetails = async () => await handleLoadDetails(userID);
+				fetchUserDetails();
+				setFieldDisabled(true); // ← you meant to set this to true, to disable editing
+			}
+		};
+		init();
 	}, []);
 
 	// handlers
