@@ -24,5 +24,5 @@ jobs:
           cd ${{ secrets.EC2_PROJECT_PATH }}
           sudo docker compose --env-file ${{ secrets.EC2_ENV_PATH }} down -v
           git pull 
-          sudo docker compose --env-file ${{ secrets.EC2_ENV_PATH }} up --build
+          sudo docker compose --env-file ${{ secrets.EC2_ENV_PATH }} up --build -d
         EOF
