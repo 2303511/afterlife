@@ -109,6 +109,10 @@ router.post("/login", async (req, res) => {
 		const [userRow] = await db.query("SELECT * FROM User WHERE email = ?", [email]);
 		const user = userRow[0];
 
+		if (!user) {
+			return res.status(401).json({ error: "Invalid credentials" });
+		}
+
 		// Re-hash user input password using the stored salt
 		const hashedInput = await bcrypt.hash(password, user.salt);
 
@@ -122,7 +126,7 @@ router.post("/login", async (req, res) => {
 		
 		const role = await getUserRole(user.userID);
 		if (!role) {
-		return res.status(500).json({ error: "User role not found" });
+			return res.status(500).json({ error: "User role not found" });
 		}
 		
 		req.session.role = role === "Applicant" ? "user" : role.toLowerCase();
@@ -172,7 +176,7 @@ router.post("/getUserByNRIC", async (req, res) => {
 })
 
 // Logout
-router.post("/logout", (req, res) => {
+router.post("/logout", (req, res) => {	
 	req.session.destroy(err => {
 		if (err) {
 			console.error("Session destroy error:", err);
@@ -184,6 +188,12 @@ router.post("/logout", (req, res) => {
 		return res.status(200).json({ message: "Logged out" });
 	});
 });
+
+// Forget password
+router.post("/forget_password", (req, res) => {	
+	
+});
+
 
 
 module.exports = router;

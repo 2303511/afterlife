@@ -21,6 +21,7 @@ import BuildingManagement from "../pages/admin/BuildingManagement";
 import Login from "../pages/public/Login";
 import Register from "../pages/public/Register";
 import LandingPage from "../pages/public/LandingPage";
+import Logout from "../pages/public/Logout";
 
 // hidden pages
 import RequestUrnPlacement from "../pages/user/RequestUrnPlacement";
@@ -83,6 +84,12 @@ export const userRoutes = [
     element: <Profile />,
     requiredRoles: ["user", "staff", "admin"]
   },
+  {
+    label: "Logout",
+    path: "/logout",
+    element: <Logout />,
+    requiredRoles: ["user", "staff", "admin"]
+  }
 ];
 
 // STAFF
@@ -114,7 +121,7 @@ export const staffRoutes = [
     icon: <FaMapMarkedAlt />,
     element: <NicheManagement />,
     requiredRoles: ["staff"]
-  },
+  }
 ];
 
 // ADMIN
@@ -132,7 +139,7 @@ export const adminRoutes = [
     icon: <MdApartment />,
     element: <BuildingManagement />,
     requiredRoles: ["admin"]
-  },
+  }
 ];
 
 export const hiddenRoutes = [
