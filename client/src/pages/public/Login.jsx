@@ -42,7 +42,7 @@ export default function Login() {
             if (err.response?.status === 401) {
 				setError("Incorrect e-mail or password.");
 			} else {
-			setError("Something went wrong. Please try again.");
+				setError("Something went wrong. Please try again.");
 			}
             return null;
         }
