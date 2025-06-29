@@ -174,7 +174,7 @@ router.post("/getUserByNRIC", async (req, res) => {
 })
 
 // Logout
-router.post("/logout", (req, res) => {
+router.post("/logout", (req, res) => {	
 	req.session.destroy(err => {
 		if (err) {
 			console.error("Session destroy error:", err);
