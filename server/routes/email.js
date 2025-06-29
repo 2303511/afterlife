@@ -39,5 +39,24 @@ router.post('/sendDeniedRequest', async (req, res) => {
   }
 });
 
+// for booking
+async function sendAccountCreationEmail(to, fullName, tempPassword) {
+  console.log("sendAccountCreationEmail triggered for:", to);
 
-module.exports = router;
+  const subject = "Your Afterlife Account Has Been Created";
+  const html = `
+    <p>Hello ${fullName},</p>
+    <p>An account has been created for you on Afterlife.</p>
+    <p><strong>Temporary password:</strong> ${tempPassword}</p>
+    <p>Please log in and change your password as soon as possible.</p>
+    <p><a href="https://yourdomain.com/login">Click here to log in</a></p> 
+  `;
+
+  return sendMail(to, subject, html);
+}
+
+
+module.exports = {
+  router,
+  sendAccountCreationEmail
+};

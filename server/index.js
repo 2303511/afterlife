@@ -66,7 +66,7 @@ app.use("/api/beneficiary", beneficiaryRoute);
 app.use("/api/block", blockRoute);
 app.use("/api/dashboard", dashboardRoute);
 app.use("/api/payment", stripeRoute);
-app.use('/api/email', emailRoutes);
+app.use('/api/email', emailRoutes.router);
 
 const port = 8888;
 app.listen(port, () => {
