@@ -48,12 +48,12 @@ router.post("/register", async (req, res) => {
 		email,
 		password,
 		username,
-		fullName,
-		contactNumber,
+		fullname,
+		contactnumber,
 		nric,
 		dob,
 		nationality,
-		userAddress,
+		address,
 		gender,
 		roleID
 	} = req.body;
@@ -74,20 +74,20 @@ router.post("/register", async (req, res) => {
 		// Insert user 
 		const [result] = await db.query(
 			`INSERT INTO User
-			(userID, username, email, hashedPassword, salt, fullName, contactNumber, nric, dob, nationality, userAddress, gender, roleID)
-			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+			(userID, username, email, hashedPassword, salt, fullName, contactNumber, nric, dob, nationality, userAddress, gender, roleID, lastLogin)
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
 			[
 				userID,
 				username,
 				email,
 				hashedPassword,
 				salt,
-				fullName,
-				contactNumber,
+				fullname,
+				contactnumber,
 				nric,
 				dob,
 				nationality,
-				userAddress,
+				address,
 				gender,
 				roleID,
 			]
@@ -104,9 +104,13 @@ router.post("/register", async (req, res) => {
 router.post("/login", async (req, res) => {
 	console.log("User login");
 	const { email, password } = req.body;
+	const connection = await db.getConnection();
 
 	try {
-		const [userRow] = await db.query("SELECT * FROM User WHERE email = ?", [email]);
+		// start transaction
+		await connection.beginTransaction();
+
+		const [userRow] = await connection.query("SELECT * FROM User WHERE email = ?", [email]);
 		const user = userRow[0];
 
 		if (!user) {
@@ -132,6 +136,9 @@ router.post("/login", async (req, res) => {
 		req.session.role = role === "Applicant" ? "user" : role.toLowerCase();
 
 		console.log("this is in login server, user id:", req.session.userID);
+
+		// save latest login time
+		await db.query(`UPDATE User SET lastLogin = NOW() WHERE userID = ?`, [user.userID]);
 		
 		req.session.save(err => {
 			if (err) {

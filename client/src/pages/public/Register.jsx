@@ -4,6 +4,9 @@ import axios from "axios";
 
 import "bootstrap/dist/js/bootstrap.bundle.min";
 
+// natoinalities
+import { nationalities } from "../../components/nationalities";
+
 export default function Register() {	
 	const [form, setForm] = useState({
         username: "",
@@ -86,7 +89,20 @@ export default function Register() {
 					{/* nationality */}
 					<div className="col-md-6">
 						<label className="form-label">Nationality</label>
-						<input type="text" className="form-control" name="nationality" value={form.nationality} onChange={handleInputChange} placeholder="Enter nationality" required />
+						<select
+							className="form-select"
+							name="nationality"
+							value={form.nationality}
+							onChange={handleInputChange}
+							required
+						>
+							<option value="">-- Select Nationality --</option>
+							{nationalities.map((nation, index) => (
+							<option key={index} value={nation}>
+								{nation}
+							</option>
+							))}
+						</select>
 					</div>
 
 					{/* address */}
