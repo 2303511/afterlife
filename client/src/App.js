@@ -1,39 +1,56 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
-import 'bootstrap/dist/css/bootstrap.min.css'; // ← put this FIRST
-import './index.css'; // your custom styles
-
-// TODO: import pages here
-import UsersPage from './pages/testingUsersPage';
-import MainLayout from "./layouts/MainLayout"; // assuming this is where your layout is
-import Login from "./pages/Login";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import ProtectedRoute from "../src/components/navigation/ProtectedRoute";
+import 'bootstrap/dist/css/bootstrap.min.css';
+import './index.css';
 
 import { appRoutes } from "./config/routesConfig";
+import RoleLayout from "./layouts/RoleLayout";
+import PublicLayout from "./layouts/PublicLayout";
+import { publicRoutes } from "./config/routesConfig";
+
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
+import PageNotFound from './pages/PageNotFound';
+import PaymentSuccess from './pages/PaymentSuccess';
+import LandingPage from "./pages/public/LandingPage";
+import Unauthorized from "./pages/Unauthorized";
 
 function App() {
+  localStorage.setItem("role", "staff"); // temp, change here to see staff and user navbar changes
   return (
     <Router>
+      <ToastContainer position="top-right" autoClose={3000} />
       <Routes>
-        {/* Default path - redirect to dashboard */}
-        <Route path="/" element={<Navigate to="/dashboard" replace />} />
+        {/* Public routes */}
+        {publicRoutes.map(({ path, element }) => (
+          <Route key={path} path={path} element={<PublicLayout>{element}</PublicLayout>} />
+        ))}
 
-        {/* Login route (without layout) */}
-        <Route path="/login" element={<Login />} />
+        {/* Protected + role-based layout routes */}
+        <Route element={<RoleLayout />}>
+          <Route path="/" element={<LandingPage />} />
+          <Route path="payment-success" element={<PaymentSuccess />} />
 
-        <Route path="/users" element={<UsersPage />} />
+          {appRoutes.map(({ path, element, requiredRoles }) => (
+            <Route
+              key={path}
+              path={path}
+              element={
+                <ProtectedRoute allowedRoles={requiredRoles}>
+                  {element}
+                </ProtectedRoute>
+              }
+            />
+          ))}
+        </Route>
 
-        {/* All other routes use MainLayout */}
-        <Route
-          path="*"
-          element={
-            <MainLayout>
-              <Routes>
-                {appRoutes.map(({ path, element }) => (
-                  <Route key={path} path={path} element={element} />
-                ))}
-              </Routes>
-            </MainLayout>
-          }
-        />
+        {/* Unauthorized page */}
+        <Route path="/unauthorized" element={<Unauthorized />} />
+        
+        {/* Page Not Found */}
+        <Route path="*" element={<PublicLayout> {<PageNotFound/>} </PublicLayout>} />
+
       </Routes>
     </Router>
   );
