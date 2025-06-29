@@ -67,12 +67,13 @@ export default function RequestUrnPlacement() {
 		else toast.error("Problems retrieving booking details");
 
 		form.append("nicheID", currentBooking.nicheID);
+		form.append("bookingID", bookingID);
 		form.append("dateOfDeath", formData.dateOfDeath);
 		form.append("inscription", formData.inscription); // optional
 		form.append("deathCertFile", formData.deathCertFile); // ✅ match `multer.single("deathCertFile")`
 
 		try {
-			await axios.post("/api/beneficiary/place-urn", form, {
+			await axios.post("/api/booking/place-urn", form, {
 				headers: { "Content-Type": "multipart/form-data" },
 				withCredentials: true // ✅ if your session uses cookies
 			});
