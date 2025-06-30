@@ -16,7 +16,6 @@ import LandingPage from "./pages/public/LandingPage";
 import Unauthorized from "./pages/Unauthorized";
 
 function App() {
-  localStorage.setItem("role", "staff"); // temp, change here to see staff and user navbar changes
   return (
     <Router>
       <ToastContainer position="top-right" autoClose={3000} />
