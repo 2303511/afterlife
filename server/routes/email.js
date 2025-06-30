@@ -39,5 +39,26 @@ router.post('/sendDeniedRequest', async (req, res) => {
   }
 });
 
+router.post('/sendResetPassword', async (req, res) => {
+  const { to, link } = req.body;
+
+  try {
+    await sendMail(
+      to,
+      'Password reset',
+      `<p>Dear user,</p>
+      <p>Sorry to hear you’re having trouble logging into AfterLife. We got a message that you forgot your password.</p>
+      <p>If this was you, you can reset your password using this link:</p>
+      <p>${link}</p>
+      <p>If you didn’t request a login link or a password reset, you can ignore this message.</p>`
+    );
+
+    res.json({ success: true, message: 'Email sent successfully!' });
+  } catch (err) {
+    console.error('Email error:', err);
+    res.status(500).json({ success: false, error: 'Failed to send email' });
+  }
+});
+
 
 module.exports = router;

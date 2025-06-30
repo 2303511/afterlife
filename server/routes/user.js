@@ -190,8 +190,27 @@ router.post("/logout", (req, res) => {
 });
 
 // Forget password
-router.post("/forget_password", (req, res) => {	
-	
+router.post("/forget_password", async (req, res) => {
+	const { email } = req.body;
+
+	try {
+		const [userRow] = await db.query("SELECT * FROM User WHERE email = ?", [email]);
+		const user = userRow[0];
+
+		if (!user) {
+			return res.status(401).json({ error: "If that e-mail is registered, a reset link has been sent." });
+		}
+
+		const res = await axios.post('/api/email/sendResetPassword', {
+			to: email,
+			link: "replace this link with reset password link"
+		});
+
+		
+	} catch (err) {
+		console.error(err);
+		res.status(500).json({ error: "Failed to send email" });
+	}
 });
 
 
