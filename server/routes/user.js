@@ -1,11 +1,13 @@
 const express = require("express");
 const router = express.Router();
 const db = require("../db");
-const { v4: uuidv4 } = require('uuid');
-const bcrypt = require('bcrypt');
+const { v4: uuidv4 } = require("uuid");
+const bcrypt = require("bcrypt");
+const { sessionStore } = require("../utils/sessionConfig");
+const { ensureAuth, ensureRole, ensureSelfOrRole } = require("../middleware/auth.js");
 
 // Get user id and role in session
-router.get("/me", (req, res) => {
+router.get("/me", ensureAuth, (req, res) => {
 	if (!req.session.userID) {
 		return res.status(401).json({ error: "Not authenticated" });
 	}
@@ -13,7 +15,7 @@ router.get("/me", (req, res) => {
 });
 
 // GET all users
-router.get("/", async (req, res) => {
+router.get("/", ensureAuth, ensureRole(["admin"]), async (req, res) => {
 	try {
 		const [users] = await db.query("SELECT * FROM User");
 		res.json(users);
@@ -32,7 +34,6 @@ async function getUserRole(userID) {
 			INNER JOIN User u ON u.roleID = r.roleID 
 			WHERE u.userID = ?
 		`, [userID]);
-		
 		return role[0].roleName; 
 	} catch (error) {
 		console.error("Error fetching role:", error);
@@ -61,21 +62,14 @@ router.post("/register", async (req, res) => {
 	} = req.body;
 
 	try {
-
-		// Generate UUID for userID
 		const userID = uuidv4();
-
-		// Hash password
 		const salt = await bcrypt.genSalt(10);
 		const hashedPassword = await bcrypt.hash(password, salt);
+		const fullAddress = `${address}, ${unitnumber}, ${postalcode}`;
 
-		// Role - Applicant
 		const [rows] = await db.query("SELECT roleID FROM Role WHERE roleName = ?", ['Applicant']);
 		const roleID = rows[0].roleID;
-
-		let finalAddress = `${address}, ${unitnumber}, ${postalcode}`;
 		
-		// Insert user 
 		const [result] = await db.query(
 			`INSERT INTO User
 			(userID, username, email, hashedPassword, salt, fullName, contactNumber, nric, dob, nationality, userAddress, gender, roleID, lastLogin)
@@ -91,13 +85,13 @@ router.post("/register", async (req, res) => {
 				nric,
 				dob,
 				nationality,
-				finalAddress,
+				fullAddress,
 				gender,
 				roleID,
 			]
 		);	
 		
-		res.json(result);
+		res.json({ success: true, userID });
 	} catch (err) {
 		console.error(err);
 		res.status(500).json({ error: "Registration Failed" });
@@ -108,95 +102,114 @@ router.post("/register", async (req, res) => {
 router.post("/login", async (req, res) => {
 	console.log("User login");
 	const { email, password } = req.body;
-	const connection = await db.getConnection();
+	const conn = await db.getConnection();
 
 	try {
-		// start transaction
-		await connection.beginTransaction();
+		await conn.beginTransaction();
 
-		const [userRow] = await connection.query("SELECT * FROM User WHERE email = ?", [email]);
+		const [userRow] = await conn.query(
+			"SELECT userID, salt, hashedPassword FROM User WHERE email = ?",
+			[email]
+		);
 		const user = userRow[0];
-
 		if (!user) {
+			await conn.rollback();
 			return res.status(401).json({ error: "Invalid credentials" });
 		}
 
-		// Re-hash user input password using the stored salt
 		const hashedInput = await bcrypt.hash(password, user.salt);
-
-		// Compare the hashed password with the one in the DB
 		if (hashedInput !== user.hashedPassword) {
+			await conn.rollback();
 			return res.status(401).json({ error: "Invalid credentials" });
 		}
 
-		// Store user id and role into session
-		req.session.userID = user.userID;
-		
-		const role = await getUserRole(user.userID);
-		if (!role) {
-			return res.status(500).json({ error: "User role not found" });
-		}
-		
-		req.session.role = role === "Applicant" ? "user" : role.toLowerCase();
+		// if (user.currentSessionID) {
+		// 	sessionStore.destroy(user.currentSessionID, err => {
+		// 		if (err) console.error("Error destroying old session:", err);
+		// 	});
+		// }
 
-		console.log("this is in login server, user id:", req.session.userID);
-
-		// save latest login time
-		await db.query(`UPDATE User SET lastLogin = NOW() WHERE userID = ?`, [user.userID]);
-		
-		req.session.save(err => {
+		req.session.regenerate(async err => {
 			if (err) {
-				console.error("session save:", err);
-				return res.status(500).json({ error: "Login failed" });
+				console.error("Session regeneration error:", err);
+				await conn.rollback();
+				return res.status(500).json({ error: "Session error" });
 			}
-			res.json({ role: req.session.role });
+
+			req.session.userID = user.userID;
+			const roleName = await getUserRole(user.userID);
+			req.session.role = roleName === "Applicant" ? "user" : roleName.toLowerCase();
+
+			const newSID = req.sessionID;
+			// await conn.query(
+			// 	"UPDATE User SET currentSessionID = ?, lastLogin = NOW() WHERE userID = ?",
+			// 	[newSID, user.userID]
+			// );
+
+			await conn.commit();
+			req.session.save(saveErr => {
+				if (saveErr) {
+					console.error("Session save error:", saveErr);
+					return res.status(500).json({ error: "Login failed" });
+				}
+				res.json({ success: true, role: req.session.role });
+			});
 		});
-		
 	} catch (err) {
 		console.error(err);
+		await conn.rollback();
 		res.status(500).json({ error: "Login Failed" });
+	} finally {
+		conn.release();
 	}
 });
 
-router.get("/getUserByID", async (req, res) => {
+router.get("/getUserByID", ensureAuth, ensureSelfOrRole(["admin"]), async (req, res) => {
 	let userID = req.query.userID;
 
 	try {
 		const [user] = await db.query("SELECT * FROM User WHERE userID = ?", [userID]);
 		if (user.length <= 0) return res.status(404).json({ error: 'User not found' });
 
-		res.json(user[0]); // return user details
+		res.json(user[0]);
 	} catch (err) {
 		console.error(err);
 		res.status(500).json({ error: `Failed to fetch user with ID ${userID}` });
 	}
 });
 
-router.post("/getUserByNRIC", async (req, res) => {
+router.post("/getUserByNRIC", ensureAuth, ensureRole(["admin"]), async (req, res) => {
 	let userNRIC = req.body.nric;
 
 	try {
 		const [user] = await db.query("SELECT * FROM User WHERE nric = ?", [userNRIC]);
 		if (user.length === 0) return res.status(404).json({ message: `User with NRIC ${userNRIC} not found` });
 		
-		res.json(user[0]); // return user details
+		res.json(user[0]);
 	} catch (err) {
 		console.error(err);
 		res.status(500).json({ error: `Failed to fetch user with ID ${userNRIC}` });
 	}
-})
+});
 
 // Logout
-router.post("/logout", (req, res) => {	
-	req.session.destroy(err => {
+router.post("/logout", ensureAuth, async (req, res) => {	
+	const uid = req.session.userID;
+	req.session.destroy(async err => {
 		if (err) {
 			console.error("Session destroy error:", err);
 			return res.status(500).json({ error: "Logout failed" });
 		}
 
-		res.clearCookie("sid", { path: "/" });
+		res.clearCookie(process.env.SESSION_COOKIE_NAME || "sid");
 
-		return res.status(200).json({ message: "Logged out" });
+		// try {
+		// 	await db.query("UPDATE User SET currentSessionID = NULL WHERE userID = ?", [uid]);
+		// } catch (e) {
+		// 	console.error("Error clearing sessionID in DB:", e);
+		// }
+
+		res.json({ message: "Logged out" });
 	});
 });
 
@@ -204,26 +217,8 @@ router.post("/logout", (req, res) => {
 router.post("/forget_password", async (req, res) => {
 	const { email } = req.body;
 
-	try {
-		const [userRow] = await db.query("SELECT * FROM User WHERE email = ?", [email]);
-		const user = userRow[0];
-
-		if (!user) {
-			return res.status(401).json({ error: "If that e-mail is registered, a reset link has been sent." });
-		}
-
-		const res = await axios.post('/api/email/sendResetPassword', {
-			to: email,
-			link: "replace this link with reset password link"
-		});
-
-		
-	} catch (err) {
-		console.error(err);
-		res.status(500).json({ error: "Failed to send email" });
-	}
+	// TODO: implement secure reset-token flow
+	res.status(501).json({ error: "Not implemented" });
 });
-
-
 
 module.exports = router;

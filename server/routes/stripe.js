@@ -3,13 +3,15 @@ const router = express.Router();
 const Stripe = require("stripe");
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY); // use dotenv!
 
-router.get("/config", (req, res) => {
+const { ensureAuth } = require("../middleware/auth.js");
+
+router.get("/config", ensureAuth, (req, res) => {
 	res.send({
 		publishableKey: process.env.STRIPE_PUBLISHABLE_KEY
 	});
 });
 
-router.post("/create-payment-intent", async (req, res) => {
+router.post("/create-payment-intent", ensureAuth, async (req, res) => {
 	const paymentAmount = req.body.amount * 100; // stripe always takes in the value in cents.hence need to *100
 
 	try {

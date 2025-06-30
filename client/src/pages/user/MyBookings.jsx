@@ -32,7 +32,7 @@ export default function MyBookings() {
 
 	// for user session 
 	const [user, setUser] = useState(undefined);
-
+	
 	const bookingTypeCSS = {
 		Current: "status-current",
 		PreOrder: "status-preorder",
@@ -64,6 +64,7 @@ export default function MyBookings() {
 		try {
 			const response = await axios.get(`/api/${endpoint}`, {
 				params: { [idLabel]: indivID },
+				withCredentials: true,
 				headers: {
 					"Content-Type": "application/json"
 				}
@@ -169,7 +170,10 @@ export default function MyBookings() {
 
 	const handleBookingDetails = async (bookingID) => {
 		var currBookingDetails = await fetchDetails("booking/getBookingByBookingID", "bookingID", bookingID);
-		currBookingDetails = currBookingDetails?.[0];
+		if (!currBookingDetails) {
+			toast.error("Failed to load booking details");
+			return;
+		}
 		const currNicheDetail = await fetchDetails("niche/getNicheByID", "nicheID", currBookingDetails.nicheID);
 		const currBeneficiaryDetail = await fetchDetails("beneficiary/getBeneficiaryByID", "beneficiaryID", currBookingDetails.beneficiaryID);
 

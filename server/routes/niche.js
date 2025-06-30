@@ -1,11 +1,11 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../db');
-
 const { v4: uuidv4 } = require("uuid");
+const { ensureAuth, ensureRole } = require("../middleware/auth.js");
 
 // GET all niches
-router.get('/', async (req, res) => {
+router.get('/', ensureAuth, async (req, res) => {
     try {
         const [niches] = await db.query('SELECT * FROM Niche');
         res.json(niches);
@@ -16,7 +16,7 @@ router.get('/', async (req, res) => {
 });
 
 // GET niche by ID 
-router.get('/getNicheByID', async (req, res) => {
+router.get('/getNicheByID', ensureAuth, async (req, res) => {
     const nicheID = req.query.nicheID;
 
     if (!nicheID) {
@@ -38,30 +38,30 @@ router.get('/getNicheByID', async (req, res) => {
 });
 
 // Get all buildings
-router.get("/buildings", async (req, res) => {
+router.get("/buildings", ensureAuth, async (req, res) => {
   const [rows] = await db.query("SELECT * FROM Building");
   res.json(rows);
 });
 
 // Get levels for a building
-router.get("/levels/:buildingID", async (req, res) => {
+router.get("/levels/:buildingID", ensureAuth, async (req, res) => {
   const [rows] = await db.query("SELECT * FROM Level WHERE buildingID = ?", [req.params.buildingID]);
   res.json(rows);
 });
 
 // Get blocks for a level
-router.get("/blocks/:levelID", async (req, res) => {
+router.get("/blocks/:levelID", ensureAuth, async (req, res) => {
   const [rows] = await db.query("SELECT * FROM Block WHERE levelID = ?", [req.params.levelID]);
   res.json(rows);
 });
 
 // Get niches for a block
-router.get("/niches/:blockID", async (req, res) => {
+router.get("/niches/:blockID", ensureAuth, async (req, res) => {
   const [rows] = await db.query("SELECT * FROM Niche WHERE blockID = ?", [req.params.blockID]);
   res.json(rows);
 });
 
-router.post("/create-block", async (req, res) => {
+router.post("/create-block", ensureAuth, ensureRole(["staff","admin"]), async (req, res) => {
   const { levelID, notes, rows, cols, status } = req.body;
 
   try {
@@ -91,10 +91,9 @@ router.post("/create-block", async (req, res) => {
 });
 
 // admin level
-router.post("/update-status", async (req, res) => {
+router.post("/update-status", ensureAuth, ensureRole(["admin"]), async (req, res) => {
   const { nicheID, newStatus } = req.body;
 
-  // Validate input
   const allowedStatuses = ["Available", "Reserved", "Occupied", "Pending"];
   if (!nicheID || !newStatus) {
       return res.status(400).json({ error: "Missing nicheID or newStatus." });
@@ -105,18 +104,17 @@ router.post("/update-status", async (req, res) => {
   }
 
   try {
-      // Check if niche exists
       const [[existing]] = await db.query(`SELECT * FROM Niche WHERE nicheID = ?`, [nicheID]);
       if (!existing) {
           return res.status(404).json({ error: "Niche not found." });
       }
 
-      // Update the status
-      await db.query(`
-          UPDATE Niche
-          SET status = ?, lastUpdated = NOW()
-          WHERE nicheID = ?
-      `, [newStatus, nicheID]);
+      await db.query(
+          `UPDATE Niche
+           SET status = ?, lastUpdated = NOW()
+           WHERE nicheID = ?`,
+          [newStatus, nicheID]
+      );
 
       res.status(200).json({ success: true, message: "Niche status updated successfully." });
   } catch (err) {
@@ -124,7 +122,5 @@ router.post("/update-status", async (req, res) => {
       res.status(500).json({ error: "Failed to update niche status." });
   }
 });
-
-
 
 module.exports = router;

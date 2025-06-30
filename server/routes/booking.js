@@ -1,144 +1,121 @@
-const express = require('express');
-const router = express.Router();
-const db = require('../db');
-const multer = require('multer');
-const upload = multer();
-const { v4: uuidv4 } = require("uuid");
+const express    = require('express');
+const router     = express.Router();
+const db         = require('../db');
+const multer     = require('multer');
+const upload     = multer();
+const { v4: uuidv4 }           = require("uuid");
 const { sendAccountCreationEmail } = require("../routes/email");
 const bcrypt = require('bcrypt');
+const { ensureAuth, ensureRole, ensureSelfOrRole } = require('../middleware/auth.js');
 
-
-// for random password when a new user is created through booking
+// for random password when staff creates a new user
 function generateRandomPassword(length = 12) {
-    const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+";
-    return Array.from({ length }, () => charset[Math.floor(Math.random() * charset.length)]).join('');
+  const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+";
+  return Array.from({ length }, () => charset[Math.floor(Math.random() * charset.length)]).join('');
 }
 
-
-router.get("/", async (req, res) => {
+// GET bookings for a given userID (self or staff/admin)
+router.get("/", ensureAuth, ensureSelfOrRole(["staff","admin"]), async (req, res) => {
     const userID = req.query.userID;
-
-    if (!userID) {
-        return res.status(400).json({ error: "User ID is required" });
-    }
-
+    if (!userID) return res.status(400).json({ error: "User ID is required" });
     try {
-        const [bookings] = await db.query('SELECT * FROM Booking WHERE userID = ?', [userID]);
-        res.json(bookings);
+      const [bookings] = await db.query("SELECT * FROM Booking WHERE userID = ?", [userID]);
+      res.json(bookings);
     } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: "Failed to fetch bookings" });
+      console.error(err);
+      res.status(500).json({ error: "Failed to fetch bookings" });
     }
-});
+  }
+);
 
-router.get("/getBookingByUserID", async (req, res) => {
+// GET bookings paid by a given userID (self or staff/admin)
+router.get("/getBookingByUserID", ensureAuth, ensureSelfOrRole(["staff","admin"]), async (req, res) => {
     const userID = req.query.userID;
-
     try {
-        const [bookings] = await db.query('SELECT * FROM Booking WHERE paidByID = ?', [userID]);
-
-        if (bookings.length === 0) {
-            return res.json([]); // Return empty array if no bookings found
-        }
-
-        res.json(bookings);
-
+      const [bookings] = await db.query("SELECT * FROM Booking WHERE paidByID = ?", [userID]);
+      res.json(bookings.length ? bookings : []);
     } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: "Failed to fetch bookings" });
+      console.error(err);
+      res.status(500).json({ error: "Failed to fetch bookings" });
     }
+  }
+);
 
-});
-
-router.get("/getBookingByBookingID", async (req, res) => {
+// GET a booking by bookingID (self if owner, or staff/admin)
+router.get("/getBookingByBookingID", ensureAuth, async (req, res) => {
     const bookingID = req.query.bookingID;
-
     try {
-        const [bookings] = await db.query('SELECT * FROM Booking WHERE bookingID = ?', [bookingID]);
-
-        if (bookings.length === 0) {
-            return res.json([]); // Return empty array if no bookings found
-        }
-
-        res.json(bookings);
-
+      const [rows] = await db.query("SELECT * FROM Booking WHERE bookingID = ?", [bookingID]);
+      if (!rows.length) return res.json([]);
+      const booking = rows[0];
+      if (booking.paidByID !== req.session.userID && !["staff","admin"].includes(req.session.role)) {
+        return res.status(403).json({ error: "Forbidden" });
+      }
+      res.json(booking);
     } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: "Failed to fetch bookings" });
+      console.error(err);
+      res.status(500).json({ error: "Failed to fetch bookings" });
     }
+  }
+);
 
-});
-
-// staff - to search for bookings under a user's phone number
-router.get('/search', async (req, res) => {
-    const query = req.query.query;
-
+// staff-only search
+router.get("/search", ensureAuth, ensureRole(["staff","admin"]), async (req, res) => {
+    const q = req.query.query;
     try {
-        const [rows] = await db.query(`
-            SELECT 
-              b.*, 
-              u.fullName AS customerName,
-              u.contactNumber,
-              be.beneficiaryName,
-              p.paymentID,
-              p.amount as paymentAmount,
-              p.paymentMethod,
-              p.paymentDate,
-              p.paymentStatus,
-              n.nicheCode,
-              n.status AS nicheStatus
-            FROM Booking b
-            JOIN User u ON b.paidByID = u.userID
-            JOIN Role r ON u.roleID = r.roleID
-            LEFT JOIN Beneficiary be ON b.beneficiaryID = be.beneficiaryID
-            LEFT JOIN Payment p ON b.paymentID = p.paymentID
-            LEFT JOIN Niche n ON b.nicheID = n.nicheID
-            WHERE u.contactNumber LIKE ?
-              AND r.roleName = 'Applicant'
-        `, [`%${query}%`]);
-
-        res.json(rows);
+      const [rows] = await db.query(
+        `SELECT b.*, u.fullName AS customerName, u.contactNumber, be.beneficiaryName,
+                p.paymentID, p.amount AS paymentAmount, p.paymentMethod, p.paymentDate, p.paymentStatus,
+                n.nicheCode, n.status AS nicheStatus
+         FROM Booking b
+         JOIN User u ON b.paidByID = u.userID
+         JOIN Role r ON u.roleID = r.roleID
+         LEFT JOIN Beneficiary be ON b.beneficiaryID = be.beneficiaryID
+         LEFT JOIN Payment p ON b.paymentID = p.paymentID
+         LEFT JOIN Niche n ON b.nicheID = n.nicheID
+         WHERE u.contactNumber LIKE ? AND r.roleName = 'Applicant'`,
+        [`%${q}%`]
+      );
+      res.json(rows);
     } catch (err) {
-        console.error("Search error:", err);
-        res.status(500).send("Internal server error");
+      console.error(err);
+      res.status(500).send("Internal server error");
     }
-});
+  }
+);
 
-
-// staff - view all pending bookings
-router.get("/pending", async (req, res) => {
+// staff-only view pending
+router.get("/pending", ensureAuth, ensureRole(["staff","admin"]), async (req, res) => {
     try {
-        const [rows] = await db.query(`
-            SELECT 
-                b.bookingID, b.bookingType, b.bookingStatus, b.nicheID, b.beneficiaryID,
+      const [rows] = await db.query(
+        `SELECT b.bookingID, b.bookingType, b.bookingStatus, b.nicheID, b.beneficiaryID,
                 u.fullName AS customerName, u.contactNumber,
                 n.nicheCode, n.status AS nicheStatus, n.lastUpdated,
-                be.beneficiaryName,
-                p.amount AS paymentAmount, p.paymentMethod
-            FROM Booking b
-            JOIN User u ON b.paidByID = u.userID
-            LEFT JOIN Beneficiary be ON b.beneficiaryID = be.beneficiaryID
-            LEFT JOIN Niche n ON b.nicheID = n.nicheID
-            LEFT JOIN Payment p ON b.paymentID = p.paymentID
-            WHERE b.bookingStatus = 'Pending'
-            ORDER BY n.lastUpdated DESC
-        `);
-
-        res.json(rows);
+                be.beneficiaryName, p.amount AS paymentAmount, p.paymentMethod
+         FROM Booking b
+         JOIN User u ON b.paidByID = u.userID
+         LEFT JOIN Beneficiary be ON b.beneficiaryID = be.beneficiaryID
+         LEFT JOIN Niche n ON b.nicheID = n.nicheID
+         LEFT JOIN Payment p ON b.paymentID = p.paymentID
+         WHERE b.bookingStatus = 'Pending'
+         ORDER BY n.lastUpdated DESC`
+      );
+      res.json(rows);
     } catch (err) {
-        console.error("Error fetching pending bookings:", err);
-        res.status(500).json({ message: "Internal server error" });
+      console.error(err);
+      res.status(500).json({ message: "Internal server error" });
     }
-});
+  }
+);
 
 // for user to submit their bookings
-router.post("/submitBooking", upload.fields([
+router.post("/submitBooking", ensureAuth, upload.fields([
     { name: 'birthCertFile', maxCount: 1 },
     { name: 'deathCertFile', maxCount: 1 }
-]), async (req, res) => {
+  ]),
+  async (req, res) => {
     const dbConn = await db.getConnection();
     await dbConn.beginTransaction();
-
     try {
         const {
             // Applicant
@@ -300,7 +277,7 @@ router.post("/submitBooking", upload.fields([
 
 
 // after the user completes payment, need to update the booking to fully paid. 
-router.post("/updateBookingTransaction", async (req, res) => {
+router.post("/updateBookingTransaction", ensureAuth, ensureSelfOrRole(["staff","admin"]), async (req, res) => {
     const dbConn = await db.getConnection();
     await dbConn.beginTransaction();
 
@@ -336,7 +313,7 @@ router.post("/updateBookingTransaction", async (req, res) => {
 })
 
 // user request to place urn
-router.post("/place-urn", upload.single("deathCertFile"), async (req, res) => {
+router.post("/place-urn", ensureAuth, ensureSelfOrRole(["staff","admin"]), upload.single("deathCertFile"), async (req, res) => {
     const { bookingID, nicheID, beneficiaryID, dateOfDeath, inscription } = req.body;
     const deathCertificate = req.file?.buffer || null;
     const deathCertificateMime = req.file?.mimetype || null;
@@ -383,7 +360,7 @@ router.post("/place-urn", upload.single("deathCertFile"), async (req, res) => {
 
 
 // staff - to approve pending niches aka to put a urn in
-router.post('/approve', async (req, res) => {
+router.post('/approve', ensureAuth, ensureRole(["staff","admin"]), async (req, res) => {
     const { bookingID, nicheID, bookingType } = req.body;
 
     const dbConn = await db.getConnection();
@@ -417,7 +394,7 @@ router.post('/approve', async (req, res) => {
 });
 
 // staff - to archive ('free') niches once the applicants are done with it
-router.post('/booking/archive', async (req, res) => {
+router.post('/booking/archive', ensureAuth, ensureRole(["staff","admin"]), async (req, res) => {
     const { bookingID, nicheID } = req.body;
 
     const dbConn = await db.getConnection();
@@ -448,7 +425,7 @@ router.post('/booking/archive', async (req, res) => {
 });
 
 //bene.beneficiaryNRIC, 
-router.get("/approval/:bookingID", async (req, res) => {
+router.get("/approval/:bookingID", ensureAuth, async (req, res) => {
     const dbConn = await db.getConnection();
 
     try {

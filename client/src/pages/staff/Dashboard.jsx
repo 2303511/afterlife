@@ -13,7 +13,7 @@ export default function Dashboard() {
   });
 
   useEffect(() => {
-    axios.get("http://localhost:8888/api/dashboard/stats")
+    axios.get("/api/dashboard/stats", { withCredentials: true })
       .then(res => {
         setStatsData(res.data);
       })

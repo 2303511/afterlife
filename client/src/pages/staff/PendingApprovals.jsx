@@ -11,7 +11,7 @@ export default function PendingApprovals() {
 	useEffect(() => {
 		setIsLoading(true);
 		axios
-			.get("http://localhost:8888/api/booking/pending")
+			.get("/api/booking/pending", { withCredentials: true })
 			.then((res) => {
 				//console.log('Pending approvals:', res.data);
 				setPendingBookings(res.data);
@@ -26,8 +26,20 @@ export default function PendingApprovals() {
 	}, []);
 
 	const onArchive = (bookingID, nicheID) => {
-
-  }
+		axios
+			.post(
+				"/api/booking/archive",
+				{ bookingID, nicheID },
+				{ withCredentials: true }
+			)
+			.then(() => {
+				setPendingBookings(bs => bs.filter(b => b.bookingID !== bookingID));
+				toast.success("Booking archived successfully!");
+			})
+			.catch(() => {
+				toast.error("Failed to archive booking — please try again.");
+			});
+	};
 
   return (
 		<div className="pending-approvals container mt-4">
@@ -42,6 +54,7 @@ export default function PendingApprovals() {
 				<BookingGrid
 					currentTab="pending"
 					bookings={pendingBookings}
+					onArchive={onArchive}
 					// You can pass your approve/archive handlers here if needed
 				/>
 			)}

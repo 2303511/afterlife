@@ -1,84 +1,88 @@
-import { useState } from "react";
+// src/pages/ForgetPasswordModal.jsx
+
+import React, { useState } from "react";
+import { Modal, Button, Form, Alert } from "react-bootstrap";
 import axios from "axios";
 
-export default function ForgetPasswordModal({ show, onClose }) {
-    const [email, setEmail] = useState("");
-    const [status, setStatus] = useState(null);          // null | "ok" | "error"
-    const [submitting, setSubmitting] = useState(false);
-    const [error, setError] = useState("");  
+export default function ForgetPasswordModal({ show, onHide }) {
+  const [email, setEmail]     = useState("");
+  const [status, setStatus]   = useState("idle"); // idle, sending, success, error
+  const [errorMessage, setErrorMessage] = useState("");
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setSubmitting(true);
-        setError("");
-        try {
-            await axios.post("/api/user/forget_password", { email });
-            setStatus("ok");
-        } catch (err) {
-            setStatus("error");
-            if (err.response?.status === 401) {
-				setError("If that e-mail is registered, a reset link has been sent.");
-			} else {
-				setError("Something went wrong. Please try again.");
-			}
-        } finally {
-            setSubmitting(false);
-        }
-    };
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setStatus("sending");
+    setErrorMessage("");
 
-    // Bootstrap’s “modal fade” needs .show class + inline style to display
-    const modalClass = `modal fade ${show ? "show" : ""}`;
-    const modalStyle = show ? { display: "block" } : {};
+    try {
+      // You could generate a real reset link here or have the backend do it.
+      const resetLink = `${window.location.origin}/reset-password?token=PLACEHOLDER`;
+      await axios.post(
+        "/api/email/sendResetPassword",
+        { to: email, link: resetLink },
+        { headers: { "Content-Type": "application/json" } }
+      );
+      setStatus("success");
+    } catch (err) {
+      console.error("Password reset request failed:", err);
+      setErrorMessage("Failed to send reset link. Please try again.");
+      setStatus("error");
+    }
+  };
 
-    return (
-    <div className={modalClass} style={modalStyle} tabIndex="-1" role="dialog" onClick={onClose}>
-        <div className="modal-dialog" role="document" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-content">
-                <div className="modal-header">
-                <h5 className="modal-title">Forget Password</h5>
-                <button type="button" className="close" onClick={onClose}>
-                    <span>&times;</span>
-                </button>
-                </div>
+  const resetForm = () => {
+    setEmail("");
+    setStatus("idle");
+    setErrorMessage("");
+  };
 
-                <form onSubmit={handleSubmit}>
-                    <div className="modal-body">
-                        <p>Enter the e-mail address linked to your account and we’ll send you a reset link.</p>
+  const handleClose = () => {
+    resetForm();
+    onHide();
+  };
 
-                        <div className="form-group">
-                            <label htmlFor="reset-email">E-mail</label>
-                            <input
-                                id="reset-email"
-                                type="email"
-                                className="form-control"
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                                required
-                                disabled={submitting || status === "ok"}
-                            />
-                        </div>
-
-                        {status === "ok" && (
-                        <div className="alert alert-success mt-3">
-                            Check your inbox for the reset link.
-                        </div>
-                        )}
-                        {status === "error" && (
-                        <div className="alert alert-danger mt-3">
-                            Something went wrong. Please try again.
-                        </div>
-                        )}
-                    </div>
-
-                    <div className="modal-footer">
-                        <button type="button" className="btn btn-secondary" onClick={onClose}>Close</button>
-                        <button type="submit" className="btn btn-primary" disabled={!email || submitting || status === "ok"}>
-                            {submitting ? "Sending…" : "Send Reset Link"}
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-    );
+  return (
+    <Modal show={show} onHide={handleClose} centered>
+      <Modal.Header closeButton>
+        <Modal.Title>Reset Your Password</Modal.Title>
+      </Modal.Header>
+      <Modal.Body>
+        {status === "success" ? (
+          <Alert variant="success">
+            If that email is registered, a reset link has been sent.
+          </Alert>
+        ) : (
+          <Form onSubmit={handleSubmit}>
+            <Form.Group controlId="resetEmail" className="mb-3">
+              <Form.Label>Email address</Form.Label>
+              <Form.Control
+                type="email"
+                placeholder="Enter your email"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                required
+                disabled={status === "sending"}
+              />
+            </Form.Group>
+            {status === "error" && (
+              <Alert variant="danger">{errorMessage}</Alert>
+            )}
+            <Button
+              variant="primary"
+              type="submit"
+              disabled={status === "sending"}
+              className="w-100"
+            >
+              {status === "sending" ? "Sending…" : "Send Reset Link"}
+            </Button>
+          </Form>
+        )}
+      </Modal.Body>
+      <Modal.Footer>
+        <Button variant="secondary" onClick={handleClose}>
+          {status === "success" ? "Close" : "Cancel"}
+        </Button>
+      </Modal.Footer>
+    </Modal>
+  );
 }

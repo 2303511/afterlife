@@ -29,7 +29,7 @@ export default function SearchBooking() {
       setIsLoading(true);
       setHasSearched(true);
 
-      axios.get(`/api/booking/search?query=${encodeURIComponent(query)}`)
+      axios.get(`/api/booking/search?query=${encodeURIComponent(query)}`, { withCredentials: true })
         .then((res) => {
           setBookings(res.data);
         })
@@ -81,7 +81,7 @@ export default function SearchBooking() {
       await axios.post("/api/booking/approve", {
         bookingID: bookingID,
         nicheID: booking.nicheID
-      });
+      }, { withCredentials: true });
 
       // for immediate visual changes
       setBookings(prev =>
@@ -107,7 +107,7 @@ export default function SearchBooking() {
       await axios.post("/api/booking/archive", {
         bookingID: bookingID,
         nicheID: booking.nicheID
-      });
+      }, { withCredentials: true });
 
       // for immediate visual changes
       setBookings(prev =>

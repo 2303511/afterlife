@@ -1,26 +1,16 @@
-// Logout.jsx
-import { useEffect } from "react";
+import { useEffect, useContext } from "react";
 import { useNavigate } from "react-router-dom";
+import { AuthContext } from "../../auth/AuthContext";
 
 export default function Logout() {
-    const navigate = useNavigate();
-    useEffect(() => {
-        const doLogout = async () => {
-            try {
-                await fetch("/api/user/logout", {
-                    method: "POST",
-                    credentials: "include", 
-                });
-            } catch (err) {
-            console.error("Logout error:", err);
-            } finally {
-                console.log("logout successful!!")
-                navigate("/login", { replace: true });
-            }
-        };
+  const { logout } = useContext(AuthContext);
+  const navigate   = useNavigate();
 
-        doLogout();
-    }, [navigate]);
+  useEffect(() => {
+    logout().finally(() => {
+      navigate("/login", { replace: true });
+    });
+  }, [logout, navigate]);
 
-    return null;
+  return null;
 }
