@@ -1,11 +1,27 @@
 import React from "react";
 import { Modal, Form, Button } from "react-bootstrap";
 
-export default function EditSlotModal({ show, onClose, onSave, selectedSlot, setSelectedSlot, statusClass }) {
+export default function EditSlotModal({
+  show,
+  onClose,
+  onSave,
+  selectedSlot,
+  setSelectedSlot,
+  statusClass
+}) {
+  const handleSave = () => {
+    const confirmed = window.confirm(
+      "Are you sure you want to override this slot's status?\nThis should only be done if no automatic resolution is possible."
+    );
+    if (confirmed) {
+      onSave();
+    }
+  };
+
   return (
     <Modal show={show} onHide={onClose}>
       <Modal.Header closeButton>
-        <Modal.Title>Edit Slot</Modal.Title>
+        <Modal.Title>Manually Override Slot Status</Modal.Title>
       </Modal.Header>
       <Modal.Body>
         {selectedSlot && (
@@ -14,6 +30,7 @@ export default function EditSlotModal({ show, onClose, onSave, selectedSlot, set
               <Form.Label>Slot ID</Form.Label>
               <Form.Control type="text" value={selectedSlot.id} disabled />
             </Form.Group>
+
             <Form.Group className="mb-3">
               <Form.Label>Status</Form.Label>
               <Form.Select
@@ -29,12 +46,38 @@ export default function EditSlotModal({ show, onClose, onSave, selectedSlot, set
                 ))}
               </Form.Select>
             </Form.Group>
+
+            <Form.Group className="mb-3">
+              <Form.Label>Reason for Override (optional)</Form.Label>
+              <Form.Control
+                as="textarea"
+                rows={2}
+                placeholder="E.g. user payment stuck, system failed to update"
+                value={selectedSlot.overrideReason || ""}
+                onChange={(e) =>
+                  setSelectedSlot({
+                    ...selectedSlot,
+                    overrideReason: e.target.value
+                  })
+                }
+              />
+            </Form.Group>
+
+            <div className="alert alert-warning mt-3">
+              <strong>⚠ Manual Override Warning:</strong><br />
+              Changing the status manually should <u>only</u> be done as a last resort.<br />
+              Ensure there are no pending bookings or system issues before proceeding.
+            </div>
           </Form>
         )}
       </Modal.Body>
       <Modal.Footer>
-        <Button variant="secondary" onClick={onClose}>Cancel</Button>
-        <Button variant="primary" onClick={onSave}>Save Changes</Button>
+        <Button variant="secondary" onClick={onClose}>
+          Cancel
+        </Button>
+        <Button variant="danger" onClick={handleSave}>
+          Save Changes
+        </Button>
       </Modal.Footer>
     </Modal>
   );
