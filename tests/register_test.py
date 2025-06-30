@@ -21,7 +21,7 @@ def test_register_with_selenium():
     options.add_argument("--disable-dev-shm-usage")
     options.add_argument("--window-size=1920,1080")  # Improve visibility in headless mode
 
-    driver = webdriver.Chrome(ChromeDriverManager().install(), options=options)
+    driver = webdriver.Chrome(executable_path=ChromeDriverManager().install(), options=options)
 
     try:
         # Open frontend (make sure it's served on port 80 in your test setup)
