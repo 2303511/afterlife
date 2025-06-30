@@ -1,0 +1,70 @@
+name: Register Test
+
+on:
+  push:
+    branches: [main, is-dev]
+
+jobs:
+  selenium-test:
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: ${{ secrets.EC2_SQL_PW }}
+          MYSQL_DATABASE: ${{ secrets.EC2_SQL_DB_NAME }}
+          MYSQL_USER: ${{ secrets.EC2_SQL_USER }}
+          MYSQL_PASSWORD: ${{ secrets.EC2_SQL_PW }}
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping --silent"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '20'
+
+    - name: Install frontend and backend dependencies
+      run: |
+        cd client && npm install && npm run build &
+        cd server && npm install &
+        wait
+
+    - name: Start backend and frontend with secrets
+      run: |
+        export MYSQL_HOST=localhost
+        export MYSQL_USER=${{ secrets.EC2_SQL_USER }}
+        export MYSQL_PASSWORD=${{ secrets.EC2_SQL_PW }}
+        export MYSQL_DATABASE=${{ secrets.EC2_SQL_DB_NAME }}
+
+        cd server && nohup node index.js &
+
+        cd ../client && nohup npx serve -s build -l 80 &
+
+        sleep 10
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.11"
+
+    - name: Install Python test dependencies
+      run: pip install selenium
+
+    - name: Install Chrome and ChromeDriver
+      run: |
+        sudo apt update
+        sudo apt install -y chromium-browser chromium-chromedriver
+        sudo ln -fs /usr/lib/chromium-browser/chromedriver /usr/bin/chromedriver
+
+    - name: Run Selenium registration test
+      run: pytest tests/register_test.py
