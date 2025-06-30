@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Modal, Form, Button } from "react-bootstrap";
 
 export default function EditSlotModal({
@@ -9,11 +9,14 @@ export default function EditSlotModal({
   setSelectedSlot,
   statusClass
 }) {
+  const [isConfirmed, setIsConfirmed] = useState(false);
+
+  useEffect(() => {
+    setIsConfirmed(false); // reset when modal opens
+  }, [show]);
+
   const handleSave = () => {
-    const confirmed = window.confirm(
-      "Are you sure you want to override this slot's status?\nThis should only be done if no automatic resolution is possible."
-    );
-    if (confirmed) {
+    if (isConfirmed) {
       onSave();
     }
   };
@@ -68,6 +71,15 @@ export default function EditSlotModal({
               Changing the status manually should <u>only</u> be done as a last resort.<br />
               Ensure there are no pending bookings or system issues before proceeding.
             </div>
+
+            <Form.Check
+              type="checkbox"
+              id="confirmOverride"
+              label="I understand and wish to proceed with the override"
+              checked={isConfirmed}
+              onChange={(e) => setIsConfirmed(e.target.checked)}
+              className="mt-3"
+            />
           </Form>
         )}
       </Modal.Body>
@@ -75,7 +87,11 @@ export default function EditSlotModal({
         <Button variant="secondary" onClick={onClose}>
           Cancel
         </Button>
-        <Button variant="danger" onClick={handleSave}>
+        <Button
+          variant="danger"
+          onClick={handleSave}
+          disabled={!isConfirmed}
+        >
           Save Changes
         </Button>
       </Modal.Footer>

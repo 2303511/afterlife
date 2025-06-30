@@ -132,10 +132,25 @@ export default function FullNicheMap({
 		}
 	};
 
-	const handleSaveSlot = () => {
-		setSlots((prev) => prev.map((slot) => (slot.id === selectedSlot.id ? selectedSlot : slot)));
-		setShowEditModal(false);
+	const handleSaveSlot = async () => {
+		try {
+			await axios.post("/api/niche/update-status", {
+				nicheID: selectedSlot.id,
+				newStatus: selectedSlot.status.charAt(0).toUpperCase() + selectedSlot.status.slice(1) // Ensure proper casing
+			});
+	
+			// Update local state for optimistic UI
+			setSlots((prev) =>
+				prev.map((slot) => (slot.id === selectedSlot.id ? selectedSlot : slot))
+			);
+	
+			setShowEditModal(false);
+		} catch (err) {
+			console.error("Failed to update niche status:", err);
+			alert("Failed to update status. Please try again.");
+		}
 	};
+	
 
 	if (!user) return null;
 
