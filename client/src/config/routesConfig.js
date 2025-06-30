@@ -11,12 +11,13 @@ import Profile from "../pages/Profile";
 // staff pages
 import Dashboard from "../pages/staff/Dashboard";
 import SearchBooking from "../pages/staff/SearchBooking";
-import NicheManagement from "../pages/staff/NicheManagement";
+import NicheBookingStaff from "../pages/staff/NicheBookingStaff";
 import BookingApproval from "../pages/staff/BookingApproval";
 import PendingApprovals from "../pages/staff/PendingApprovals";
 
 // admin pages
 import AdminDashboard from "../pages/admin/AdminDashboard";
+import NicheManagement from "../pages/admin/NicheManagement";
 import BuildingManagement from "../pages/admin/BuildingManagement";
 import Login from "../pages/public/Login";
 import Register from "../pages/public/Register";
@@ -116,10 +117,10 @@ export const staffRoutes = [
     requiredRoles: ["staff"]
   },
   {
-    label: "Niche Management",
-    path: "/niche-management",
+    label: "Niche Booking",
+    path: "/niche-booking",
     icon: <FaMapMarkedAlt />,
-    element: <NicheManagement />,
+    element: <NicheBookingStaff />,
     requiredRoles: ["staff"]
   }
 ];
@@ -131,6 +132,13 @@ export const adminRoutes = [
     path: "/admin-dashboard",
     icon: <MdAdminPanelSettings />,
     element: <AdminDashboard />,
+    requiredRoles: ["admin"]
+  },
+  {
+    label: "Niche Management",
+    path: "/niche-management",
+    icon: <FaMapMarkedAlt />,
+    element: <NicheManagement />,
     requiredRoles: ["admin"]
   },
   {
