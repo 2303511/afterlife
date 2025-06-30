@@ -14,6 +14,7 @@ DROP TABLE IF EXISTS Block;
 DROP TABLE IF EXISTS Level;
 DROP TABLE IF EXISTS Building;
 DROP TABLE IF EXISTS Role;
+DROP TABLE IF EXISTS sessions;
 
 -- Re-enable foreign key checks
 SET FOREIGN_KEY_CHECKS = 1;
@@ -54,7 +55,8 @@ CREATE TABLE User (
     email VARCHAR(255),
     hashedPassword VARCHAR(255),
     salt VARCHAR(255), 
-    failLoginCount INT DEFAULT 0, 
+    currentSessionID VARCHAR(128) COLLATE utf8mb4_bin,
+    failLoginCount INT DEFAULT 0,
     accountCreatedAt DATETIME DEFAULT CURRENT_TIMESTAMP, 
     lastLogin DATETIME NULL,
     fullName VARCHAR(255),
@@ -124,7 +126,7 @@ CREATE TABLE Booking (
     FOREIGN KEY (beneficiaryID) REFERENCES Beneficiary(beneficiaryID)
 );
 
-CREATE TABLE IF NOT EXISTS `sessions` (
+CREATE TABLE sessions (
   `session_id` VARCHAR(128) COLLATE utf8mb4_bin NOT NULL,
   `expires`    INT UNSIGNED NOT NULL,
   `data`       TEXT         COLLATE utf8mb4_bin,

@@ -108,7 +108,7 @@ router.post("/login", async (req, res) => {
 		await conn.beginTransaction();
 
 		const [userRow] = await conn.query(
-			"SELECT userID, salt, hashedPassword FROM User WHERE email = ?",
+			"SELECT userID, salt, hashedPassword, currentSessionID FROM User WHERE email = ?",
 			[email]
 		);
 		const user = userRow[0];
@@ -123,11 +123,11 @@ router.post("/login", async (req, res) => {
 			return res.status(401).json({ error: "Invalid credentials" });
 		}
 
-		// if (user.currentSessionID) {
-		// 	sessionStore.destroy(user.currentSessionID, err => {
-		// 		if (err) console.error("Error destroying old session:", err);
-		// 	});
-		// }
+		if (user.currentSessionID) {
+			sessionStore.destroy(user.currentSessionID, err => {
+				if (err) console.error("Error destroying old session:", err);
+			});
+		}
 
 		req.session.regenerate(async err => {
 			if (err) {
@@ -141,10 +141,10 @@ router.post("/login", async (req, res) => {
 			req.session.role = roleName === "Applicant" ? "user" : roleName.toLowerCase();
 
 			const newSID = req.sessionID;
-			// await conn.query(
-			// 	"UPDATE User SET currentSessionID = ?, lastLogin = NOW() WHERE userID = ?",
-			// 	[newSID, user.userID]
-			// );
+			await conn.query(
+				"UPDATE User SET currentSessionID = ?, lastLogin = NOW() WHERE userID = ?",
+				[newSID, user.userID]
+			);
 
 			await conn.commit();
 			req.session.save(saveErr => {
@@ -203,11 +203,11 @@ router.post("/logout", ensureAuth, async (req, res) => {
 
 		res.clearCookie(process.env.SESSION_COOKIE_NAME || "sid");
 
-		// try {
-		// 	await db.query("UPDATE User SET currentSessionID = NULL WHERE userID = ?", [uid]);
-		// } catch (e) {
-		// 	console.error("Error clearing sessionID in DB:", e);
-		// }
+		try {
+			await db.query("UPDATE User SET currentSessionID = NULL WHERE userID = ?", [uid]);
+		} catch (e) {
+			console.error("Error clearing sessionID in DB:", e);
+		}
 
 		res.json({ message: "Logged out" });
 	});
