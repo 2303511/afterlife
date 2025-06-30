@@ -1,5 +1,6 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Button, Form, Accordion } from "react-bootstrap";
+import axios from "axios";
 
 import ApplicantDetails from './ApplicantDetails';
 import BeneficiaryDetails from './BeneficiaryDetails';
@@ -13,17 +14,18 @@ export default function BookingForm({ selectedSlot, onCancel, onSubmit, isModal 
   // const [bookingType, setBookingType] = useState("");
   const [bookingType, setBookingType] = useState("PreOrder");
 
-  const [applicantData, setApplicantData] = useState({
+  /*const [applicantData, setApplicantData] = useState({
     fullName: "",
     gender: "",
     nationality: "",
     nationalID: "",
     mobileNumber: "",
+    email:"",
     address: "",
     postalCode: "",
     unitNumber: "",
     dob: ""
-  });
+  });*/
 
   // const [beneficiaryData, setBeneficiaryData] = useState({
   //   beneficiaryName: "",
@@ -39,17 +41,18 @@ export default function BookingForm({ selectedSlot, onCancel, onSubmit, isModal 
   //   beneficiaryUnitNumber: ""
   // });
 
-  // const [applicantData, setApplicantData] = useState({
-  //   fullName: "John Doe",
-  //   gender: "Male",
-  //   nationality: "Singaporean",
-  //   nationalID: "S1234567A",
-  //   mobileNumber: "91234567",
-  //   address: "123 Main Street",
-  //   postalCode: "123456",
-  //   unitNumber: "01-01",
-  //   dob: "1990-01-01"
-  // });
+	
+  const [applicantData, setApplicantData] = useState({
+    fullName: "John Doe",
+    gender: "Male",
+    nationality: "Singaporean",
+    nationalID: "S1234567A",
+    mobileNumber: "91234567",
+    address: "123 Main Street",
+    postalCode: "123456",
+    unitNumber: "01-01",
+    dob: "1990-01-01"
+  });
 
   const [beneficiaryData, setBeneficiaryData] = useState({
     beneficiaryName: "Jane Doe",
@@ -76,6 +79,20 @@ export default function BookingForm({ selectedSlot, onCancel, onSubmit, isModal 
     beneficiary: {}
   });
 
+  // user session
+  const [user, setUser] = useState(undefined);
+
+  useEffect(() => {
+    axios.get("/api/user/me", { withCredentials: true })
+      .then(res => {
+        setUser(res.data);
+      })
+      .catch(err => console.error("Failed to fetch session:", err));
+  }, []);
+
+  if (user === undefined) return null; 
+
+  // when the new file is uploaded
   const onFileChange = (e, type) => {
     const file = e.target.files[0];
 
@@ -243,8 +260,6 @@ export default function BookingForm({ selectedSlot, onCancel, onSubmit, isModal 
         });
       }
 
-      console.log(`bookingTypeError: ${bookingTypeError}`);
-
       setErrors({
         bookingType: bookingTypeError,
         applicant: applicantErrors,
@@ -275,13 +290,13 @@ export default function BookingForm({ selectedSlot, onCancel, onSubmit, isModal 
     formData.append("birthCertFile", files.birthCert);
     formData.append("deathCertFile", files.deathCert);
 
+    formData.append("userRole", user?.role); // e.g., "user", "staff", "admin"
+
+    //console.log("going to payment !!");
     /*for (let pair of formData.entries()) {
       console.log(`${pair[0]}:`, pair[1]);
     }*/
-    console.log`going to payment !!`;
-    for (let pair of formData.entries()) {
-      console.log(`${pair[0]}:`, pair[1]);
-    }
+
     onSubmit(formData);
   };
 
@@ -391,7 +406,7 @@ export default function BookingForm({ selectedSlot, onCancel, onSubmit, isModal 
               />
 
               {/* if staff, redirect to payment page */}
-              {(sessionStorage.getItem("role") === "staff" || sessionStorage.getItem("role") === "admin") && (
+              {(user?.role === "staff" || user?.role === "admin") && (
                 <Button
                   type="submit"
                   variant="success"
@@ -403,7 +418,7 @@ export default function BookingForm({ selectedSlot, onCancel, onSubmit, isModal 
               )}
 
               {/* if user, proceed to payment. */}
-              {sessionStorage.getItem("role") === "user" && (
+              {user?.role === "user" && (
                 <Button
                   type="submit"
                   variant="success"

@@ -4,9 +4,16 @@ const db = require("../db");
 const { v4: uuidv4 } = require('uuid');
 const bcrypt = require('bcrypt');
 
+// Get user id and role in session
+router.get("/me", (req, res) => {
+	if (!req.session.userID) {
+		return res.status(401).json({ error: "Not authenticated" });
+	}
+	res.json({ userID: req.session.userID, role: req.session.role });
+});
+
 // GET all users
 router.get("/", async (req, res) => {
-	console.log("Fetching all users");
 	try {
 		const [users] = await db.query("SELECT * FROM User");
 		res.json(users);
@@ -41,13 +48,15 @@ router.post("/register", async (req, res) => {
 		email,
 		password,
 		username,
-		fullName,
-		contactNumber,
+		fullname,
+		contactnumber,
 		nric,
 		dob,
 		nationality,
-		userAddress,
+		address,
 		gender,
+		postalcode, 
+		unitnumber,
 		roleID
 	} = req.body;
 
@@ -63,24 +72,26 @@ router.post("/register", async (req, res) => {
 		// Role - Applicant
 		const [rows] = await db.query("SELECT roleID FROM Role WHERE roleName = ?", ['Applicant']);
 		const roleID = rows[0].roleID;
+
+		let finalAddress = `${address}, ${unitnumber}, ${postalcode}`;
 		
 		// Insert user 
 		const [result] = await db.query(
 			`INSERT INTO User
-			(userID, username, email, hashedPassword, salt, fullName, contactNumber, nric, dob, nationality, userAddress, gender, roleID)
-			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+			(userID, username, email, hashedPassword, salt, fullName, contactNumber, nric, dob, nationality, userAddress, gender, roleID, lastLogin)
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
 			[
 				userID,
 				username,
 				email,
 				hashedPassword,
 				salt,
-				fullName,
-				contactNumber,
+				fullname,
+				contactnumber,
 				nric,
 				dob,
 				nationality,
-				userAddress,
+				finalAddress,
 				gender,
 				roleID,
 			]
@@ -97,10 +108,18 @@ router.post("/register", async (req, res) => {
 router.post("/login", async (req, res) => {
 	console.log("User login");
 	const { email, password } = req.body;
+	const connection = await db.getConnection();
 
 	try {
-		const [userRow] = await db.query("SELECT * FROM User WHERE email = ?", [email]);
+		// start transaction
+		await connection.beginTransaction();
+
+		const [userRow] = await connection.query("SELECT * FROM User WHERE email = ?", [email]);
 		const user = userRow[0];
+
+		if (!user) {
+			return res.status(401).json({ error: "Invalid credentials" });
+		}
 
 		// Re-hash user input password using the stored salt
 		const hashedInput = await bcrypt.hash(password, user.salt);
@@ -109,13 +128,28 @@ router.post("/login", async (req, res) => {
 		if (hashedInput !== user.hashedPassword) {
 			return res.status(401).json({ error: "Invalid credentials" });
 		}
+
+		// Store user id and role into session
+		req.session.userID = user.userID;
 		
 		const role = await getUserRole(user.userID);
-		res.json({ 
-			user: {
-				userID: user.userID,
-				role: role
+		if (!role) {
+			return res.status(500).json({ error: "User role not found" });
+		}
+		
+		req.session.role = role === "Applicant" ? "user" : role.toLowerCase();
+
+		console.log("this is in login server, user id:", req.session.userID);
+
+		// save latest login time
+		await db.query(`UPDATE User SET lastLogin = NOW() WHERE userID = ?`, [user.userID]);
+		
+		req.session.save(err => {
+			if (err) {
+				console.error("session save:", err);
+				return res.status(500).json({ error: "Login failed" });
 			}
+			res.json({ role: req.session.role });
 		});
 		
 	} catch (err) {
@@ -124,12 +158,12 @@ router.post("/login", async (req, res) => {
 	}
 });
 
-router.post("/getUserByID", async (req, res) => {
-	let userID = req.body.userID;
+router.get("/getUserByID", async (req, res) => {
+	let userID = req.query.userID;
 
 	try {
 		const [user] = await db.query("SELECT * FROM User WHERE userID = ?", [userID]);
-		if (user.length === 0) return res.status(404).json({ error: 'User not found' });
+		if (user.length <= 0) return res.status(404).json({ error: 'User not found' });
 
 		res.json(user[0]); // return user details
 	} catch (err) {
@@ -137,5 +171,59 @@ router.post("/getUserByID", async (req, res) => {
 		res.status(500).json({ error: `Failed to fetch user with ID ${userID}` });
 	}
 });
+
+router.post("/getUserByNRIC", async (req, res) => {
+	let userNRIC = req.body.nric;
+
+	try {
+		const [user] = await db.query("SELECT * FROM User WHERE nric = ?", [userNRIC]);
+		if (user.length === 0) return res.status(404).json({ message: `User with NRIC ${userNRIC} not found` });
+		
+		res.json(user[0]); // return user details
+	} catch (err) {
+		console.error(err);
+		res.status(500).json({ error: `Failed to fetch user with ID ${userNRIC}` });
+	}
+})
+
+// Logout
+router.post("/logout", (req, res) => {	
+	req.session.destroy(err => {
+		if (err) {
+			console.error("Session destroy error:", err);
+			return res.status(500).json({ error: "Logout failed" });
+		}
+
+		res.clearCookie("sid", { path: "/" });
+
+		return res.status(200).json({ message: "Logged out" });
+	});
+});
+
+// Forget password
+router.post("/forget_password", async (req, res) => {
+	const { email } = req.body;
+
+	try {
+		const [userRow] = await db.query("SELECT * FROM User WHERE email = ?", [email]);
+		const user = userRow[0];
+
+		if (!user) {
+			return res.status(401).json({ error: "If that e-mail is registered, a reset link has been sent." });
+		}
+
+		const res = await axios.post('/api/email/sendResetPassword', {
+			to: email,
+			link: "replace this link with reset password link"
+		});
+
+		
+	} catch (err) {
+		console.error(err);
+		res.status(500).json({ error: "Failed to send email" });
+	}
+});
+
+
 
 module.exports = router;

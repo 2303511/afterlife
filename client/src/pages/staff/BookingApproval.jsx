@@ -38,7 +38,8 @@ export default function BookingApproval() {
         try {
             const res = await axios.post('/api/booking/approve', {
                 bookingID: booking.bookingID,
-                nicheID: booking.nicheID
+                nicheID: booking.nicheID,
+                bookingType: booking.bookingType
             });
 
             if (res.data.success) {

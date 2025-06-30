@@ -11,7 +11,7 @@ import "react-toastify/dist/ReactToastify.css";
 
 import { useNavigate } from "react-router-dom";
 
-export default function PaymentForm({ onBack, bookingID }) {
+export default function PaymentForm({ onBack, bookingID, amount }) {
   const navigate = useNavigate();
 	const [paymentMethod, setPaymentMethod] = useState("");
 	const [paymentAmount, setPaymentAmount] = useState("");
@@ -22,21 +22,17 @@ export default function PaymentForm({ onBack, bookingID }) {
 		// When "Card" is selected, load Stripe client + intent
 		if (paymentMethod === "Card") {
 			const setupStripe = async () => {
-            // 2a. this is going to ask from stripe config
-        const publishableKey = await axios.get("/api/payment/config").then((res) => {
-          return res.data.publishableKey;
-        });
-        setStripePromise(loadStripe(publishableKey));
+				// 2a. this is going to ask from stripe config
+				const publishableKey = await axios.get("/api/payment/config").then((res) => {
+				return res.data.publishableKey;
+				});
+				setStripePromise(loadStripe(publishableKey));
 
-        // 2b. to get the secret key
-        const secretKey = await axios
-          .post("/api/payment/create-payment-intent", {
-            amount: 100, // TODO: UPDATE THE PRICE OF THE NICHE
-          })
-          .then((res) => {
-            return res.data.clientSecret; // this is client secret for stripe
-          });
-        setClientSecret(secretKey);
+				// 2b. to get the secret key
+				const secretKey = await axios.post("/api/payment/create-payment-intent", { amount: amount })
+				.then((res) => { return res.data.clientSecret; }); // this is client secret for stripe 
+
+				setClientSecret(secretKey);
 			};
 
 			setupStripe();

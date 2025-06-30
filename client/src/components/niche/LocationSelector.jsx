@@ -1,5 +1,6 @@
-import React from "react";
+import { useState, useEffect } from "react";
 import { Form, Button } from "react-bootstrap";
+import axios from "axios";
 
 export default function LocationSelector({
   buildings,
@@ -16,7 +17,19 @@ export default function LocationSelector({
   isEdit = true,
   isBookButtonDisabled = false
 }) {
-  const isStaff = sessionStorage.getItem("role") === "staff";
+  const [user, setUser] = useState(undefined);
+
+  useEffect(() => {
+    axios.get("/api/user/me", { withCredentials: true })
+    .then(res => {
+      setUser(res.data);
+    })
+    .catch(err => console.error("Failed to fetch session:", err));
+  }, []);
+
+  if (user === undefined) return null;  
+
+  const isStaff = user?.role === "staff";
 
   return (
     <div className="d-flex gap-3 mb-3">

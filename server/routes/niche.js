@@ -6,7 +6,6 @@ const { v4: uuidv4 } = require("uuid");
 
 // GET all niches
 router.get('/', async (req, res) => {
-    console.log('Fetching all niches');
     try {
         const [niches] = await db.query('SELECT * FROM Niche');
         res.json(niches);
@@ -19,7 +18,6 @@ router.get('/', async (req, res) => {
 // GET niche by ID 
 router.get('/getNicheByID', async (req, res) => {
     const nicheID = req.query.nicheID;
-    console.log('Fetching niche with ID:', nicheID);
 
     if (!nicheID) {
         return res.status(400).json({ error: 'Niche ID is required' });
@@ -27,7 +25,6 @@ router.get('/getNicheByID', async (req, res) => {
 
     try {
         const [niche] = await db.query('SELECT * FROM Niche WHERE nicheID = ?', [nicheID]);
-        console.log('Niche fetched:', niche);
 
         if (niche.length === 0) {
             return res.status(404).json({ error: 'Niche not found' });

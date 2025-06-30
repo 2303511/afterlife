@@ -24,7 +24,7 @@ export default function NicheGrid({ slots, statusClass, onSlotClick, selectedSlo
                 onClick={() => slot && onSlotClick(slot)}
                 title={slot?.nicheCode || `Row ${nicheRow}, Col ${nicheColumn}`}
               >
-                <small>{`${nicheRow}-${nicheColumn}`}</small>
+                <small>{`${nicheColumn}-${nicheRow}`}</small>
 
               </div>
             );

@@ -17,16 +17,40 @@ import { useResizeDetector } from "react-resize-detector";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
+import { retrieveSession } from "../../utils/retrieveSession";
+
 export default function FullFormFlow({ selectedSlot, onCancel, setIsBookButtonDisabled, setIsForm }) {
 	const [step, setStep] = useState("booking"); // or 'payment'
 	const [bookingFormData, setBookingFormData] = useState(null);
-	const [paymentData, setPaymentData] = useState(null);
+	const [amount, setAmount] = useState(null);
 	const [stripePromise, setStripePromise] = useState(null);
 	const [clientSecret, setClientSecret] = useState("");
 	const [bookingID, setBookingID] = useState("");
 
 	// get the form width
 	const { ref, width = 0 } = useResizeDetector();
+
+	// for user session
+	const [user, setUser] = useState(undefined);
+	useEffect(() => {
+		const init = async () => {
+			let currentUser = await retrieveSession();
+
+			if (!!currentUser) setUser(currentUser)
+			else {
+				toast.error(`Failed to find user in session`);
+				return null
+			}
+
+			setAmount(100); // TODO: RETRIEVE AMOUNT
+			sessionStorage.setItem("paymentAmount", 100); 
+
+			let res_user = await axios.get(`/api/user/getUserByID?userID=${currentUser.userID}`);	
+			console.log(res_user.data);
+			sessionStorage.setItem("userEmail", res_user.data.email);
+		}
+		init();
+	}, []);
 
 	// handlers
 	const handleSubmit = async (bookingFormData) => {
@@ -39,7 +63,7 @@ export default function FullFormFlow({ selectedSlot, onCancel, setIsBookButtonDi
 			return;
 		}
 
-		await bookingFormData.append("paidByID", sessionStorage.getItem("userId"));
+		await bookingFormData.append("paidByID", user?.userID);
 
 		try {
 			const res = await axios.post("/api/booking/submitBooking", bookingFormData, { headers: { "Content-Type": "multipart/form-data" } }); // save to db
@@ -86,7 +110,7 @@ export default function FullFormFlow({ selectedSlot, onCancel, setIsBookButtonDi
 		// 2b. to get the secret key
 		const secretKey = await axios
 			.post("/api/payment/create-payment-intent", {
-				amount: 100, // TODO: UPDATE THE PRICE OF THE NICHE
+				amount: amount, 
 				bookingFormData: bookingFormData
 			})
 			.then((res) => {
@@ -113,13 +137,14 @@ export default function FullFormFlow({ selectedSlot, onCancel, setIsBookButtonDi
 				)}
 			</div>
 			{step === "payment" &&
-				(sessionStorage.getItem("role") === "staff" ? (
+				(user?.role === "staff" ? (
 					// display the option for cash, cheque, or card
 					<PaymentForm
 						onBack={() => {
 							setStep("booking");							
 						}}
 						bookingID={bookingID}
+						amount={amount}
 					/>
 				) : (
 					!!stripePromise &&

@@ -36,4 +36,4 @@ coverage/
 *.sqlite
 *.sqlite3
 *.bak
-
+*.pem

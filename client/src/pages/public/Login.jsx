@@ -3,9 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import axios from "axios";
 
 import "bootstrap/dist/js/bootstrap.bundle.min";
+import ForgetPasswordModal from "./ForgetPasswordModal";
 
 export default function Login() {
+	const [showForget, setShowForget] = useState(false);
 	const [form, setForm] = useState({ email: "", password: "" });
+	const [error, setError] = useState("");  
     
 	const handleInputChange = (e) => {
 		const { name, value } = e.target;
@@ -14,33 +17,33 @@ export default function Login() {
 
 	const navigate = useNavigate();
 	const handleLogin = async () => {
+		setError("");
 		try {
             const response = await axios.post('/api/user/login', form, {
 				headers: {
 					"Content-Type": "application/json"
-				}
+				},
+				withCredentials: true
             });
 
-			// Save session data
-			sessionStorage.setItem("userId", response.data.user.userID);
+			const role = response.data.role;
 
-			const role = response.data.user.role;
-
-			if (role == "Applicant")
+			if (role == "user")
 			{
-				sessionStorage.setItem("role", "user");
 				navigate("/my-bookings");
-			} else {
-				sessionStorage.setItem("role", role.toLowerCase());
+			} else if (role == "staff") {
 				navigate("/dashboard");
+			} else if (role == "admin") {
+				navigate("/admin-dashboard");
 			}
-			
-			// const role = localStorage.getItem("role");
-			// console.log("this is the role:", role);
 
             return response.data;
-        } catch (error) {
-            console.error("Failed to login:", error);
+        } catch (err) {
+            if (err.response?.status === 401) {
+				setError("Incorrect e-mail or password.");
+			} else {
+				setError("Something went wrong. Please try again.");
+			}
             return null;
         }
 	};
@@ -59,7 +62,19 @@ export default function Login() {
 				<div className="mb-3">
 					<label className="form-label">Password</label>
 					<input type="password" className="form-control" name="password" value={form.password} onChange={handleInputChange} placeholder="Enter password" required />
+					<button className="btn btn-link p-0 mt-2" onClick={() => setShowForget(true)}>
+						Forget password?
+					</button>
+
+					<ForgetPasswordModal
+						show={showForget}
+						onClose={() => setShowForget(false)}
+					/>
 				</div>
+
+				{error && (
+					<div className="alert alert-danger py-2">{error}</div>
+				)}
 
 				{/* submit button */}
 				<button type="submit" className="btn btn-primary w-100">
