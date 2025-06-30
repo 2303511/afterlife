@@ -123,3 +123,10 @@ CREATE TABLE Booking (
     FOREIGN KEY (paymentID) REFERENCES Payment(paymentID),
     FOREIGN KEY (beneficiaryID) REFERENCES Beneficiary(beneficiaryID)
 );
+
+CREATE TABLE IF NOT EXISTS `sessions` (
+  `session_id` VARCHAR(128) COLLATE utf8mb4_bin NOT NULL,
+  `expires`    INT UNSIGNED NOT NULL,
+  `data`       TEXT         COLLATE utf8mb4_bin,
+  PRIMARY KEY (`session_id`)
+) ENGINE=InnoDB;

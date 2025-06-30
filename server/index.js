@@ -8,12 +8,12 @@ require("dotenv").config();
 const morgan = require('morgan');
 
 const app = express();
-
+app.set('trust proxy', 1);
 // Session Store (MYSQL)
 const sessionStore = new MySQLStore({
     host:     process.env.DB_HOST,
     user:     process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
+    password: process.env.DB_PASS,
     database: process.env.DB_NAME,
 });
 
