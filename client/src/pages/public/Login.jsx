@@ -1,4 +1,4 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useState, useEffect  } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import "bootstrap/dist/js/bootstrap.bundle.min";
@@ -18,14 +18,52 @@ export default function Login() {
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
+  //recaptcha variables
+	const [recaptchaLoaded, setRecaptchaLoaded] = useState(false);
+	// Load reCAPTCHA script
+  useEffect(() => {
+      const loadRecaptcha = () => {
+          const script = document.createElement('script');
+          script.src = 'https://www.google.com/recaptcha/api.js?render=6LcNiHIrAAAAADOLYumj1n6TlcxjTgjE6c55J0YO';
+          script.addEventListener('load', () => {
+              setRecaptchaLoaded(true);
+          });
+          document.body.appendChild(script);
+      };
+
+      if (!window.grecaptcha) {
+          loadRecaptcha();
+      } else {
+          setRecaptchaLoaded(true);
+      }
+
+      return () => {
+          // Cleanup if needed
+      };
+  }, []);
+
+
+
   const handleLogin = async (e) => {
     e.preventDefault();
     setError("");
+
+    //check if recaptcha is loaded, gonna call it ltr
+		if (!recaptchaLoaded) {
+      console.error("reCAPTCHA not loaded yet");
+      return;
+    }
+
     try {
+
+      // Get reCAPTCHA token // this site key can be exposed
+      const token = await window.grecaptcha.execute('6LcNiHIrAAAAADOLYumj1n6TlcxjTgjE6c55J0YO', { action: 'login' });
+			console.log("Got the token sending to backend now")
+
       // 1) Perform login
       await axios.post(
         "/api/user/login",
-        { email: form.email, password: form.password },
+        { email: form.email, password: form.password, recaptchaToken: token},
         {
           headers: { "Content-Type": "application/json" },
           withCredentials: true,

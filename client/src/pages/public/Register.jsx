@@ -1,6 +1,6 @@
 // src/pages/Register.jsx
 
-import React, { useState } from "react";
+import React, { useState, useEffect  } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import "bootstrap/dist/js/bootstrap.bundle.min";
@@ -24,6 +24,32 @@ export default function Register() {
 
   const navigate = useNavigate();
 
+  //recaptcha variables
+  const [recaptchaLoaded, setRecaptchaLoaded] = useState(false);
+  // Load reCAPTCHA script
+  useEffect(() => {
+      const loadRecaptcha = () => {
+          const script = document.createElement('script');
+          script.src = 'https://www.google.com/recaptcha/api.js?render=6LcNiHIrAAAAADOLYumj1n6TlcxjTgjE6c55J0YO';
+          script.addEventListener('load', () => {
+              setRecaptchaLoaded(true);
+          });
+          document.body.appendChild(script);
+      };
+
+      if (!window.grecaptcha) {
+          loadRecaptcha();
+      } else {
+          setRecaptchaLoaded(true);
+      }
+
+      return () => {
+          // Cleanup if needed
+      };
+  }, []);
+
+
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setForm(prev => ({ ...prev, [name]: value }));
@@ -31,10 +57,24 @@ export default function Register() {
 
   const handleRegister = async (e) => {
     e.preventDefault();
+
+    //check if recaptcha is loaded, gonna call it ltr
+		if (!recaptchaLoaded) {
+      console.error("reCAPTCHA not loaded yet");
+      return;
+    }
+
+
+
     try {
+      // Get reCAPTCHA token // this site key can be exposed
+      const token = await window.grecaptcha.execute('6LcNiHIrAAAAADOLYumj1n6TlcxjTgjE6c55J0YO', { action: 'register' });
+			console.log("Got the token sending to backend now")
+
+
       await axios.post(
         "/api/user/register",
-        form,
+        {...form,recaptchaToken: token},
         {
           headers: { "Content-Type": "application/json" },
           withCredentials: true

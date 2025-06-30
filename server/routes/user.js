@@ -5,6 +5,120 @@ const { v4: uuidv4 } = require("uuid");
 const bcrypt = require("bcrypt");
 const { sessionStore } = require("../utils/sessionConfig");
 const { ensureAuth, ensureRole, ensureSelfOrRole } = require("../middleware/auth.js");
+//for logging
+const fs = require('fs');
+const path = require('path');
+const os = require('os');
+const logsDir = path.join(__dirname, '..', 'logs');
+const logFilePath = path.join(logsDir, 'login.logs');
+//for rate limiting
+const rateLimit = require("express-rate-limit");
+//for recaptcha
+const axios = require('axios');
+
+
+//define rate limit characteristic here and add middle ware to the login fucnction
+//once receive post will go thru this rate limit checks before going into the login function
+const loginLimiter = rateLimit({
+	windowMs: 1 * 60 * 1000, // 1 min time window
+	max: 6, // Max attempt tied to IP
+	message: { error: 'Too many login attempts. Please try again later.' },
+	standardHeaders: true, // Enables RateLimit-* headers for clients
+	legacyHeaders: false, 
+
+	//log this ip 
+	handler: (req, res, next, options) => {
+		const traceId = uuidv4();
+		logLoginAttempt({
+			traceId: traceId,
+			email: req.body.email,
+			status: "FAIL: Rate limit exceeded",
+			req,
+			role: "UNKNOWN"
+		});
+		//maybe return the generic error message and traceid to user
+		return res.status(options.statusCode).json(options.message);
+	}
+});
+
+
+//limit the rate for register
+const registerLimiter = rateLimit({
+	windowMs: 1 * 60 * 1000, // 1 min time window
+	max: 3, // Max attempt tied to IP
+	message: { error: 'Too many register attempts. Please try again later.' },
+	standardHeaders: true, // Enables RateLimit-* headers for clients
+	legacyHeaders: false, 
+
+	//log this ip 
+	handler: (req, res, next, options) => {
+		const traceId = uuidv4();
+		logLoginAttempt({
+			traceId: traceId,
+			email: req.body.email,
+			status: "FAIL: Register limit exceeded",
+			req,
+			role: "UNKNOWN"
+		});
+		//maybe return the generic error message and traceid to user
+		return res.status(options.statusCode).json(options.message);
+	}
+});
+
+//logs login logs to /app/logs/login.logs
+function logLoginAttempt({ traceId, email, status, req, role }) {
+	console.log("Entering log function");
+
+	// Create logs folder if not exists
+	if (!fs.existsSync(logsDir)) {
+		console.log("Creating directory");
+		fs.mkdirSync(logsDir, { recursive: true });
+	}
+
+
+	const logEntry = {
+		timestamp: new Date().toISOString(),
+		traceId: traceId,
+		ip: req.headers['x-forwarded-for'] || req.connection.remoteAddress,
+		email,
+		status,
+		role
+	};
+
+	const logLine = JSON.stringify(logEntry) + os.EOL;
+
+	fs.appendFile(logFilePath, logLine, (err) => {
+		if (err){
+		  console.error("Failed to write login log:", err);
+		} else {
+		  console.log("Log to file successful");
+		}
+	  });
+}
+
+
+//recaptcha function , return the success, score , action 
+//please provide it with the token , res
+async function recaptchaServerCheck(recaptchaToken){
+	try{
+		console.log("trying to verify captcha token");
+		const recaptchaSecretKey = process.env.RECAPTCHA_SECRET;
+		const recaptchaResponse = await axios.post(
+			`https://www.google.com/recaptcha/api/siteverify?secret=${recaptchaSecretKey}&response=${recaptchaToken}`
+		);
+		//get the values from the google response data and legit check it 
+		const { success, score , action } = recaptchaResponse.data;
+		console.log("Received things from google api for captcha");
+		//return as object
+		return { success, score , action }
+	}catch(err){
+		console.log("recaptcha login failed 1")
+		throw new Error("reCAPTCHA verification failed");
+	}
+}
+
+
+
 
 // Get user id and role in session
 router.get("/me", ensureAuth, (req, res) => {
@@ -42,7 +156,7 @@ async function getUserRole(userID) {
 };
 
 // Register
-router.post("/register", async (req, res) => {
+router.post("/register", registerLimiter, async (req, res) => {
 	console.log("Register User");
 	
     const {
@@ -58,8 +172,19 @@ router.post("/register", async (req, res) => {
 		gender,
 		postalcode, 
 		unitnumber,
-		roleID
+		roleID,
+		recaptchaToken
 	} = req.body;
+
+	//verify the recaptchaToken first 
+	//console.log("Register recpatchatoken is " , recaptchaToken)
+	const { success, score, action } =  await recaptchaServerCheck(recaptchaToken);
+	console.log("Register success, score, action values are:", success, score, action);
+	// Verify the things for this work flow 
+	const isValid = success && score > 0.5 && action ==='register';
+	console.log("isValid register value is:", isValid);
+	if (!isValid){return res.status(400).json({ error: "recaptcha register failed" });}
+	console.log("recaptcha register verficication passed");
 
 	try {
 		const userID = uuidv4();
@@ -99,10 +224,26 @@ router.post("/register", async (req, res) => {
 });
 
 // Login
-router.post("/login", async (req, res) => {
+router.post("/login", loginLimiter, async (req, res) => {
 	console.log("User login");
-	const { email, password } = req.body;
+	const { email, password , recaptchaToken} = req.body;
 	const conn = await db.getConnection();
+
+	// Verify reCAPTCHA first
+    const { success, score, action } =  await recaptchaServerCheck(recaptchaToken);
+	console.log("Login success, score, action values are:", success, score, action);
+	// Verify the things for this work flow 
+	const isValid = success && score > 0.5 && action ==='login';
+	console.log("isValid login value is:", isValid);
+	if (!isValid){return res.status(400).json({ error: "recaptcha login failed" });}
+	console.log("recaptcha login verficication passed");
+
+	// Back-end email validation
+	const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+	if (!emailRegex.test(email)) {
+		return res.status(400).json({ error: "Invalid email format" });
+	}
+	console.log("email backend regrex verification passed");
 
 	try {
 		await conn.beginTransaction();
@@ -113,12 +254,20 @@ router.post("/login", async (req, res) => {
 		);
 		const user = userRow[0];
 		if (!user) {
+			// No user found
+			console.log("no user name found");
+			const traceId = uuidv4();
+			logLoginAttempt({traceId,email,status: "FAIL: Incorrect User",req, role :"UNKNOWN"});
 			await conn.rollback();
 			return res.status(401).json({ error: "Invalid credentials" });
 		}
 
 		const hashedInput = await bcrypt.hash(password, user.salt);
 		if (hashedInput !== user.hashedPassword) {
+			console.log("Incorret password");
+			const traceId = uuidv4();
+			logLoginAttempt({traceId,email,status: "FAIL: Incorrect password",req, role :"UNKNOWN"});
+			console.log("incorrect password");
 			await conn.rollback();
 			return res.status(401).json({ error: "Invalid credentials" });
 		}
@@ -145,6 +294,10 @@ router.post("/login", async (req, res) => {
 				"UPDATE User SET currentSessionID = ?, lastLogin = NOW() WHERE userID = ?",
 				[newSID, user.userID]
 			);
+
+			//logs successful log in
+			const traceId = uuidv4();
+			logLoginAttempt({traceId,email,status: "SUCCESS",req, role :req.session.role});
 
 			await conn.commit();
 			req.session.save(saveErr => {
