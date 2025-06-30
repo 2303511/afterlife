@@ -17,7 +17,7 @@ export default function ForgetPasswordModal({ show, onClose }) {
         } catch (err) {
             setStatus("error");
             if (err.response?.status === 401) {
-				setError("Invalid Email.");
+				setError("If that e-mail is registered, a reset link has been sent.");
 			} else {
 				setError("Something went wrong. Please try again.");
 			}
