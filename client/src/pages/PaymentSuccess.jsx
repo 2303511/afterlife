@@ -1,5 +1,5 @@
 import { Link, useSearchParams } from "react-router-dom";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import axios from "axios";
 
 import { toast } from "react-toastify";
@@ -10,6 +10,7 @@ import "../styles/AfterLife-Theme.css";
 
 export default function PaymentSuccess() {
 	const [searchParams] = useSearchParams();
+	const paymentAmount = sessionStorage.getItem("paymentAmount");
 	
 	useEffect(() => {
 		const updateTransaction = async () => {
@@ -21,18 +22,34 @@ export default function PaymentSuccess() {
 				console.log("Booking ID from URL:", bookingID);
 
 				try {
-					const res = await axios.post("/api/booking/updateBookingTransaction", {
+					const res_update = await axios.post("/api/booking/updateBookingTransaction", {
 						paymentMethod: "Credit Card",
-						paymentAmount: 100, //TODO PUT DYNAMIC VALUES LTR
+						paymentAmount,
 						bookingID
 					});
 
-					if (!res.data.success) {
+					if (!res_update.data.success) {
 						toast.error("Failed to update transaction.");
 					}
 				} catch (err) {
 					console.error("Error updating transaction:", err);
 					toast.error("Server error while updating transaction.");
+				}
+
+				// if successful, then send email to the user as receipt
+				try {
+					const res_sendPaymentSummary = await axios.post('/api/email/sendReceipt', { 
+						to: sessionStorage.getItem("userEmail"),
+						bookingID
+					});
+
+					if (!res_sendPaymentSummary.data.success) {
+						toast.error("Failed to send payment summary email from endpoint.");
+					}
+					
+				} catch (err) {
+					console.error("Error sending payment confirmation email:", err);
+					toast.error("Server error while sending payment confirmation email.");
 				}
 			}
 		};

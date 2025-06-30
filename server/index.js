@@ -60,13 +60,13 @@ app.use(
 // TODO: Define routes
 app.use("/api/user", usersRoute);
 app.use("/api/booking", bookingsRoute); 
-app.use("/api/payment", paymentsRoute); 
+app.use("/api/payment", paymentsRoute.router); 
 app.use("/api/niche", nicheRoute); 
 app.use("/api/beneficiary", beneficiaryRoute);
 app.use("/api/block", blockRoute);
 app.use("/api/dashboard", dashboardRoute);
 app.use("/api/payment", stripeRoute);
-app.use('/api/email', emailRoutes);
+app.use('/api/email', emailRoutes.router);
 
 const port = 8888;
 app.listen(port, () => {

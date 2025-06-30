@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Form, Button } from "react-bootstrap";
 
@@ -7,10 +7,14 @@ import axios from "axios";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
+import { useNavigate } from "react-router-dom";
+
 export default function RequestUrnPlacement() {
 	// to get the current booking ID
 	const [searchParams] = useSearchParams();
 	const [bookingID] = useState(searchParams.get("bookingID"));
+	const [currentBooking, setCurrentBooking] = useState(null);
+	const [beneficiaryDetails, setBeneficiaryDetails] = useState(null);
 
 	const [formData, setFormData] = useState({
 		dateOfDeath: "",
@@ -20,6 +24,9 @@ export default function RequestUrnPlacement() {
 
 	// to handle errors
 	const [errors, setErrors] = useState({});
+
+	// to navigate pages after successful form submission
+	const navigate = useNavigate();
 
 	const fetchBooking = async (bookingID) => {
 		try {
@@ -32,6 +39,33 @@ export default function RequestUrnPlacement() {
 			return null;
 		}
 	};
+
+	const fetchBeneficiary = async (beneficiaryID) => {
+		try {
+			let res = await axios.get("/api/beneficiary/getBeneficiaryByID", {
+				params: { beneficiaryID }
+			});
+			return res.data;
+		} catch (err) {
+			console.error("Failed to fetch booking: ", err);
+			return null;
+		}
+	};
+
+	useEffect(() => {
+		const init = async () => {
+			let currBooking = await fetchBooking(bookingID);
+			if (currBooking != null) {
+				setCurrentBooking(currBooking);
+			}
+
+			const res = await fetchBeneficiary(currBooking.beneficiaryID);
+			if (res != null) {
+				setBeneficiaryDetails(res);
+			}
+		};
+		init();
+	}, []);
 
 	// handlers
 	const handleChange = (e) => {
@@ -57,20 +91,22 @@ export default function RequestUrnPlacement() {
 		}
 
 		const form = new FormData();
-		let currentBooking = await fetchBooking(bookingID);
 		if (currentBooking != null) form.append("beneficiaryID", currentBooking.beneficiaryID); // make sure currentBooking is set
 		else toast.error("Problems retrieving booking details");
 
+		form.append("nicheID", currentBooking.nicheID);
+		form.append("bookingID", bookingID);
 		form.append("dateOfDeath", formData.dateOfDeath);
 		form.append("inscription", formData.inscription); // optional
 		form.append("deathCertFile", formData.deathCertFile); // ✅ match `multer.single("deathCertFile")`
 
 		try {
-			await axios.post("/api/beneficiary/place-urn", form, {
+			await axios.post("/api/booking/place-urn", form, {
 				headers: { "Content-Type": "multipart/form-data" },
 				withCredentials: true // ✅ if your session uses cookies
 			});
 			toast.success("Urn placement request submitted!");
+			navigate("/my-bookings");
 		} catch (err) {
 			toast.error("Something went wrong :(");
 			console.error(err);
@@ -79,7 +115,7 @@ export default function RequestUrnPlacement() {
 
 	return (
 		<>
-			<h5 className="mt-4 mb-3">Urn Placement Details</h5>
+			{beneficiaryDetails && <h5 className="mt-4 mb-3">Urn Placement Details for {beneficiaryDetails.beneficiaryName}</h5>}
 
 			<Form onSubmit={handleSubmit}>
 				<Form.Group className="mb-3">

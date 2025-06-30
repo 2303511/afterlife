@@ -6,6 +6,7 @@ export default function StaffBookingCard({ booking, onArchive, currentTab }) {
 
     const {
         bookingID,
+        bookingStatus,
         customerName,
         service,
         date,
@@ -28,11 +29,11 @@ export default function StaffBookingCard({ booking, onArchive, currentTab }) {
             <div>
                 <div className="d-flex justify-content-between align-items-start mb-2">
                     <h5 className="fw-bold mb-0">{customerName}</h5>
-                    {nicheStatus === 'Pending' ? (
+                    {bookingStatus === 'Pending' ? (
                         <span className="badge bg-warning text-dark">Pending</span>
                     ) : (
-                        <span className={`badge ${nicheStatus ? `status-${nicheStatus.toLowerCase()}` : 'status-unknown'}`}>
-                            {nicheStatus || 'Unknown'}
+                        <span className={`badge ${bookingStatus ? `status-${bookingStatus.toLowerCase()}` : 'status-unknown'}`}>
+                            {bookingStatus || 'Unknown'}
                         </span>
                     )}
                 </div>
@@ -45,11 +46,12 @@ export default function StaffBookingCard({ booking, onArchive, currentTab }) {
             </div>
 
             <div className="d-flex gap-2">
-                {nicheStatus === 'Pending' ? (
+                {bookingStatus === 'Pending' ? (
                     <button className="btn btn-primary flex-grow-1" onClick={handleViewDetails}>
                         View Details
                     </button>
                 ) : (
+                    // TODO: when to archive the niche ?
                     <>
                         {nicheStatus === 'Occupied' && currentTab !== 'archived' && (
                             <button className="btn btn-outline-danger flex-grow-1" onClick={() => onArchive(bookingID)}>

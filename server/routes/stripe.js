@@ -31,6 +31,7 @@ router.post("/create-payment-intent", async (req, res) => {
 	}
 });
 
+// TODO: XH REMEMBER THIS
 router.post("/webhook", express.raw({ type: "application/json" }), (req, res) => {
     const sig = req.headers["stripe-signature"];
 

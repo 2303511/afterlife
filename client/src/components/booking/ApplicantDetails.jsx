@@ -20,11 +20,15 @@ export default function ApplicantDetails({ formData, onChange, errors, width = 6
 	const [userPreview, setUserPreview] = useState(null);
 	const [loading, setLoading] = useState(false);
 
+	// user session
+	const [user, setUser] = useState(null);
+
 	const mapUserToApplicant = (user) => {
 		const [address = "", unitNumber = "", postalCode = ""] = user.userAddress.split(", ");
 
 		return {
 			fullName: user.fullName || "",
+			email: user.email || "",
 			gender: user.gender || "",
 			nationality: user.nationality || "",
 			nationalID: user.nric || "", // ← mapping nric to nationalID
@@ -36,14 +40,11 @@ export default function ApplicantDetails({ formData, onChange, errors, width = 6
 		};
 	};
 
-	// user session
-	const [userSession, setUser] = useState(undefined);
-
 	// if the current user is a user, auto load the details in
 	useEffect(() => {
 		const init = async () => {
 			let currSession = await retrieveSession();
-	
+
 			if (!!currSession) setUser(currSession);
 			else {
 				toast.error(`Failed to find user in session`);
@@ -97,7 +98,7 @@ export default function ApplicantDetails({ formData, onChange, errors, width = 6
 		if (!userID) toast.error("Please enter a valid userID");
 
 		try {
-			const res = await axios.post("/api/user/getUserByID", { userID });
+			const res = await axios.get(`/api/user/getUserByID?userID=${userID}`);
 			let userDetails = mapUserToApplicant(res.data);
 
 			if (!!res.data) {
@@ -121,7 +122,7 @@ export default function ApplicantDetails({ formData, onChange, errors, width = 6
 			<div className="d-flex justify-content-between align-items-center mt-4 mb-3">
 				<h5 className="mb-0">Applicant Details</h5>
 
-				{sessionStorage.getItem("role") == "staff" && <Button onClick={() => setShowModal(true)}>Load My Details</Button>}
+				{user?.role == "staff" && <Button onClick={() => setShowModal(true)}>Load My Details</Button>}
 			</div>
 
 			<Row>
@@ -220,6 +221,23 @@ export default function ApplicantDetails({ formData, onChange, errors, width = 6
 						<Form.Control.Feedback type="invalid">{errors.mobileNumber}</Form.Control.Feedback>
 					</Form.Group>
 				</Col>
+
+				<Col md={isLargeScreen ? 6 : 12}>
+					<Form.Group className="mb-3">
+						<Form.Label>Email Address</Form.Label>
+						<Form.Control
+							type="email"
+							name="email"
+							value={formData.email}
+							onChange={onChange}
+							isInvalid={!!errors.email}
+							readOnly={fieldDisabled}
+							style={fieldDisabled ? { backgroundColor: "#e9ecef", cursor: "not-allowed" } : {}}
+						/>
+						<Form.Control.Feedback type="invalid">{errors.email}</Form.Control.Feedback>
+					</Form.Group>
+				</Col>
+
 
 				<Col md={isLargeScreen ? 6 : 12}>
 					<Form.Group className="mb-3">

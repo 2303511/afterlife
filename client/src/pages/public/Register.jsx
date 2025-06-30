@@ -4,6 +4,9 @@ import axios from "axios";
 
 import "bootstrap/dist/js/bootstrap.bundle.min";
 
+// natoinalities
+import { nationalities } from "../../components/nationalities";
+
 export default function Register() {	
 	const [form, setForm] = useState({
         username: "",
@@ -15,7 +18,9 @@ export default function Register() {
         nationality: "",
         address: "",
         gender: "", 
-        password: ""
+        password: "",
+		postalcode: "",
+		unitnumber: ""
     });
     
 	const handleInputChange = (e) => {
@@ -47,52 +52,29 @@ export default function Register() {
 			<h2 className="text-center mb-4">Register</h2>
 			<form onSubmit={(e) => {e.preventDefault(); handleRegister();}}>
 				<div className="row g-3">
+					<h5>Personal Details</h5>
 					{/* username */}
-					<div className="col-md-6">
+					<div className="col-md-4">
 						<label className="form-label">Username</label>
 						<input type="text" className="form-control" name="username" value={form.username} onChange={handleInputChange} placeholder="Enter username" required />
 					</div>
 
-					{/* email */}
-					<div className="col-md-6">
-						<label className="form-label">Email</label>
-						<input type="email" className="form-control" name="email" value={form.email} onChange={handleInputChange} placeholder="Enter email" required />
-					</div>
-
 					{/* full name */}
-					<div className="col-md-6">
+					<div className="col-md-4">
 						<label className="form-label">Full Name</label>
 						<input type="text" className="form-control" name="fullname" value={form.fullname} onChange={handleInputChange} placeholder="Enter full name" required />
 					</div>
 
-					{/* contact number */}
-					<div className="col-md-6">
-						<label className="form-label">Contact Number</label>
-						<input type="tel" className="form-control" name="contactnumber" value={form.contactnumber} onChange={handleInputChange} placeholder="Enter contact number" required />
+					{/* email */}
+					<div className="col-md-4">
+						<label className="form-label">Email</label>
+						<input type="email" className="form-control" name="email" value={form.email} onChange={handleInputChange} placeholder="Enter email" required />
 					</div>
 
 					{/* NRIC */}
 					<div className="col-md-6">
 						<label className="form-label">NRIC</label>
 						<input type="text" className="form-control" name="nric" value={form.nric} onChange={handleInputChange} placeholder="Enter NRIC" required />
-					</div>
-
-					{/* DOB */}
-					<div className="col-md-6">
-						<label className="form-label">Date of Birth</label>
-						<input type="date" className="form-control" name="dob" value={form.dob} onChange={handleInputChange} required />
-					</div>
-
-					{/* nationality */}
-					<div className="col-md-6">
-						<label className="form-label">Nationality</label>
-						<input type="text" className="form-control" name="nationality" value={form.nationality} onChange={handleInputChange} placeholder="Enter nationality" required />
-					</div>
-
-					{/* address */}
-					<div className="col-md-6">
-						<label className="form-label">Address</label>
-						<input type="text" className="form-control" name="address" value={form.address} onChange={handleInputChange} placeholder="Enter address" required />
 					</div>
 
 					{/* gender */}
@@ -110,14 +92,62 @@ export default function Register() {
 						</div>
 					</div>
 
+					{/* contact number */}
+					<div className="col-md-6">
+						<label className="form-label">Contact Number</label>
+						<input type="tel" className="form-control" name="contactnumber" value={form.contactnumber} onChange={handleInputChange} placeholder="Enter contact number" required />
+					</div>
+
+					{/* DOB */}
+					<div className="col-md-6">
+						<label className="form-label">Date of Birth</label>
+						<input type="date" className="form-control" name="dob" value={form.dob} onChange={handleInputChange} required />
+					</div>
+
+					{/* nationality */}
+					<div className="col-md-6">
+						<label className="form-label">Nationality</label>
+						<select
+							className="form-select"
+							name="nationality"
+							value={form.nationality}
+							onChange={handleInputChange}
+							required
+						>
+							<option value="">-- Select Nationality --</option>
+							{nationalities.map((nation, index) => (
+							<option key={index} value={nation}>
+								{nation}
+							</option>
+							))}
+						</select>
+					</div>
+
 					{/* password */}
 					<div className="col-md-6">
 						<label className="form-label">Password</label>
 						<input type="password" className="form-control" name="password" value={form.password} onChange={handleInputChange} placeholder="Enter password" required />
 					</div>
+					
+					<h5 className="pt-4">Mailing Address</h5>
+					{/* address */}
+					<div className="col-md-12">
+						<label className="form-label">Address</label>
+						<input type="text" className="form-control" name="address" value={form.address} onChange={handleInputChange} placeholder="Enter address" required />
+					</div>
+					<div className="row">
+						<div className="col-md-6">
+							<label className="form-label">Postal Code</label>
+							<input type="text" className="form-control" name="postalcode" value={form.postalcode} onChange={handleInputChange} placeholder="Enter address" required />
+						</div>
+						<div className="col-md-6">
+							<label className="form-label">Unit Number</label>
+							<input type="text" className="form-control" name="unitnumber" value={form.unitnumber} onChange={handleInputChange} placeholder="Enter address" required />
+						</div>
+					</div>
 
 					{/* submit button (full width) */}
-					<div className="col-12">
+					<div className="col-12 pt-4">
 						<button type="submit" className="btn btn-primary w-100">Register</button>
 					</div>
 				</div>

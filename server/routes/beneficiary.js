@@ -34,29 +34,5 @@ router.get("/getBeneficiaryByID", async (req, res) => {
     }
 });
 
-router.post("/place-urn", upload.single("deathCertFile"), async (req, res) => {
-    const { beneficiaryID, dateOfDeath, inscription } = req.body;
-    const deathCertificate = req.file?.buffer || null;
-    const deathCertificateMime = req.file?.mimetype || null;
-
-    try {
-        const [result] = await db.query(
-            `UPDATE Beneficiary 
-             SET dateOfDeath = ?, deathCertificate = ?, deathCertificateMime = ?, inscription = ?
-             WHERE beneficiaryID = ?`,
-            [new Date(dateOfDeath), deathCertificate, deathCertificateMime, inscription, beneficiaryID]
-        );
-
-        if (result.affectedRows === 0) {
-            return res.status(404).json({ error: "Beneficiary not found." });
-        }
-
-        res.json({ message: "Urn placement details updated successfully." });
-
-    } catch (err) {
-        console.error("Error updating beneficiary:", err);
-        res.status(500).json({ error: "Failed to update urn placement details." });
-    }
-});
 
 module.exports = router;

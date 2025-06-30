@@ -4,6 +4,16 @@ const db = require('../db');
 const multer = require('multer');
 const upload = multer();
 const { v4: uuidv4 } = require("uuid");
+const { sendAccountCreationEmail } = require("../routes/email");
+const bcrypt = require('bcrypt');
+
+
+// for random password when a new user is created through booking
+function generateRandomPassword(length = 12) {
+    const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+";
+    return Array.from({ length }, () => charset[Math.floor(Math.random() * charset.length)]).join('');
+}
+
 
 router.get("/", async (req, res) => {
     const userID = req.query.userID;
@@ -100,7 +110,7 @@ router.get("/pending", async (req, res) => {
     try {
         const [rows] = await db.query(`
             SELECT 
-                b.bookingID, b.bookingType, b.nicheID, b.beneficiaryID,
+                b.bookingID, b.bookingType, b.bookingStatus, b.nicheID, b.beneficiaryID,
                 u.fullName AS customerName, u.contactNumber,
                 n.nicheCode, n.status AS nicheStatus, n.lastUpdated,
                 be.beneficiaryName,
@@ -110,7 +120,7 @@ router.get("/pending", async (req, res) => {
             LEFT JOIN Beneficiary be ON b.beneficiaryID = be.beneficiaryID
             LEFT JOIN Niche n ON b.nicheID = n.nicheID
             LEFT JOIN Payment p ON b.paymentID = p.paymentID
-            WHERE n.status = 'Pending'
+            WHERE b.bookingStatus = 'Pending'
             ORDER BY n.lastUpdated DESC
         `);
 
@@ -132,7 +142,7 @@ router.post("/submitBooking", upload.fields([
     try {
         const {
             // Applicant
-            fullName, gender, nationality, nationalID, mobileNumber, address, postalCode, unitNumber, dob,
+            fullName, gender, nationality, nationalID, mobileNumber, email, address, postalCode, unitNumber, dob,
 
             // Beneficiary
             beneficiaryName, beneficiaryGender, beneficiaryNationality, beneficiaryNationalID, beneficiaryAddress,
@@ -142,15 +152,16 @@ router.post("/submitBooking", upload.fields([
             nicheID, bookingType,
 
             // Meta
-            paidByID
+            paidByID, userRole
         } = req.body;
 
-        const birthCertificate = req.files['birthCertFile'] ? req.files['birthCertFile'][0].buffer : null;
-        const birthCertificateMime = req.files['birthCertFile'] ? req.files['birthCertFile'][0].mimetype : null;
+        // Extract file buffers
+        const birthCertificate = req.files['birthCertFile']?.[0]?.buffer || null;
+        const birthCertificateMime = req.files['birthCertFile']?.[0]?.mimetype || null;
+        const deathCertificate = req.files['deathCertFile']?.[0]?.buffer || null;
+        const deathCertificateMime = req.files['deathCertFile']?.[0]?.mimetype || null;
 
-        const deathCertificate = req.files['deathCertFile'] ? req.files['deathCertFile'][0].buffer : null;
-        const deathCertificateMime = req.files['deathCertFile'] ? req.files['deathCertFile'][0].mimetype : null;
-
+        // For validation
         const payload = {
             ...req.body,
             birthCertificate,
@@ -159,90 +170,79 @@ router.post("/submitBooking", upload.fields([
             deathCertificateMime
         };
 
-        const validationErrors = validateBookingPayload(payload, isPayment = true);
-
+        const validationErrors = validateBookingPayload(payload, true);
         if (Object.keys(validationErrors).length > 0) {
-            return res.status(400).json({
-                success: false,
-                errors: validationErrors
-            });
+            return res.status(400).json({ success: false, errors: validationErrors });
         }
 
-        const userID = paidByID;
         const beneficiaryID = uuidv4();
         const bookingID = uuidv4();
+        let finalUserID = paidByID;
 
-        // 1. Get roleID
-        const [[roleRow]] = await dbConn.query(
-            "SELECT roleID FROM Role WHERE roleName = ?",
-            ["Applicant"]
-        );
+        // Get Applicant roleID (used for all created users)
+        const [[roleRow]] = await dbConn.query("SELECT roleID FROM Role WHERE roleName = ?", ["Applicant"]);
         if (!roleRow) throw new Error("Role not found");
         const roleID = roleRow.roleID;
 
         const fullUserAddress = `${address}, ${unitNumber}, ${postalCode}`;
 
-        // 2b. check if user exists.
-        if (userID !== "") {
-            const exists = await dbConn.query("SELECT userID FROM User WHERE userID = ?", [userID]);
-            if (exists.length == 0) {
-                // current user do not exist, create a new user
-                await dbConn.query(`
-                    INSERT INTO User (userID, fullName, gender, nationality, nric, contactNumber, userAddress, dob, roleID)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-                    [userID, fullName, gender, nationality, nationalID, mobileNumber, fullUserAddress, dob, roleID]
-                );
-            } // else, ignore and continue on
-        } else if (userID === "") {
-            // 1. Check for existing user by NRIC
-            let userID;
-            const [[existingUser]] = await dbConn.query(
-                "SELECT userID FROM User WHERE nric = ?",
-                [nationalID]
-            );
+        if (userRole === "user") {
+            // Normal user placing booking — must already exist
+            const [[existingUser]] = await dbConn.query("SELECT userID FROM User WHERE userID = ?", [paidByID]);
+            if (!existingUser) throw new Error("User does not exist. Invalid session.");
+        }
+
+        if (userRole === "staff") {
+            // Check if user exists based on NRIC
+            const [[existingUser]] = await dbConn.query("SELECT * FROM User WHERE nric = ?", [nationalID]);
 
             if (existingUser) {
-                // extra checks to make sure that the user is actually the user
-                if (existingUser.fullName !== fullName) {
-                    res.status(500).json({ error: "wrong user" });
-                } else if (existingUser.mobileNumber !== mobileNumber) {
-                    res.status(500).json({ error: "wrong user" });
-                } else if (existingUser.dateOfBirth !==  dob) {
-                    res.status(500).json({ error: "wrong user" });
-                } else {
-                    userID = existingUser.userID;
-                }
-               
-            } else {
-                userID = uuidv4();
-                const [[roleRow]] = await dbConn.query(
-                    "SELECT roleID FROM Role WHERE roleName = ?",
-                    ["Applicant"]
-                );
-                if (!roleRow) throw new Error("Role not found");
-                const roleID = roleRow.roleID;
+                finalUserID = existingUser.userID;
 
-                const fullUserAddress = `${address}, ${unitNumber}, ${postalCode}`;
+                if (
+                    existingUser.fullName !== fullName ||
+                    existingUser.contactNumber !== mobileNumber ||
+                    existingUser.dob !== dob
+                ) {
+                    throw new Error("NRIC conflict with existing user details.");
+                }
+
+            } else {
+                // Create new user
+                finalUserID = uuidv4();
+                const randomPassword = generateRandomPassword();
+
+                const salt = await bcrypt.genSalt(10);
+                const hashedPassword = await bcrypt.hash(randomPassword, salt);
 
                 await dbConn.query(`
-                    INSERT INTO User (userID, fullName, gender, nationality, nric, contactNumber, userAddress, dob, roleID)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-                    [userID, fullName, gender, nationality, nationalID, mobileNumber, fullUserAddress, dob, roleID]
+            INSERT INTO User (userID, fullName, gender, nationality, nric, contactNumber, userAddress, dob, roleID, email, hashedPassword, salt)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                    [finalUserID, fullName, gender, nationality, nationalID, mobileNumber, fullUserAddress, dob, roleID, email, hashedPassword, salt]
                 );
+
+                // Email account credentials
+                try {
+                    //console.log("Sending account creation email...");
+                    await sendAccountCreationEmail(email, fullName, randomPassword);
+                    //console.log("Email sent");
+                } catch (e) {
+                    //console.error("Failed to send account creation email:", e);
+                }
             }
         }
 
-        // based off booking type whether to insert death date
+        // Format DOD
         const finalDateOfDeath = (bookingType === "PreOrder" || !dateOfDeath) ? null : dateOfDeath;
 
-        // 3. Insert Beneficiary
+        // Insert Beneficiary
         await dbConn.query(`
-            INSERT INTO Beneficiary (
-                beneficiaryID, beneficiaryName, gender, nationality, nric, beneficiaryAddress, dateOfBirth, dateOfDeath,
-                birthCertificate, birthCertificateMime,
-                deathCertificate, deathCertificateMime,
-                relationshipWithApplicant, inscription
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        INSERT INTO Beneficiary (
+          beneficiaryID, beneficiaryName, gender, nationality, nric, beneficiaryAddress, dateOfBirth, dateOfDeath,
+          birthCertificate, birthCertificateMime,
+          deathCertificate, deathCertificateMime,
+          relationshipWithApplicant, inscription
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [beneficiaryID, beneficiaryName, beneficiaryGender, beneficiaryNationality, beneficiaryNationalID, beneficiaryAddress,
                 dateOfBirth, finalDateOfDeath,
                 birthCertificate, birthCertificateMime,
@@ -250,36 +250,54 @@ router.post("/submitBooking", upload.fields([
                 relationshipWithApplicant, inscription]
         );
 
-        // 5. Insert Booking
-        await dbConn.query(`
+        
+        // Update Niche Status
+        if (userRole == "user") {
+            // Insert Booking
+            await dbConn.query(`
             INSERT INTO Booking (bookingID, nicheID, beneficiaryID, bookingType, paidByID, bookingStatus)
             VALUES (?, ?, ?, ?, ?, ?)`,
-            [bookingID, nicheID, beneficiaryID, bookingType, userID, "Pending"]
-        );
+                [bookingID, nicheID, beneficiaryID, bookingType, finalUserID, "Pending"]
+            );
 
-        // 6. Determine Niche Status
-        const nicheStatus = (bookingType === "Current") ? "Occupied" : "Reserved";
-        // only have occupied and reserved because staff
+            // update niche status
+            await dbConn.query(
+                `UPDATE Niche
+                SET status = ?, lastUpdated = NOW()
+                WHERE nicheID = ?`,
+                ["Pending", nicheID]
+            );
+        } else {
+            // Insert Booking
+            await dbConn.query(`
+            INSERT INTO Booking (bookingID, nicheID, beneficiaryID, bookingType, paidByID, bookingStatus)
+            VALUES (?, ?, ?, ?, ?, ?)`,
+                [bookingID, nicheID, beneficiaryID, bookingType, finalUserID, "Confirmed"]
+            );
 
-        // 7. Update Niche Status
-        await dbConn.query(`
-            UPDATE Niche
-            SET status = ?, lastUpdated = NOW()
-            WHERE nicheID = ?
-        `, [nicheStatus, nicheID]);
-
+            // update niche status accordingly (already fixed, dont need to vet)
+            let nicheStatus = (bookingType === "Current") ? "Occupied" : "Reserved";
+            await dbConn.query(
+                `UPDATE Niche
+                SET status = ?, lastUpdated = NOW()
+                WHERE nicheID = ?`,
+                    [nicheStatus, nicheID]
+            );
+        }
+        
         await dbConn.commit();
-        console.log("\n\nUser Booking Created\n\n\n\n");
+        console.log("Booking submitted");
         res.status(201).json({ success: true, bookingID });
 
     } catch (err) {
         await dbConn.rollback();
-        console.error("submission of booking failed:", err);
+        console.error("Booking submission failed:", err);
         res.status(500).json({ error: "Failed to submit booking" });
     } finally {
         dbConn.release();
     }
 });
+
 
 // after the user completes payment, need to update the booking to fully paid. 
 router.post("/updateBookingTransaction", async (req, res) => {
@@ -302,8 +320,8 @@ router.post("/updateBookingTransaction", async (req, res) => {
         // update booking to be updated
         await dbConn.query(`
             UPDATE Booking
-            SET bookingStatus = ?, paymentID = ?
-            WHERE bookingID = ?;`, ["Confirmed", paymentID, bookingID]);
+            SET paymentID = ?
+            WHERE bookingID = ?;`, [paymentID, bookingID]);
 
         await dbConn.commit();
         res.status(201).json({ success: true, bookingID, paymentID });
@@ -317,12 +335,56 @@ router.post("/updateBookingTransaction", async (req, res) => {
     }
 })
 
+// user request to place urn
+router.post("/place-urn", upload.single("deathCertFile"), async (req, res) => {
+    const { bookingID, nicheID, beneficiaryID, dateOfDeath, inscription } = req.body;
+    const deathCertificate = req.file?.buffer || null;
+    const deathCertificateMime = req.file?.mimetype || null;
+
+    try {
+        const [result] = await db.query(
+            `UPDATE Beneficiary 
+             SET dateOfDeath = ?, deathCertificate = ?, deathCertificateMime = ?, inscription = ?
+             WHERE beneficiaryID = ?`,
+            [new Date(dateOfDeath), deathCertificate, deathCertificateMime, inscription, beneficiaryID]
+        );
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ error: "Beneficiary not found." });
+        }
+
+        const [updateNiche, updateBooking] = await Promise.all([
+            db.query(
+                `UPDATE Niche SET status = ? WHERE nicheID = ?`,
+                ["Pending", nicheID]
+            ),
+            db.query(
+                `UPDATE Booking SET bookingStatus = ?, bookingType = ? WHERE bookingID = ?`,
+                ["Pending", "Current", bookingID]
+            )
+        ]);
+
+        if (updateNiche[0].affectedRows === 0) {
+            return res.status(404).json({ error: "Niche not found." });
+        }
+
+        if (updateBooking[0].affectedRows === 0) {
+            return res.status(404).json({ error: "Booking not found." });
+        }
+
+        res.json({ message: "Urn placement details updated successfully." });
+
+    } catch (err) {
+        console.error("Error updating beneficiary:", err);
+        res.status(500).json({ error: "Failed to update urn placement details." });
+    }
+});
 
 
 
 // staff - to approve pending niches aka to put a urn in
 router.post('/approve', async (req, res) => {
-    const { bookingID, nicheID } = req.body;
+    const { bookingID, nicheID, bookingType } = req.body;
 
     const dbConn = await db.getConnection();
     await dbConn.beginTransaction();
@@ -330,14 +392,17 @@ router.post('/approve', async (req, res) => {
     try {
         // 1. Update booking type
         await dbConn.query(
-            `UPDATE Booking SET bookingType = ? WHERE bookingID = ?`,
-            ['Current', bookingID]
+            `UPDATE Booking 
+                SET bookingStatus = ?
+                WHERE bookingID = ?`,
+            ['Confirmed', bookingID]
         );
 
         // 2. Update niche status
+        let nicheStatus = bookingType=="PreOrder" ? "Reserved" : "Occupied";
         await dbConn.query(
             `UPDATE Niche SET status = ?, lastUpdated = NOW() WHERE nicheID = ?`,
-            ['Occupied', nicheID]
+            [nicheStatus, nicheID]
         );
 
         await dbConn.commit();
@@ -456,6 +521,7 @@ module.exports = router;
 
 function validateBookingPayload(payload, isPayment) {
 
+    console.log(payload);
     const errors = {};
 
     // Applicant
@@ -469,6 +535,15 @@ function validateBookingPayload(payload, isPayment) {
 
     if (!/^[89]\d{7}$/.test(payload.mobileNumber)) {
         errors.mobileNumber = "Invalid mobile number (8 digits starting with 8 or 9)";
+    }
+
+    if (!payload.email) {
+        errors.email = "Email is required";
+    } else {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(payload.email)) {
+            errors.email = "Invalid email format";
+        }
     }
 
     if (!payload.address) errors.address = "Address is required";

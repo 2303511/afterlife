@@ -13,8 +13,6 @@ const statusClass = {
 	selected: "status-selected",
 	occupied: "status-occupied",
 	reserved: "status-reserved",
-	booked: "status-booked",
-	blocked: "status-blocked",
 	pending: "status-pending"
 };
 
