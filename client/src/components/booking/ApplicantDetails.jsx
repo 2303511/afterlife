@@ -98,7 +98,7 @@ export default function ApplicantDetails({ formData, onChange, errors, width = 6
 		if (!userID) toast.error("Please enter a valid userID");
 
 		try {
-			const res = await axios.post("/api/user/getUserByID", { userID });
+			const res = await axios.get(`/api/user/getUserByID?userID=${userID}`);
 			let userDetails = mapUserToApplicant(res.data);
 
 			if (!!res.data) {

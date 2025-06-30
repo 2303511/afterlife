@@ -60,7 +60,7 @@ app.use(
 // TODO: Define routes
 app.use("/api/user", usersRoute);
 app.use("/api/booking", bookingsRoute); 
-app.use("/api/payment", paymentsRoute); 
+app.use("/api/payment", paymentsRoute.router); 
 app.use("/api/niche", nicheRoute); 
 app.use("/api/beneficiary", beneficiaryRoute);
 app.use("/api/block", blockRoute);
