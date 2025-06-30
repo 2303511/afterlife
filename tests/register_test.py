@@ -5,36 +5,39 @@ import pytest
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from webdriver_manager.chrome import ChromeDriverManager
 
-# Generate a unique email for each test run
+# Generate a unique email for test run
 def generate_random_email():
     return f"user_{''.join(random.choices(string.ascii_lowercase, k=6))}@example.com"
 
-@pytest.mark.selenium
 def test_register_with_selenium():
     options = Options()
     options.add_argument("--headless")
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
-    options.add_argument("--window-size=1920,1080")  # Improve visibility in headless mode
+    options.add_argument("--window-size=1920,1080")  # Ensure visible layout in headless
 
-    driver = webdriver.Chrome(executable_path=ChromeDriverManager().install(), options=options)
+    # Proper way to create ChromeDriver in Selenium 4+
+    service = Service(ChromeDriverManager().install())
+    driver = webdriver.Chrome(service=service, options=options)
 
     try:
-        # Open frontend (make sure it's served on port 80 in your test setup)
+        # Open the register page (served by React app)
         driver.get("http://localhost/register")
+
         WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.NAME, "username")))
 
-        # Fill in form fields
+        # Fill out registration form
         driver.find_element(By.NAME, "username").send_keys("ci_user")
         driver.find_element(By.NAME, "fullname").send_keys("CI User")
         driver.find_element(By.NAME, "email").send_keys(generate_random_email())
         driver.find_element(By.NAME, "nric").send_keys("S1234567A")
 
-        # Scroll to and click gender radio button safely
+        # Click gender radio button safely
         male_radio = WebDriverWait(driver, 10).until(
             EC.element_to_be_clickable((By.ID, "male"))
         )
@@ -49,10 +52,10 @@ def test_register_with_selenium():
         driver.find_element(By.NAME, "postalcode").send_keys("123456")
         driver.find_element(By.NAME, "unitnumber").send_keys("#01-01")
 
-        # Submit the form
+        # Submit form
         driver.find_element(By.CSS_SELECTOR, "button[type='submit']").click()
 
-        # Wait for redirect or success (adjust path or message as needed)
+        # Confirm success by checking redirect to login page
         WebDriverWait(driver, 10).until(
             EC.url_contains("/login")
         )
