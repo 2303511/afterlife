@@ -16,9 +16,9 @@ jobs:
 
       - name: Set environment variables
         run: |
-          echo "EC2_SQL_USER=${{ secrets.EC2_SQL_USER }}" >> .env
-          echo "EC2_SQL_PW=${{ secrets.EC2_SQL_PW }}" >> .env
-          echo "EC2_SQL_DB_NAME=${{ secrets.EC2_SQL_DB_NAME }}" >> .env
+          echo "DB_USER=${{ secrets.EC2_SQL_USER }}" >> .env
+          echo "DB_PASSWORD=${{ secrets.EC2_SQL_PW }}" >> .env
+          echo "DB_NAME"=${{ secrets.EC2_SQL_DB_NAME }}" >> .env
 
       - name: Set up Python
         uses: actions/setup-python@v4
