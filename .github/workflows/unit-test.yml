@@ -32,8 +32,5 @@ jobs:
       - name: Start Docker Compose stack
         run: docker compose up -d --build
 
-      - name: Wait for backend and DB to be ready
-        run: sleep 15
-
       - name: Run Selenium Unit Tests
         run: pytest tests/register_test.py
