@@ -16,7 +16,8 @@ export default function StaffNavigation() {
     .catch(err => console.error("Failed to fetch session:", err));
   }, []);
 
-  const [role] = useState(user?.role);
+  const role = user?.role; 
+
   const routes = role === "admin" ? adminRoutes : staffRoutes;
 
   return (
