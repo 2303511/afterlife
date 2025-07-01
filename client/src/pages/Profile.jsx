@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import EditAccountModal from "./EditAccountModal";
+import ChangePasswordModal from "./ChangePasswordModal";
 
 export default function Profile() {
   const [showModal, setShowModal] = useState(false);
+  const [showPwModal, setShowPwModal] = useState(false);
   const [sessionUser, setSessionUser] = useState(undefined);
   const [profile, setProfile] = useState(null);
 
@@ -87,7 +89,10 @@ export default function Profile() {
                 </button>
               </li>
               <li className="nav-item">
-                <button className="btn btn-link p-0 mt-2">
+                <button
+                  className="btn btn-link p-0 mt-2"
+                  onClick={() => setShowPwModal(true)}
+                >
                   Change Password
                 </button>
               </li>
@@ -100,6 +105,13 @@ export default function Profile() {
               profile={profile}
               onClose={() => setShowModal(false)}
               onUpdated={handleUpdated}
+            />
+          )}
+
+          {showPwModal && (
+            <ChangePasswordModal
+              show={showPwModal}
+              onClose={() => setShowPwModal(false)}
             />
           )}
       </div>

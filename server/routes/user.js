@@ -295,6 +295,69 @@ router.post("/edit_account", async (req, res) => {
 	}
 });
 
+router.post("/change_password", async (req, res) => {
+	const userID = req.session.userID;
+	if (!userID) {
+		return res.status(401).json({ error: "Unauthorized: Not logged in" });
+	}
+
+	const { oldPassword, newPassword } = req.body;
+	if (!oldPassword || !newPassword) {
+	return res
+		.status(400)
+		.json({ error: "Old password and new password are required" });
+	}
+
+	const connection = await db.getConnection();
+	try {
+		await connection.beginTransaction();
+
+		const [rows] = await connection.query(
+			"SELECT salt, hashedPassword FROM User WHERE userID = ?",
+			[userID]
+		);
+		if (rows.length === 0) {
+			await connection.rollback();
+			return res.status(404).json({ error: "User not found" });
+		}
+		const user = rows[0];
+
+		// check old password
+		const hashedOldInput = await bcrypt.hash(oldPassword, user.salt);
+		if (hashedOldInput !== user.hashedPassword) {
+			await connection.rollback();
+			return res.status(401).json({ error: "Old password is incorrect" });
+		}
+
+		// check if new is same as old password
+		if (oldPassword === newPassword) {
+			return res
+			.status(400)
+			.json({ error: "New password cannot be the same as the old password" });
+		}
+
+		// hash new password
+		const saltRounds = 10;
+		const newSalt = await bcrypt.genSalt(saltRounds);
+		const hashedNewPassword = await bcrypt.hash(newPassword, newSalt);
+
+		// update password
+		await connection.query(
+			"UPDATE User SET salt = ?, hashedPassword = ? WHERE userID = ?",
+			[newSalt, hashedNewPassword, userID]
+		);
+
+		await connection.commit();
+		res.json({ message: "Password updated successfully" });
+	} catch (err) {
+		await connection.rollback();
+		console.error("Change password error:", err);
+		res.status(500).json({ error: "Failed to change password" });
+	} finally {
+		connection.release();
+	}
+});
+
 
 // Forget password
 router.post("/forget_password", async (req, res) => {
