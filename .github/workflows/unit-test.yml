@@ -48,6 +48,8 @@ jobs:
           DB_ROOT_PASSWORD=${{ secrets.DB_ROOT_PASSWORD }}
           EOF
 
+      - name: Start Docker Compose
+        run: docker compose up --build -d
 
       # 4) Install Chrome & Python for Selenium
       - name: Install Google Chrome
