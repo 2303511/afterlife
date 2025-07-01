@@ -18,7 +18,7 @@ def generate_random_email():
 @pytest.mark.selenium
 def test_register_up_to_2fa():
     # allow overriding in CI via env
-    base = os.getenv("BASE_URL", "http://localhost:3000")
+    base = os.getenv("BASE_URL", "http://localhost")
     register_url = f"{base}/register"
     
     options = Options()
