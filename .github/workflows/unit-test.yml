@@ -9,21 +9,27 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout repository
+      - name: Check out repository
         uses: actions/checkout@v4
 
-      - name: Create .env
+      # 1) Drop in any secrets your docker-compose needs
+      - name: Create .env file
         run: |
-          echo "DB_HOST=${{ secrets.DB_HOST }}" > .env
-          echo "DB_USER=${{ secrets.DB_USER }}" >> .env
-          echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> .env
-          echo "DB_NAME=${{ secrets.DB_NAME }}" >> .env
-          echo "SQL_ROOT_PASSWORD=${{ secrets.SQL_ROOT_PASSWORD }}" >> .env
+          cat > .env <<EOF
+          DB_HOST=${{ secrets.DB_HOST }}
+          DB_USER=${{ secrets.DB_USER }}
+          DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+          DB_NAME=${{ secrets.DB_NAME }}
+          DB_ROOT_PASSWORD=${{ secrets.DB_ROOT_PASSWORD }}
+          EOF
 
+      # 2) Build & start all containers (frontend, backend, db, reverse-proxy)
       - name: Start Docker Compose
         run: docker compose up --build -d
 
+      # 5) Install Google Chrome (for headless Selenium)
       - name: Install Google Chrome
         run: |
           sudo apt-get update
@@ -35,16 +41,16 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y google-chrome-stable
 
-      - name: Set up Python
+      # 6) Install Python & test deps
+      - name: Setup Python & install test requirements
         uses: actions/setup-python@v4
         with:
           python-version: '3.11'
-
-      - name: Install test requirements
-        run: |
+      - run: |
           python -m pip install --upgrade pip
           pip install selenium>=4.10.0 webdriver-manager>=4.0.0 pytest
 
+      # 7) Run just the registration Selenium test
       - name: Run Selenium registration test
         env:
           BASE_URL: http://localhost
