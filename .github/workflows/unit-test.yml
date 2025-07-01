@@ -48,11 +48,6 @@ jobs:
           DB_ROOT_PASSWORD=${{ secrets.DB_ROOT_PASSWORD }}
           EOF
 
-      - name: Start Docker Compose
-        run: docker compose up -d --build
-
-      - name: Wait for API to be healthy
-        run: npx wait-on http://localhost/api/health
 
       # 4) Install Chrome & Python for Selenium
       - name: Install Google Chrome
