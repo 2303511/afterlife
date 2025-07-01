@@ -21,6 +21,12 @@ jobs:
         working-directory: client
         run: |
           npm ci
+
+      - name: Build front-end
+        working-directory: client
+        env:
+          CI: false    # disable CRA's warnings-as-errors in CI
+        run: |
           npm run build
 
       # 2) Serve the built bundle on port 80
@@ -41,9 +47,13 @@ jobs:
           DB_NAME=${{ secrets.DB_NAME }}
           DB_ROOT_PASSWORD=${{ secrets.DB_ROOT_PASSWORD }}
           EOF
+
       - name: Start Docker Compose
         run: docker compose up -d --build
-        
+
+      - name: Wait for API to be healthy
+        run: npx wait-on http://localhost/api/health
+
       # 4) Install Chrome & Python for Selenium
       - name: Install Google Chrome
         run: |
