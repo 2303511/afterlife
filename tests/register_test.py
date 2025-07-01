@@ -32,7 +32,6 @@ def test_register_and_redirect_to_login():
     wait = WebDriverWait(driver, 15)
 
     try:
-        # 2) Stub axios.post so registration always “succeeds”
         driver.get("about:blank")
         driver.execute_script("""
           // override axios.post
@@ -43,20 +42,22 @@ def test_register_and_redirect_to_login():
           };
         """)
 
-        # 3) Load the Register page
         driver.get(register_url)
 
-        # 4) Wait for the form to mount
         wait.until(EC.presence_of_element_located((By.NAME, "username")))
 
         # --- Fill out each field exactly as in your JSX ---
         driver.find_element(By.NAME, "username").send_keys("test444")
-        driver.find_element(By.NAME, "email").send_keys(test444@mail.com))
+        driver.find_element(By.NAME, "email").send_keys(test444@mail.com)
         driver.find_element(By.NAME, "fullname").send_keys("test444")
         driver.find_element(By.NAME, "contactnumber").send_keys("91234567")
         driver.find_element(By.NAME, "nric").send_keys("S1234567A")
         dob = wait.until(EC.presence_of_element_located((By.NAME, "dob")))
         driver.execute_script("arguments[0].value = '1999-03-01';", dob)
+        driver.execute_script("""
+          arguments[0].dispatchEvent(new Event('input', { bubbles: true }));
+          arguments[0].dispatchEvent(new Event('change', { bubbles: true }));
+        """, dob)
         driver.find_element(By.NAME, "nationality").send_keys("Singaporean")
         driver.find_element(By.NAME, "address").send_keys("123 Example St")
 
