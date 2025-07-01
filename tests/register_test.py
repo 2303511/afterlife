@@ -79,11 +79,7 @@ def test_register_up_to_2fa():
         el = wait.until(EC.presence_of_element_located((By.NAME, "address")))
         el.send_keys("123 Example St")
 
-        # wait for Mailing Address header to ensure section is loaded
-        wait.until(EC.presence_of_element_located(
-            (By.XPATH, "//h5[text()='Mailing Address']")))
-
-        # locate by placeholder instead of name
+        # 7) Locate postal-code & unit-number by placeholder
         postal = wait.until(EC.presence_of_element_located(
             (By.CSS_SELECTOR, "input[placeholder='Enter postal code']")))
         postal.send_keys("123456")
@@ -92,7 +88,7 @@ def test_register_up_to_2fa():
             (By.CSS_SELECTOR, "input[placeholder='Enter unit number']")))
         unit.send_keys("#01-01")
 
-        # 7) Submit form and wait for redirect to 2FA setup
+        # 8) Submit form and wait for redirect to 2FA setup
         submit_btn = driver.find_element(By.CSS_SELECTOR, "button[type='submit']")
         submit_btn.click()
 
