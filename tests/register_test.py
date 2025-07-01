@@ -59,6 +59,7 @@ def fill_registration_form(driver, base_url, email):
 def test_register_redirects_to_login(driver):
     base_url = os.getenv("BASE_URL", "http://localhost")
     unique_email = generate_random_email()
+    wait = WebDriverWait(driver, 5)
 
     # 1) Fill & submit the real form against your backend
     fill_registration_form(driver, base_url, unique_email)
