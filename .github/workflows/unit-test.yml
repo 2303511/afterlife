@@ -1,10 +1,10 @@
-name: Run Unit Tests
+name: Unit-Test
 
 on:
   push:
     branches:
       - main
-      - is-dev
+  pull_request:
 
 jobs:
   unit-test:
@@ -14,23 +14,41 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set environment variables
+      - name: Set Environment variables
         run: |
-          echo "DB_USER=${{ secrets.EC2_SQL_USER }}" >> .env
-          echo "DB_PASSWORD=${{ secrets.EC2_SQL_PW }}" >> .env
-          echo "DB_NAME=${{ secrets.EC2_SQL_DB_NAME }}" >> .env
+          echo "DB_HOST=${{ secrets.DB_HOST }}" > .env
+          echo DB_USER=${{ secrets.DB_USER }} >> .env
+          echo DB_PASSWORD=${{ secrets.DB_PASSWORD }} >> .env
+          echo DB_NAME=${{ secrets.DB_NAME }} >> .env
+          echo SQL_ROOT_PASSWORD=${{ secrets.SQL_ROOT_PASSWORD }} >> .env
 
-      - name: Set up Python
+      - name: Set up Docker
+        run: |
+          docker compose up --build -d
+
+      - name: Install Chrome
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y wget gnupg unzip
+          wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub \
+            | sudo apt-key add -
+          sudo sh -c 'echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" \
+            > /etc/apt/sources.list.d/google-chrome.list'
+          sudo apt-get update
+          sudo apt-get install -y google-chrome-stable
+
+      - name: Install Python & dependencies
         uses: actions/setup-python@v4
         with:
-          python-version: "3.11"
+          python-version: '3.11'
 
-      - name: Install Python test dependencies
+      - name: Install test requirements
         run: |
-          pip install selenium webdriver-manager pytest
+          python -m pip install --upgrade pip
+          pip install selenium>=4.10.0 webdriver-manager>=4.0.0 pytest
 
-      - name: Start Docker Compose stack
-        run: docker compose up -d --build
-
-      - name: Run Selenium Unit Tests
-        run: pytest tests/register_test.py
+      - name: Run Selenium & Unit Tests
+        env:
+          BASE_URL: http://localhost:3000
+        run: |
+          pytest -q --maxfail=1 --disable-warnings
