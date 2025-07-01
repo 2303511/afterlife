@@ -2,11 +2,8 @@ name: Frontend Unit Tests
 
 on:
   push:
-    paths:
-      - 'client/**'
-  pull_request:
-    paths:
-      - 'client/**'
+    branches:
+      - main
 
 jobs:
   test:
