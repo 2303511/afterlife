@@ -1,5 +1,62 @@
 // validationRules.js
 
+// REGISTER
+export const registerFieldLabels = {
+  username: "Username",
+  email: "Email",
+  fullname: "Full Name",
+  gender: "Gender",
+  nationality: "Nationality",
+  nric: "NRIC",
+  contactnumber: "Contact Number",
+  dob: "Date of Birth",
+  address: "Address",
+  postalcode: "Postal Code",
+  unitnumber: "Unit Number",
+  password: "Password"
+};
+
+export const registerRules = {
+  username: { required: true },
+  email: {
+    required: true,
+    pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+    message: "Email format is invalid e.g. (user@example.com)"
+  },
+  fullname: { required: true },
+  gender: { required: true },
+  nationality: { required: true },
+  nric: {
+    required: true,
+    pattern: /^[STFG]\d{7}[A-Z]$/,
+    message: "NRIC format invalid (e.g., S1234567A)"
+  },
+  contactnumber: {
+    required: true,
+    pattern: /^[89]\d{7}$/,
+    message: "Mobile number must start with 8 or 9 and be 8 digits"
+  },
+  dob: { required: true },
+  address: {
+    required: true,
+    pattern: /^[A-Za-z0-9\s]+$/,
+    message: "Address can only contain letters, numbers, and spaces (no symbols)"
+  },
+  postalcode: {
+    required: true,
+    pattern: /^\d{6}$/,
+    message: "Postal code must be 6 digits"
+  },
+  unitnumber: { 
+    required: true,
+    pattern: /^[A-Za-z0-9\-]+$/,
+    message: "Unit number must only contain letters, numbers, and dashes (no # symbol)"
+
+   },
+  password: { required: true }
+};
+
+// BOOKING FORM
 export const applicantFieldLabels = {
     fullName: "Full Name",
     gender: "Gender",
