@@ -32,25 +32,11 @@ def test_register_and_redirect_to_login():
     wait = WebDriverWait(driver, 15)
 
     try:
-        # 2) Stub axios.post so registration always “succeeds”
-        driver.get("about:blank")
-        driver.execute_script("""
-          // override axios.post
-          window._realAxios = window.axios;
-          window.axios = {
-            ...window._realAxios,
-            post: (url, data) => Promise.resolve({ data: { success: true } })
-          };
-        """)
-
-        # 3) Load the Register page
+        # 2) Navigate to the register page
         driver.get(register_url)
 
-        # 4) Wait for the form to mount
-        wait.until(EC.presence_of_element_located((By.NAME, "username")))
-
-        # --- Fill out each field exactly as in your JSX ---
-        driver.find_element(By.NAME, "username").send_keys("ci_user")
+        # 3) Fill out the form
+        wait.until(EC.presence_of_element_located((By.NAME, "username"))).send_keys("ci_user")
         driver.find_element(By.NAME, "email").send_keys(generate_random_email())
         driver.find_element(By.NAME, "fullname").send_keys("CI User")
         driver.find_element(By.NAME, "contactnumber").send_keys("91234567")
@@ -59,19 +45,20 @@ def test_register_and_redirect_to_login():
         driver.find_element(By.NAME, "nationality").send_keys("Singaporean")
         driver.find_element(By.NAME, "address").send_keys("123 Example St")
 
-        # gender radios
         male = wait.until(EC.element_to_be_clickable((By.ID, "male")))
         driver.execute_script("arguments[0].scrollIntoView()", male)
         male.click()
 
         driver.find_element(By.NAME, "password").send_keys("TestPassword123")
 
-        # 5) Submit the form
+        # 4) Submit the form
         driver.find_element(By.CSS_SELECTOR, "button[type='submit']").click()
 
-        # 6) Assert client‐side redirect to /login
-        wait.until(EC.url_contains("/login"))
-        assert "/login" in driver.current_url
+        # 5) Wait for React Router to update window.location.pathname to "/login"
+        wait.until(lambda d: d.execute_script("return window.location.pathname") == "/login")
+
+        # 6) As a sanity check, also ensure the login form is present
+        assert driver.find_element(By.NAME, "username")  # or "email" on your login form
 
     finally:
         driver.quit()
