@@ -30,8 +30,9 @@ def generate_random_email():
         random.choices(string.ascii_lowercase + string.digits, k=6)
     ) + "@example.com"
 
-def fill_registration_form(driver, email):
-    # assumes you’re already on /register
+def fill_registration_form(driver, base_url, email):
+    driver.get(f"{base_url}/register")
+
     driver.find_element(By.NAME, "username").send_keys("test100")
     driver.find_element(By.NAME, "email").send_keys(email)
     driver.find_element(By.NAME, "fullname").send_keys("Test User")
@@ -41,7 +42,7 @@ def fill_registration_form(driver, email):
     dob = driver.find_element(By.NAME, "dob")
     driver.execute_script("arguments[0].value = '2000-01-01';", dob)
     driver.execute_script("""
-      arguments[0].dispatchEvent(new Event('input',{ bubbles: true }));
+      arguments[0].dispatchEvent(new Event('input',  { bubbles: true }));
       arguments[0].dispatchEvent(new Event('change',{ bubbles: true }));
     """, dob)
 
@@ -57,16 +58,14 @@ def fill_registration_form(driver, email):
 
 def test_register_redirects_to_login(driver):
     base_url = os.getenv("BASE_URL", "http://localhost")
-    email = generate_random_email()
+    unique_email = generate_random_email()
     wait = WebDriverWait(driver, 15)
 
-    driver.get(f"{base_url}/register")
-    fill_registration_form(driver, email)
+    # Fill & submit the real form against your backend
+    fill_registration_form(driver, base_url, unique_email)
 
-    # Dump any console errors
-    for entry in driver.get_log("browser"):
-        print(entry)
+    # Wait for the React client to redirect to /login
+    wait.until(lambda d: d.execute_script("return window.location.pathname") == "/login")
 
-    # Now wait for redirect
-    wait.until(lambda d: d.execute_script("return window.location.pathname") == "/login"
+    # Assert final URL
     assert "/login" in driver.current_url
