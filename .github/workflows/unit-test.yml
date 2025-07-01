@@ -30,20 +30,6 @@ jobs:
         run: |
           docker compose up --build -d
 
-      - name: Wait for backend health-check
-        run: |
-          echo "Waiting for API…"
-          until curl -sf http://localhost/api/health; do
-            sleep 2
-          done
-
-      - name: Wait for frontend to serve /register
-        run: |
-          echo "Waiting for front-end…"
-          until curl -sf http://localhost/register; do
-            sleep 2
-          done
-
       - name: Install Google Chrome
         run: |
           sudo apt-get update
