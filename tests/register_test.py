@@ -32,36 +32,46 @@ def test_register_and_redirect_to_login():
     wait = WebDriverWait(driver, 15)
 
     try:
+        # 2) Stub fetch so that all calls to /api/user/register succeed
         driver.get("about:blank")
         driver.execute_script("""
-          // override axios.post
-          window._realAxios = window.axios;
-          window.axios = {
-            ...window._realAxios,
-            post: (url, data) => Promise.resolve({ data: { success: true } })
+          // keep the real fetch around
+          window._realFetch = window.fetch;
+          window.fetch = (url, opts) => {
+            // intercept the register endpoint
+            if (url.includes('/api/user/register')) {
+              return Promise.resolve({
+                ok: true,
+                json: () => Promise.resolve({ success: true })
+              });
+            }
+            // otherwise forward to real fetch
+            return window._realFetch(url, opts);
           };
         """)
 
+        # 3) Load your Register page
         driver.get(register_url)
 
+        # 4) Wait for React to render the username input
         wait.until(EC.presence_of_element_located((By.NAME, "username")))
 
-        # --- Fill out each field exactly as in your JSX ---
-        driver.find_element(By.NAME, "username").send_keys("test444")
-        driver.find_element(By.NAME, "email").send_keys("test444@mail.com")
-        driver.find_element(By.NAME, "fullname").send_keys("test444")
+        # --- Fill the form ---
+        driver.find_element(By.NAME, "username").send_keys("ci_user")
+        driver.find_element(By.NAME, "email").send_keys(generate_random_email())
+        driver.find_element(By.NAME, "fullname").send_keys("CI User")
         driver.find_element(By.NAME, "contactnumber").send_keys("91234567")
         driver.find_element(By.NAME, "nric").send_keys("S1234567A")
-        dob = wait.until(EC.presence_of_element_located((By.NAME, "dob")))
+
+        # date-of-birth: set via JS so React picks it up
+        dob = driver.find_element(By.NAME, "dob")
         driver.execute_script("arguments[0].value = '1999-03-01';", dob)
-        driver.execute_script("""
-          arguments[0].dispatchEvent(new Event('input', { bubbles: true }));
-          arguments[0].dispatchEvent(new Event('change', { bubbles: true }));
-        """, dob)
+        driver.execute_script("arguments[0].dispatchEvent(new Event('input', { bubbles: true }));", dob)
+
         driver.find_element(By.NAME, "nationality").send_keys("Singaporean")
         driver.find_element(By.NAME, "address").send_keys("123 Example St")
 
-        # gender radios
+        # gender radio
         male = wait.until(EC.element_to_be_clickable((By.ID, "male")))
         driver.execute_script("arguments[0].scrollIntoView()", male)
         male.click()
@@ -71,9 +81,11 @@ def test_register_and_redirect_to_login():
         # 5) Submit the form
         driver.find_element(By.CSS_SELECTOR, "button[type='submit']").click()
 
-        # 6) Assert client‐side redirect to /login
-        wait.until(EC.url_contains("/login"))
-        assert "/login" in driver.current_url
+        # 6) Wait for the client-side navigation to /login
+        wait.until(lambda d: d.execute_script("return window.location.pathname") == "/login")
+
+        # Final sanity check: login form appeared
+        assert driver.find_element(By.NAME, "username")
 
     finally:
         driver.quit()
