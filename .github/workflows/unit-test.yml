@@ -24,22 +24,6 @@ jobs:
       - name: Start Docker Compose
         run: docker compose up --build -d
 
-      - name: Wait for backend health
-        run: |
-          for i in {1..30}; do
-            curl --fail http://localhost/health && break
-            echo "Waiting for backend…"
-            sleep 2
-          done
-
-      - name: Wait for frontend registration page
-        run: |
-          for i in {1..30}; do
-            curl --fail http://localhost/register && break
-            echo "Waiting for frontend…"
-            sleep 2
-          done
-
       - name: Install Google Chrome
         run: |
           sudo apt-get update
