@@ -68,5 +68,5 @@ def test_register_redirects_to_login(driver):
         print(entry)
 
     # Now wait for redirect
-    wait.until(lambda d: d.execute_script("return window.location.pathname") == "/login")
+    wait.until(lambda d: d.execute_script("return window.location.pathname") == "/login"
     assert "/login" in driver.current_url
