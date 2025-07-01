@@ -1,6 +1,6 @@
 // src/pages/Register.jsx
 
-import React, { useState, useEffect  } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import "bootstrap/dist/js/bootstrap.bundle.min";
@@ -22,80 +22,127 @@ export default function Register() {
     unitnumber: ""
   });
 
+  const [errors, setErrors] = useState({});
   const navigate = useNavigate();
-
-  //recaptcha variables
   const [recaptchaLoaded, setRecaptchaLoaded] = useState(false);
-  // Load reCAPTCHA script
+
   useEffect(() => {
-      const loadRecaptcha = () => {
-          const script = document.createElement('script');
-          script.src = 'https://www.google.com/recaptcha/api.js?render=6LcNiHIrAAAAADOLYumj1n6TlcxjTgjE6c55J0YO';
-          script.addEventListener('load', () => {
-              setRecaptchaLoaded(true);
-          });
-          document.body.appendChild(script);
-      };
+    const loadRecaptcha = () => {
+      const script = document.createElement("script");
+      script.src = "https://www.google.com/recaptcha/api.js?render=6LcNiHIrAAAAADOLYumj1n6TlcxjTgjE6c55J0YO";
+      script.addEventListener("load", () => setRecaptchaLoaded(true));
+      document.body.appendChild(script);
+    };
 
-      if (!window.grecaptcha) {
-          loadRecaptcha();
-      } else {
-          setRecaptchaLoaded(true);
-      }
-
-      return () => {
-          // Cleanup if needed
-      };
+    if (!window.grecaptcha) loadRecaptcha();
+    else setRecaptchaLoaded(true);
   }, []);
 
+  const validators = {
+    username: (v) => !v?.trim() ? "Username is required"
+      : v.length < 4 ? "At least 4 characters"
+      : !/^[a-zA-Z0-9_]+$/.test(v) ? "Only letters, numbers, and _"
+      : "",
+  
+    email: (v) => !v?.trim() ? "Email is required"
+      : !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v) ? "Invalid email"
+      : "",
+  
+    fullname: (v) => !v?.trim() ? "Full name is required"
+      : v.length < 2 ? "At least 2 characters"
+      : !/^[a-zA-Z\s]+$/.test(v) ? "Only letters and spaces"
+      : "",
+  
+    contactnumber: (v) => !v?.trim() ? "Contact number required"
+      : !/^\+?\d{8,15}$/.test(v) ? "Invalid contact number"
+      : "",
+  
+    nric: (v) => !v?.trim() ? "NRIC is required"
+      : !/^[STFG]\d{7}[A-Z]$/.test(v) ? "Invalid NRIC format, eg S1234567F"
+      : "",
+  
+    dob: (v) => {
+      if (!v) return "Date of birth is required";
+      const age = new Date().getFullYear() - new Date(v).getFullYear();
+      return age < 18 ? "Must be at least 18 years old" : "";
+    },
+  
+    nationality: (v) => !v ? "Nationality required" : "",
+  
+    address: (v) => !v?.trim() ? "Address required"
+      : v.length < 5 ? "Address must be at least 5 characters"
+      : "",
+  
+    gender: (v) => !v ? "Gender required"
+      : !["Male", "Female"].includes(v) ? "Gender must be Male or Female"
+      : "",
+  
+    password: (v) => {
+      if (!v) return "Password required";
+      if (v.length < 8) return "At least 8 characters";
+      return "";
+    },
+  
+    postalcode: (v) => !v?.trim() ? "Postal code required"
+      : !/^\d{6}$/.test(v) ? "Must be 6 digits"
+      : "",
+  
+    unitnumber: (v) => !v?.trim() ? "Unit number required" : ""
+  };
 
+  const validateForm = () => {
+    const newErrors = {};
+    for (const key in validators) {
+      newErrors[key] = validators[key](form[key]);
+    }
+    setErrors(newErrors);
+    return Object.values(newErrors).every((v) => v === "");
+  };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setForm(prev => ({ ...prev, [name]: value }));
+    setForm((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleRegister = async (e) => {
     e.preventDefault();
-
-    //check if recaptcha is loaded, gonna call it ltr
-		if (!recaptchaLoaded) {
-      console.error("reCAPTCHA not loaded yet");
-      return;
-    }
-
-
+    if (!validateForm()) return;
+    if (!recaptchaLoaded) return console.error("reCAPTCHA not loaded");
 
     try {
-      // Get reCAPTCHA token // this site key can be exposed
-      const token = await window.grecaptcha.execute('6LcNiHIrAAAAADOLYumj1n6TlcxjTgjE6c55J0YO', { action: 'register' });
-			console.log("Got the token sending to backend now")
+      const token = await window.grecaptcha.execute("6LcNiHIrAAAAADOLYumj1n6TlcxjTgjE6c55J0YO", { action: "register" });
+      const cleanedForm = Object.fromEntries(
+        Object.entries(form).map(([k, v]) => [k, typeof v === "string" ? v.trim() : v])
+      );
 
       const response = await axios.post(
         "/api/user/register",
-        {...form,recaptchaToken: token},
-        {
-          headers: { "Content-Type": "application/json" },
-          withCredentials: true
-        }
+        { ...cleanedForm, recaptchaToken: token },
+        { headers: { "Content-Type": "application/json" }, withCredentials: true }
       );
 
-      //look at the response if the email and ic is good and redirect to 2FA set up 
-      console.log("response data success from register is ", response.data.success);
-      console.log("response data redirectTo from register is ", response.data.redirectTo);
-      console.log("response data 2faenabled from register is ", response.data.twoFAEnabled );
-      if (response.data.success && response.data.redirectTo && response.data.twoFAEnabled === false) {
-        console.log("getting redirected to 2fa page.jsx")
-        navigate(response.data.redirectTo); // Server-controlled redirect
-      }
-
-      
-      //navigate("/login");
+      const { success, redirectTo, twoFAEnabled } = response.data;
+      if (success && redirectTo && !twoFAEnabled) navigate(redirectTo);
     } catch (error) {
       console.error("Failed to register user:", error);
-      // you might show a toast or set an error state here
     }
   };
+
+  const renderField = (label, name, type = "text", col = "col-md-6", placeholder = "") => (
+    <div className={col}>
+      <label className="form-label">{label}</label>
+      <input
+        type={type}
+        className="form-control"
+        name={name}
+        value={form[name]}
+        onChange={handleInputChange}
+        placeholder={placeholder}
+        required
+      />
+      {errors[name] && <div className="text-danger">{errors[name]}</div>}
+    </div>
+  );
 
   return (
     <div className="container mt-5" style={{ maxWidth: "700px" }}>
@@ -103,104 +150,35 @@ export default function Register() {
       <form onSubmit={handleRegister}>
         <div className="row g-3">
           <h5>Personal Details</h5>
-          <div className="col-md-4">
-            <label className="form-label">Username</label>
-            <input
-              type="text"
-              className="form-control"
-              name="username"
-              value={form.username}
-              onChange={handleInputChange}
-              placeholder="Enter username"
-              required
-            />
-          </div>
-          <div className="col-md-4">
-            <label className="form-label">Full Name</label>
-            <input
-              type="text"
-              className="form-control"
-              name="fullname"
-              value={form.fullname}
-              onChange={handleInputChange}
-              placeholder="Enter full name"
-              required
-            />
-          </div>
-          <div className="col-md-4">
-            <label className="form-label">Email</label>
-            <input
-              type="email"
-              className="form-control"
-              name="email"
-              value={form.email}
-              onChange={handleInputChange}
-              placeholder="Enter email"
-              required
-            />
-          </div>
-          <div className="col-md-6">
-            <label className="form-label">NRIC</label>
-            <input
-              type="text"
-              className="form-control"
-              name="nric"
-              value={form.nric}
-              onChange={handleInputChange}
-              placeholder="Enter NRIC"
-              required
-            />
-          </div>
+          {renderField("Username", "username", "text", "col-md-4", "Enter username")}
+          {renderField("Full Name", "fullname", "text", "col-md-4", "Enter full name")}
+          {renderField("Email", "email", "email", "col-md-4", "Enter email")}
+          {renderField("NRIC", "nric", "text", "col-md-6", "Enter NRIC")}
+
+          {/* Gender */}
           <div className="col-md-6">
             <label className="form-label">Gender</label>
-            <div className="d-flex align-items-center" style={{ gap: "1rem" }}>
-              <div className="form-check">
-                <input
-                  className="form-check-input"
-                  type="radio"
-                  name="gender"
-                  id="male"
-                  value="Male"
-                  checked={form.gender === "Male"}
-                  onChange={handleInputChange}
-                />
-                <label className="form-check-label" htmlFor="male">Male</label>
-              </div>
-              <div className="form-check">
-                <input
-                  className="form-check-input"
-                  type="radio"
-                  name="gender"
-                  id="female"
-                  value="Female"
-                  checked={form.gender === "Female"}
-                  onChange={handleInputChange}
-                />
-                <label className="form-check-label" htmlFor="female">Female</label>
-              </div>
+            <div className="d-flex align-items-center gap-3">
+              {["Male", "Female"].map((g) => (
+                <div key={g} className="form-check">
+                  <input
+                    className="form-check-input"
+                    type="radio"
+                    name="gender"
+                    id={g.toLowerCase()}
+                    value={g}
+                    checked={form.gender === g}
+                    onChange={handleInputChange}
+                  />
+                  <label className="form-check-label" htmlFor={g.toLowerCase()}>{g}</label>
+                </div>
+              ))}
             </div>
+            {errors.gender && <div className="text-danger">{errors.gender}</div>}
           </div>
 
-          {/* contact number */}
-					<div className="col-md-6">
-						<label className="form-label">Contact Number</label>
-						<input type="tel" className="form-control" name="contactnumber" value={form.contactnumber} onChange={handleInputChange} placeholder="Enter contact number" required />
-					</div>
-
-          {/* DOB */}
-          <div className="col-md-6">
-            <label className="form-label">Date of Birth</label>
-            <input
-              type="date"
-              className="form-control"
-              name="dob"
-              value={form.dob}
-              onChange={handleInputChange}
-              required
-            />
-          </div>
-
-          {/* Nationality */}
+          {renderField("Contact Number", "contactnumber", "tel", "col-md-6", "Enter contact number")}
+          {renderField("Date of Birth", "dob", "date", "col-md-6")}
           <div className="col-md-6">
             <label className="form-label">Nationality</label>
             <select
@@ -212,69 +190,20 @@ export default function Register() {
             >
               <option value="">-- Select Nationality --</option>
               {nationalities.map((nation, idx) => (
-                <option key={idx} value={nation}>
-                  {nation}
-                </option>
+                <option key={idx} value={nation}>{nation}</option>
               ))}
             </select>
+            {errors.nationality && <div className="text-danger">{errors.nationality}</div>}
           </div>
-
-          {/* Password */}
-          <div className="col-md-6">
-            <label className="form-label">Password</label>
-            <input
-              type="password"
-              className="form-control"
-              name="password"
-              value={form.password}
-              onChange={handleInputChange}
-              placeholder="Enter password"
-              required
-            />
-          </div>
+          {renderField("Password", "password", "password", "col-md-6", "Enter password")}
 
           <h5 className="pt-4">Mailing Address</h5>
-          <div className="col-12">
-            <label className="form-label">Address</label>
-            <input
-              type="text"
-              className="form-control"
-              name="address"
-              value={form.address}
-              onChange={handleInputChange}
-              placeholder="Enter address"
-              required
-            />
-          </div>
-          <div className="col-md-6">
-            <label className="form-label">Postal Code</label>
-            <input
-              type="text"
-              className="form-control"
-              name="postalcode"
-              value={form.postalcode}
-              onChange={handleInputChange}
-              placeholder="Enter postal code"
-              required
-            />
-          </div>
-          <div className="col-md-6">
-            <label className="form-label">Unit Number</label>
-            <input
-              type="text"
-              className="form-control"
-              name="unitnumber"
-              value={form.unitnumber}
-              onChange={handleInputChange}
-              placeholder="Enter unit number"
-              required
-            />
-          </div>
+          {renderField("Address", "address", "text", "col-12", "Enter address")}
+          {renderField("Postal Code", "postalcode", "text", "col-md-6", "Enter postal code")}
+          {renderField("Unit Number", "unitnumber", "text", "col-md-6", "Enter unit number")}
 
           <div className="col-12 pt-4">
-            <button type="submit" className="btn btn-primary w-100">
-              Register
-            </button>
+            <button type="submit" className="btn btn-primary w-100">Register</button>
           </div>
         </div>
       </form>

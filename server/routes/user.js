@@ -17,6 +17,8 @@ const rateLimit = require("express-rate-limit");
 const axios = require('axios');
 //for 2FA
 const speakeasy = require('speakeasy');
+//for server side validation
+const validator = require("validator");
 
 
 // Generate 2FA secret for new user
@@ -267,6 +269,65 @@ router.post("/register", registerLimiter, async (req, res) => {
 	if (!isValid){return res.status(400).json({ error: "recaptcha register failed" });}
 	console.log("recaptcha register verficication passed");
 
+	//server side validation of the user input from the form
+	const errors = {};
+
+	if (!username || username.length < 4 || !/^[a-zA-Z0-9_]+$/.test(username)) {
+		errors.username = "Username must be at least 4 characters and contain only letters, numbers, and underscores";
+	}
+
+	if (!fullname || fullname.length < 2 || !/^[a-zA-Z\s]+$/.test(fullname)) {
+		errors.fullname = "Full name must contain only letters and spaces";
+	}
+
+	if (!email || !validator.isEmail(email)) {
+		errors.email = "Invalid email format";
+	}
+
+	if (!password || password.length < 8 ) {
+		errors.password = "Password must be 8+ characters ";
+	}
+
+	if (!contactnumber || !/^\+?\d{8,15}$/.test(contactnumber)) {
+		errors.contactnumber = "Invalid contact number";
+	}
+
+	if (!nric || !/^[STFG]\d{7}[A-Z]$/.test(nric)) {
+		errors.nric = "Invalid NRIC format (Valid NRIC format e.g. S1234567A)";
+	}
+
+	if (!dob || isNaN(new Date(dob))) {
+		errors.dob = "Invalid date of birth";
+	} else {
+		const age = new Date().getFullYear() - new Date(dob).getFullYear();
+		if (age < 18) errors.dob = "You must be at least 18 years old";
+	}
+
+	if (!nationality) {
+		errors.nationality = "Nationality is required";
+	}
+
+	if (!address || address.length < 5) {
+		errors.address = "Address must be at least 5 characters";
+	}
+
+	if (!gender || !["Male", "Female"].includes(gender)) {
+		errors.gender = "Gender must be Male or Female";
+	}
+
+	if (!postalcode || !/^\d{6}$/.test(postalcode)) {
+		errors.postalcode = "Postal code must be 6 digits";
+	}
+
+	if (!unitnumber || unitnumber.length < 1) {
+		errors.unitnumber = "Unit number is required";
+	}
+
+	if (Object.keys(errors).length > 0) {
+		console.log("Server validation failed for register user input form" ,errors )
+		return res.status(400).json({ success: false, message: "Validation failed", errors });
+	}
+
 	//check the necessary db stuff and return if smtg goes wrong 
 	//check duplicate email duplicate ic
 	const [emailCheck] = await db.query(
@@ -274,6 +335,7 @@ router.post("/register", registerLimiter, async (req, res) => {
 		[email]
 	  );	  
 	if (emailCheck.length > 0) {
+		console.log(" duplicate email");
 		return res.status(400).json({ error: "Email already exists" });
 	}
 	console.log("no duplicate email");
@@ -282,7 +344,8 @@ router.post("/register", registerLimiter, async (req, res) => {
 		[nric]
 	  );
 	if (nricCheck.length > 0) {
-	return res.status(400).json({ error: "NRIC already exists" });
+		console.log(" duplicate ic");
+		return res.status(400).json({ error: "NRIC already exists" });
 	}
 	console.log("no duplicate ic");
 
