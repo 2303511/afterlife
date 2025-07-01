@@ -232,6 +232,7 @@ async function getUserRole(userID) {
 			WHERE u.userID = ?
 		`, [userID]);
 		return role[0].roleName; 
+
 	} catch (error) {
 		console.error("Error fetching role:", error);
 		throw error;
@@ -241,8 +242,8 @@ async function getUserRole(userID) {
 // Register
 router.post("/register", registerLimiter, async (req, res) => {
 	console.log("Register User");
-	
-    const {
+
+	const {
 		email,
 		password,
 		username,
@@ -328,28 +329,35 @@ router.post("/register", registerLimiter, async (req, res) => {
 		return res.status(400).json({ success: false, message: "Validation failed", errors });
 	}
 
-	//check the necessary db stuff and return if smtg goes wrong 
-	//check duplicate email duplicate ic
-	const [emailCheck] = await db.query(
-		"SELECT email FROM User WHERE email = ?",
-		[email]
-	  );	  
-	if (emailCheck.length > 0) {
-		console.log(" duplicate email");
-		return res.status(400).json({ error: "Email already exists" });
+	// validate before trying
+	const validationError = validateRegisterPayload(req.body);
+	if (validationError) {
+		return res.status(400).json({ error: validationError });
 	}
-	console.log("no duplicate email");
-	const [nricCheck] = await db.query(
-		"SELECT nric FROM User WHERE nric = ?",
-		[nric]
-	  );
-	if (nricCheck.length > 0) {
-		console.log(" duplicate ic");
-		return res.status(400).json({ error: "NRIC already exists" });
-	}
-	console.log("no duplicate ic");
 
 	try {
+		// Check for duplicates
+		const [existingUsers] = await db.query(
+			`SELECT username, email, contactNumber FROM User 
+				 WHERE username = ? OR email = ? OR contactNumber = ?`,
+			[username, email, contactnumber]
+		);
+
+		if (existingUsers.length > 0) {
+			const existing = existingUsers[0];
+
+			if (existing.username === username) {
+				return res.status(409).json({ error: "Username is already taken." });
+			}
+			if (existing.email === email) {
+				return res.status(409).json({ error: "Email is already registered." });
+			}
+			if (existing.contactNumber === contactnumber) {
+				return res.status(409).json({ error: "Contact number is already in use." });
+			}
+		}
+
+		// Generate UUID for userID
 		const userID = uuidv4();
 		const salt = await bcrypt.genSalt(10);
 		const hashedPassword = await bcrypt.hash(password, salt);
@@ -474,6 +482,9 @@ router.post("/login", loginLimiter, async (req, res) => {
 			});
 		}
 		console.log("s - destorying old session once password match");
+		
+		// save latest login time
+		await db.query(`UPDATE User SET lastLogin = NOW() WHERE userID = ?`, [user.userID]);
 
 		//if all the password and email matches , check if 2fa setup 
 		//if not setup then redirect to setup page 
@@ -663,8 +674,8 @@ router.post("/getUserByNRIC", ensureAuth, ensureRole(["admin"]), async (req, res
 	try {
 		const [user] = await db.query("SELECT * FROM User WHERE nric = ?", [userNRIC]);
 		if (user.length === 0) return res.status(404).json({ message: `User with NRIC ${userNRIC} not found` });
-		
-		res.json(user[0]);
+
+		res.json(user[0]); // return user details
 	} catch (err) {
 		console.error(err);
 		res.status(500).json({ error: `Failed to fetch user with ID ${userNRIC}` });
@@ -692,12 +703,197 @@ router.post("/logout", ensureAuth, async (req, res) => {
 	});
 });
 
+// Edit account
+router.post("/edit_account", async (req, res) => {
+	const userID = req.session.userID;
+	if (!userID) {
+		return res.status(401).json({ error: "Unauthorized: Not logged in" });
+	}
+
+	const { username, fullName, email, contactNumber, userAddress } = req.body;
+	const connection = await db.getConnection();
+
+	try {
+		await connection.beginTransaction();
+
+		// Check if email or username is taken by others
+		if (email) {
+			const [emailRows] = await connection.query(
+				"SELECT userID FROM User WHERE email = ? AND userID <> ?",
+				[email, userID]);
+			if (emailRows.length > 0) {
+				await connection.rollback();
+				return res.status(400).json({ error: "Email already in use" });
+			}
+		}
+
+		// Update only the fields provided
+		const fields = [];
+		const values = [];
+
+		if (username) {
+			fields.push("username = ?");
+			values.push(username);
+		}
+		if (fullName) {
+			fields.push("fullName = ?");
+			values.push(fullName);
+		}
+		if (email) {
+			fields.push("email = ?");
+			values.push(email);
+		}
+		if (contactNumber) {
+			fields.push("contactNumber = ?");
+			values.push(contactNumber);
+		}
+		if (userAddress) {
+			fields.push("userAddress = ?");
+			values.push(userAddress);
+		}
+
+		if (fields.length === 0) {
+			await connection.rollback();
+			return res.status(400).json({ error: "No fields to update" });
+		}
+
+		values.push(userID);
+		const sql = `UPDATE User SET ${fields.join(", ")} WHERE userID = ?`;
+		await connection.query(sql, values);
+
+		await connection.commit();
+		console.log("Account details updated successfully");
+		res.json({ message: "Account details updated successfully" });
+	} catch (err) {
+		await connection.rollback();
+		console.error("Edit account error:", err);
+		res.status(500).json({ error: "Failed to update account details" });
+	} finally {
+		connection.release();
+	}
+});
+
+router.post("/change_password", async (req, res) => {
+	const userID = req.session.userID;
+	if (!userID) {
+		return res.status(401).json({ error: "Unauthorized: Not logged in" });
+	}
+
+	const { oldPassword, newPassword } = req.body;
+	if (!oldPassword || !newPassword) {
+	return res
+		.status(400)
+		.json({ error: "Old password and new password are required" });
+	}
+
+	const connection = await db.getConnection();
+	try {
+		await connection.beginTransaction();
+
+		const [rows] = await connection.query(
+			"SELECT salt, hashedPassword FROM User WHERE userID = ?",
+			[userID]
+		);
+		if (rows.length === 0) {
+			await connection.rollback();
+			return res.status(404).json({ error: "User not found" });
+		}
+		const user = rows[0];
+
+		// check old password
+		const hashedOldInput = await bcrypt.hash(oldPassword, user.salt);
+		if (hashedOldInput !== user.hashedPassword) {
+			await connection.rollback();
+			return res.status(401).json({ error: "Old password is incorrect" });
+		}
+
+		// check if new is same as old password
+		if (oldPassword === newPassword) {
+			return res
+			.status(400)
+			.json({ error: "New password cannot be the same as the old password" });
+		}
+
+		// hash new password
+		const saltRounds = 10;
+		const newSalt = await bcrypt.genSalt(saltRounds);
+		const hashedNewPassword = await bcrypt.hash(newPassword, newSalt);
+
+		// update password
+		await connection.query(
+			"UPDATE User SET salt = ?, hashedPassword = ? WHERE userID = ?",
+			[newSalt, hashedNewPassword, userID]
+		);
+
+		await connection.commit();
+		res.json({ message: "Password updated successfully" });
+	} catch (err) {
+		await connection.rollback();
+		console.error("Change password error:", err);
+		res.status(500).json({ error: "Failed to change password" });
+	} finally {
+		connection.release();
+	}
+});
+
+
 // Forget password
 router.post("/forget_password", async (req, res) => {
 	const { email } = req.body;
 
-	// TODO: implement secure reset-token flow
-	res.status(501).json({ error: "Not implemented" });
+	try {
+		const [userRow] = await db.query("SELECT * FROM User WHERE email = ?", [email]);
+		const user = userRow[0];
+
+		if (!user) {
+			return res.status(401).json({ error: "If that e-mail is registered, a reset link has been sent." });
+		}
+
+		const res = await axios.post('/api/email/sendResetPassword', {
+			to: email,
+			link: "replace this link with reset password link"
+		});
+
+
+	} catch (err) {
+		console.error(err);
+		res.status(500).json({ error: "Failed to send email" });
+	}
 });
 
+
+function validateRegisterPayload(payload) {
+	const {
+		email, password, username, fullname,
+		contactnumber, nric, dob, nationality,
+		address, gender, postalcode, unitnumber
+	} = payload;
+
+	const patterns = {
+		email: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+		nric: /^[STFG]\d{7}[A-Z]$/,
+		contactnumber: /^[89]\d{7}$/,
+		postalcode: /^\d{6}$/,
+		address: /^[A-Za-z0-9\s]+$/,
+		unitnumber: /^[A-Za-z0-9\-]+$/,
+	};
+
+	if (!email || !password || !username || !fullname ||
+		!contactnumber || !nric || !dob || !nationality ||
+		!address || !gender || !postalcode || !unitnumber) {
+		return "All fields are required.";
+	}
+
+	if (!patterns.email.test(email)) return "Invalid email format.";
+	if (!patterns.nric.test(nric)) return "Invalid NRIC format.";
+	if (!patterns.contactnumber.test(contactnumber)) return "Invalid contact number.";
+	if (!patterns.postalcode.test(postalcode)) return "Postal code must be 6 digits.";
+	if (!patterns.address.test(address)) return "Address contains invalid characters.";
+	if (!patterns.unitnumber.test(unitnumber)) return "Invalid unit number format.";
+
+	return null; // no error
+}
+
 module.exports = router;
+
+
