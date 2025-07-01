@@ -36,10 +36,10 @@ def fill_registration_form(driver, base_url, email):
     driver.get(f"{base_url}/register")
 
     # Fill fields
-    driver.find_element(By.NAME, "username").send_keys("TestUser")
-    driver.find_element(By.NAME, "email").send_keys(email)
-    driver.find_element(By.NAME, "fullname").send_keys("Test User")
-    driver.find_element(By.NAME, "contactnumber").send_keys("91234567")
+    driver.find_element(By.NAME, "username").send_keys("test100")
+    driver.find_element(By.NAME, "email").send_keys("test100@mail.com)
+    driver.find_element(By.NAME, "fullname").send_keys("test100")
+    driver.find_element(By.NAME, "contactnumber").send_keys("99999999")
     driver.find_element(By.NAME, "nric").send_keys("S1234567A")
 
     # Date of Birth: set via JS + dispatch both events so React picks it up
