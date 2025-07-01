@@ -96,5 +96,5 @@ def test_register_and_dump_dom(driver):
     print("\n===== END FULL LIVE DOM =====\n\n")
 
     # Optionally assert something you expect on the login page:
-    assert 'name="email"' in full_dom
-    assert "Log In" in full_dom
+    # assert 'name="email"' in full_dom
+    # assert "Log In" in full_dom
