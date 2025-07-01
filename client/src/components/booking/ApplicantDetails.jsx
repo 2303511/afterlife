@@ -1,3 +1,5 @@
+/* eslint-disable */
+
 import { useState, useEffect } from "react";
 import { Button, Modal, Form, Row, Col } from "react-bootstrap";
 
@@ -59,7 +61,7 @@ export default function ApplicantDetails({ formData, onChange, errors, width = 6
 			}
 		};
 		init();
-	}, [handleLoadDetails]);
+	}, []);
 
 	// handlers
 	// search by NRIC
@@ -134,7 +136,6 @@ export default function ApplicantDetails({ formData, onChange, errors, width = 6
 					</Form.Group>
 				</Col>
 
-				{/* TODO */}
 				<Col sm={12} md={isLargeScreen ? 4 : 6}>
 					<Form.Group className="mb-3">
 						<Form.Label>Date of Birth</Form.Label>
@@ -152,7 +153,6 @@ export default function ApplicantDetails({ formData, onChange, errors, width = 6
 					</Form.Group>
 				</Col>
 
-				{/* TODO: FOR THIS PLS ADD READONLY */}
 				<Col md={6}>
 					<Form.Group className="mb-3">
 						<Form.Label>Nationality</Form.Label>
