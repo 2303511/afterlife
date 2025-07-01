@@ -56,8 +56,7 @@ router.post("/register", async (req, res) => {
 		address,
 		gender,
 		postalcode, 
-		unitnumber,
-		roleID
+		unitnumber
 	} = req.body;
 
 	try {
@@ -139,8 +138,6 @@ router.post("/login", async (req, res) => {
 		
 		req.session.role = role === "Applicant" ? "user" : role.toLowerCase();
 
-		console.log("this is in login server, user id:", req.session.userID);
-
 		// save latest login time
 		await db.query(`UPDATE User SET lastLogin = NOW() WHERE userID = ?`, [user.userID]);
 		
@@ -199,6 +196,77 @@ router.post("/logout", (req, res) => {
 		return res.status(200).json({ message: "Logged out" });
 	});
 });
+
+// Edit account
+router.post("/edit_account", async (req, res) => {
+	const userID = req.session.userID;
+	if (!userID) {
+		return res.status(401).json({ error: "Unauthorized: Not logged in" });
+	}
+
+	const { username, fullName, email, contactNumber, userAddress } = req.body;
+	const connection = await db.getConnection();
+
+	try {
+		await connection.beginTransaction();
+
+		// Check if email or username is taken by others
+		if (email) {
+			const [emailRows] = await connection.query(
+				"SELECT userID FROM User WHERE email = ? AND userID <> ?",
+			[email, userID]);
+			if (emailRows.length > 0) {
+				await connection.rollback();
+				return res.status(400).json({ error: "Email already in use" });
+			}
+		}
+
+		// Update only the fields provided
+		const fields = [];
+		const values = [];
+
+		if (username) {
+			fields.push("username = ?");
+			values.push(username);
+		}
+		if (fullName) {
+			fields.push("fullName = ?");
+			values.push(fullName);
+		}
+		if (email) {
+			fields.push("email = ?");
+			values.push(email);
+		}
+		if (contactNumber) {
+			fields.push("contactNumber = ?");
+			values.push(contactNumber);
+		}
+		if (userAddress) {
+			fields.push("userAddress = ?");
+			values.push(userAddress);
+		}
+
+		if (fields.length === 0) {
+			await connection.rollback();
+			return res.status(400).json({ error: "No fields to update" });
+		}
+
+		values.push(userID);
+		const sql = `UPDATE User SET ${fields.join(", ")} WHERE userID = ?`;
+		await connection.query(sql, values);
+
+		await connection.commit();
+		console.log("Account details updated successfully");
+		res.json({ message: "Account details updated successfully" });
+	} catch (err) {
+		await connection.rollback();
+		console.error("Edit account error:", err);
+		res.status(500).json({ error: "Failed to update account details" });
+	} finally {
+		connection.release();
+	}
+});
+
 
 // Forget password
 router.post("/forget_password", async (req, res) => {

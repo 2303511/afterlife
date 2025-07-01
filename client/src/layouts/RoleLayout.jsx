@@ -24,8 +24,6 @@ export default function RoleLayout() {
     if (user === undefined) return null;  
     const role = user?.role;  
 
-    console.log("this is role (in rolelayout):", role);
-
     if (pathname === "/" && role === "user") {
         return <Navigate to="/my-bookings" replace />;
     }

@@ -3,7 +3,7 @@ import axios from "axios";
 
 export default function ForgetPasswordModal({ show, onClose }) {
     const [email, setEmail] = useState("");
-    const [status, setStatus] = useState(null);          // null | "ok" | "error"
+    const [status, setStatus] = useState(null);  // null | "ok" | "error"
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState("");  
 
