@@ -2,9 +2,9 @@ name: Selenium End-to-End Tests
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
   e2e:
@@ -13,10 +13,26 @@ jobs:
       BASE_URL: http://localhost
 
     steps:
-      - name: Check out repository
+      - name: Check out code
         uses: actions/checkout@v4
 
-      - name: Create .env for Docker Compose
+      # 1) Build your front end
+      - name: Install front-end dependencies
+        working-directory: client
+        run: |
+          npm ci
+          npm run build
+
+      # 2) Serve the built bundle on port 80
+      - name: Install and run static server
+        run: |
+          npm install -g serve wait-on
+          sudo serve -s client/build -l 80 &
+      - name: Wait for front-end to be ready
+        run: npx wait-on http://localhost/register
+
+      # 3) Start your back-end (Docker Compose)
+      - name: Create .env
         run: |
           cat > .env <<EOF
           DB_HOST=db
@@ -25,11 +41,10 @@ jobs:
           DB_NAME=${{ secrets.DB_NAME }}
           DB_ROOT_PASSWORD=${{ secrets.DB_ROOT_PASSWORD }}
           EOF
-
       - name: Start Docker Compose
-        run: |
-          docker compose up --build -d
-
+        run: docker compose up -d --build
+        
+      # 4) Install Chrome & Python for Selenium
       - name: Install Google Chrome
         run: |
           sudo apt-get update
@@ -41,14 +56,15 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y google-chrome-stable
 
-      - name: Setup Python & install test dependencies
+      - name: Setup Python & Selenium
         uses: actions/setup-python@v4
         with:
           python-version: '3.11'
-      - name: Install Selenium & Pytest
+      - name: Install test dependencies
         run: |
-          python -m pip install --upgrade pip
-          pip install selenium>=4.10.0 webdriver-manager>=4.0.0 pytest
+          pip install --upgrade pip
+          pip install selenium webdriver-manager pytest
 
+      # 5) Run your Selenium test
       - name: Run Selenium registration test
-        run: pytest tests/register_test.py -q -s --maxfail=1 --disable-warnings
+        run: pytest tests/register_test.py -q -s --maxfail=1
