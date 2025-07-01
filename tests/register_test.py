@@ -10,31 +10,6 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.support.ui import WebDriverWait
 from webdriver_manager.chrome import ChromeDriverManager
 
-# --- JS stub: force any XHR to /api/user/register to return 200+{success:true}
-STUB_SCRIPT = """
-(function() {
-  const origOpen = XMLHttpRequest.prototype.open;
-  const origSend = XMLHttpRequest.prototype.send;
-  XMLHttpRequest.prototype.open = function(method, url) {
-    this._url = url;
-    return origOpen.apply(this, arguments);
-  };
-  XMLHttpRequest.prototype.send = function(body) {
-    if (this._url && this._url.includes('/api/user/register')) {
-      setTimeout(() => {
-        this.readyState = 4;
-        this.status = 200;
-        this.responseText = JSON.stringify({ success: true });
-        this.onreadystatechange && this.onreadystatechange();
-        this.onload && this.onload({ target: this });
-      }, 0);
-      return;
-    }
-    return origSend.apply(this, arguments);
-  };
-})();
-"""
-
 @pytest.fixture(scope="session")
 def driver():
     opts = Options()
@@ -42,7 +17,6 @@ def driver():
     opts.add_argument("--no-sandbox")
     opts.add_argument("--disable-dev-shm-usage")
     opts.add_argument("--window-size=1920,1080")
-
     drv = webdriver.Chrome(
         service=Service(ChromeDriverManager().install()),
         options=opts
@@ -67,14 +41,13 @@ def fill_registration_form(driver, email):
     dob = driver.find_element(By.NAME, "dob")
     driver.execute_script("arguments[0].value = '2000-01-01';", dob)
     driver.execute_script("""
-      arguments[0].dispatchEvent(new Event('input',  { bubbles: true }));
+      arguments[0].dispatchEvent(new Event('input',{ bubbles: true }));
       arguments[0].dispatchEvent(new Event('change',{ bubbles: true }));
     """, dob)
 
     driver.find_element(By.NAME, "nationality").send_keys("Singaporean")
     driver.find_element(By.NAME, "address").send_keys("123 Example St")
 
-    # select “Male”
     male = driver.find_element(By.ID, "male")
     driver.execute_script("arguments[0].scrollIntoView()", male)
     male.click()
@@ -87,17 +60,14 @@ def test_register_redirects_to_login(driver):
     unique_email = generate_random_email()
     wait = WebDriverWait(driver, 15)
 
-    # 1) Load the SPA’s /register
+    # 1) Load your SPA's register page
     driver.get(f"{base_url}/register")
 
-    # 2) Inject our XHR stub (so we never actually hit a “real” API)
-    driver.execute_script(STUB_SCRIPT)
-
-    # 3) Fill & submit the form
+    # 2) Fill & submit the real form against your test backend
     fill_registration_form(driver, unique_email)
 
-    # 4) Wait for React to call history.push("/login")
+    # 3) Wait for the React client to redirect to /login
     wait.until(lambda d: d.execute_script("return window.location.pathname") == "/login")
 
-    # 5) Final sanity‐check
+    # 4) Final assertion
     assert "/login" in driver.current_url
