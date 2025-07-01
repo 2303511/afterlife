@@ -37,7 +37,7 @@ jobs:
         working-directory: client
         run: npm install --save-dev msw identity-obj-proxy jq
 
-      - name: Patch package.json for Jest config
+      - name: Patch package.json for Jest
         working-directory: client
         run: |
           jq '. + {
@@ -47,13 +47,12 @@ jobs:
               ],
               "moduleNameMapper": {
                 "\\\\.(css|less|scss|sass)$": "identity-obj-proxy"
-              },
-              "setupFilesAfterEnv": ["<rootDir>/src/setupTests.js"]
+              }
             }
           }' package.json > package.tmp.json
           mv package.tmp.json package.json
 
-      - name: Create src/setupTests.js for polyfills
+      - name: Ensure src/setupTests.js for polyfills
         working-directory: client
         run: |
           mkdir -p src
