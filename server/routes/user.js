@@ -329,12 +329,6 @@ router.post("/register", registerLimiter, async (req, res) => {
 		return res.status(400).json({ success: false, message: "Validation failed", errors });
 	}
 
-	// validate before trying
-	const validationError = validateRegisterPayload(req.body);
-	if (validationError) {
-		return res.status(400).json({ error: validationError });
-	}
-
 	try {
 		// Check for duplicates
 		const [existingUsers] = await db.query(
@@ -356,7 +350,7 @@ router.post("/register", registerLimiter, async (req, res) => {
 				return res.status(409).json({ error: "Contact number is already in use." });
 			}
 		}
-
+		
 		// Generate UUID for userID
 		const userID = uuidv4();
 		const salt = await bcrypt.genSalt(10);
@@ -860,39 +854,6 @@ router.post("/forget_password", async (req, res) => {
 		res.status(500).json({ error: "Failed to send email" });
 	}
 });
-
-
-function validateRegisterPayload(payload) {
-	const {
-		email, password, username, fullname,
-		contactnumber, nric, dob, nationality,
-		address, gender, postalcode, unitnumber
-	} = payload;
-
-	const patterns = {
-		email: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-		nric: /^[STFG]\d{7}[A-Z]$/,
-		contactnumber: /^[89]\d{7}$/,
-		postalcode: /^\d{6}$/,
-		address: /^[A-Za-z0-9\s]+$/,
-		unitnumber: /^[A-Za-z0-9\-]+$/,
-	};
-
-	if (!email || !password || !username || !fullname ||
-		!contactnumber || !nric || !dob || !nationality ||
-		!address || !gender || !postalcode || !unitnumber) {
-		return "All fields are required.";
-	}
-
-	if (!patterns.email.test(email)) return "Invalid email format.";
-	if (!patterns.nric.test(nric)) return "Invalid NRIC format.";
-	if (!patterns.contactnumber.test(contactnumber)) return "Invalid contact number.";
-	if (!patterns.postalcode.test(postalcode)) return "Postal code must be 6 digits.";
-	if (!patterns.address.test(address)) return "Address contains invalid characters.";
-	if (!patterns.unitnumber.test(unitnumber)) return "Invalid unit number format.";
-
-	return null; // no error
-}
 
 module.exports = router;
 
