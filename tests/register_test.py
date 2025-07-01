@@ -64,9 +64,18 @@ def test_register_redirects_to_login(driver):
     fill_registration_form(driver, base_url, unique_email)
 
     # 2) Dump the full page source for debugging
-    print("\n\n===== PAGE SOURCE AFTER REGISTRATION SUBMIT =====\n")
-    print(driver.page_source)
-    print("\n===== END PAGE SOURCE =====\n\n")
+   
+    # 1) Submit registration
+    fill_registration_form(driver, base_url, unique_email)
+
+    # 2) Wait for a login‐page element (the <h2> heading)
+    wait.until(EC.visibility_of_element_located((By.XPATH, "//h2[text()='Login']")))
+
+    # 3) Now dump the **live** DOM
+    full_html = driver.find_element(By.TAG_NAME, "html").get_attribute("outerHTML")
+    print("\n\n===== LIVE DOM (with Login form) =====\n")
+    print(full_html)
+    print("\n===== END LIVE DOM =====\n\n")
 
     # 3) Wait for the React client to redirect to /login
     # wait.until(lambda d: d.execute_script("return window.location.pathname") == "/login")
