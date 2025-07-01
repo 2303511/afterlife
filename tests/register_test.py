@@ -57,17 +57,16 @@ def fill_registration_form(driver, email):
 
 def test_register_redirects_to_login(driver):
     base_url = os.getenv("BASE_URL", "http://localhost")
-    unique_email = generate_random_email()
+    email = generate_random_email()
     wait = WebDriverWait(driver, 15)
 
-    # 1) Load your SPA's register page
     driver.get(f"{base_url}/register")
+    fill_registration_form(driver, email)
 
-    # 2) Fill & submit the real form against your test backend
-    fill_registration_form(driver, unique_email)
+    # Dump any console errors
+    for entry in driver.get_log("browser"):
+        print(entry)
 
-    # 3) Wait for the React client to redirect to /login
+    # Now wait for redirect
     wait.until(lambda d: d.execute_script("return window.location.pathname") == "/login")
-
-    # 4) Final assertion
     assert "/login" in driver.current_url
