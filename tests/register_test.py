@@ -11,16 +11,15 @@ from selenium.webdriver.support import expected_conditions as EC
 from webdriver_manager.chrome import ChromeDriverManager
 
 def generate_random_email():
-    return "ci_user_" + ''.join(
+    return "testuser_" + ''.join(
         random.choices(string.ascii_lowercase + string.digits, k=6)
     ) + "@example.com"
 
 @pytest.mark.selenium
 def test_register_up_to_2fa():
-    # allow overriding in CI via env
     base = os.getenv("BASE_URL", "http://localhost")
     register_url = f"{base}/register"
-    
+
     options = Options()
     options.add_argument("--headless")
     options.add_argument("--no-sandbox")
@@ -32,7 +31,7 @@ def test_register_up_to_2fa():
     wait = WebDriverWait(driver, 10)
 
     try:
-        # 1) stub grecaptcha so recaptchaLoaded becomes true immediately
+        # Stub grecaptcha so your form always renders
         driver.get("about:blank")
         driver.execute_script("""
             window.grecaptcha = {
@@ -41,34 +40,81 @@ def test_register_up_to_2fa():
             };
         """)
 
-        # 2) load the real register page
         driver.get(register_url)
 
-        # 3) fill out every field, waiting for it to appear
-        wait.until(EC.presence_of_element_located((By.NAME, "username"))).send_keys("ci_user")
-        wait.until(EC.presence_of_element_located((By.NAME, "fullname"))).send_keys("CI User")
-        wait.until(EC.presence_of_element_located((By.NAME, "email"))).send_keys(generate_random_email())
-        wait.until(EC.presence_of_element_located((By.NAME, "nric"))).send_keys("S1234567A")
+        # username
+        el = wait.until(EC.presence_of_element_located((By.NAME, "username")))
+        print("Found field:", el.get_attribute("name"))
+        el.send_keys("ci_user")
 
-        # gender radio buttons
+        # fullname
+        el = wait.until(EC.presence_of_element_located((By.NAME, "fullname")))
+        print("Found field:", el.get_attribute("name"))
+        el.send_keys("CI User")
+
+        # email
+        el = wait.until(EC.presence_of_element_located((By.NAME, "email")))
+        print("Found field:", el.get_attribute("name"))
+        el.send_keys(generate_random_email())
+
+        # nric
+        el = wait.until(EC.presence_of_element_located((By.NAME, "nric")))
+        print("Found field:", el.get_attribute("name"))
+        el.send_keys("S1234567A")
+
+        # gender radio
         male = wait.until(EC.element_to_be_clickable((By.ID, "male")))
+        print("Found radio with id:", male.get_attribute("id"))
         driver.execute_script("arguments[0].scrollIntoView()", male)
         male.click()
 
-        wait.until(EC.presence_of_element_located((By.NAME, "contactnumber"))).send_keys("91234567")
-        wait.until(EC.presence_of_element_located((By.NAME, "dob"))).send_keys("2000-01-01")
-        wait.until(EC.presence_of_element_located((By.NAME, "nationality"))).send_keys("Singaporean")
-        wait.until(EC.presence_of_element_located((By.NAME, "password"))).send_keys("TestPassword123")
-        wait.until(EC.presence_of_element_located((By.NAME, "address"))).send_keys("123 Example St")
+        # contactnumber
+        el = wait.until(EC.presence_of_element_located((By.NAME, "contactnumber")))
+        print("Found field:", el.get_attribute("name"))
+        el.send_keys("91234567")
 
-        # your Register.jsx uses name="postalcode" and name="unitnumber" :contentReference[oaicite:1]{index=1}
-        wait.until(EC.presence_of_element_located((By.NAME, "postalcode"))).send_keys("123456")
-        wait.until(EC.presence_of_element_located((By.NAME, "unitnumber"))).send_keys("#01-01")
+        # dob
+        el = wait.until(EC.presence_of_element_located((By.NAME, "dob")))
+        print("Found field:", el.get_attribute("name"))
+        el.send_keys("2000-01-01")
 
-        # 4) submit and wait for redirect → /setup-2fa
-        driver.find_element(By.CSS_SELECTOR, "button[type='submit']").click()
+        # nationality
+        el = wait.until(EC.presence_of_element_located((By.NAME, "nationality")))
+        print("Found field:", el.get_attribute("name"))
+        el.send_keys("Singaporean")
+
+        # password
+        el = wait.until(EC.presence_of_element_located((By.NAME, "password")))
+        print("Found field:", el.get_attribute("name"))
+        el.send_keys("TestPassword123")
+
+        # address
+        el = wait.until(EC.presence_of_element_located((By.NAME, "address")))
+        print("Found field:", el.get_attribute("name"))
+        el.send_keys("123 Example St")
+
+        # Before postalcode, dump all input names on the page
+        inputs = driver.find_elements(By.TAG_NAME, "input")
+        names = [i.get_attribute("name") or i.get_attribute("id") for i in inputs]
+        print("All input elements found:", names)
+
+        # postalcode
+        el = wait.until(EC.presence_of_element_located((By.NAME, "postalcode")))
+        print("Found field:", el.get_attribute("name"))
+        el.send_keys("123456")
+
+        # unitnumber
+        el = wait.until(EC.presence_of_element_located((By.NAME, "unitnumber")))
+        print("Found field:", el.get_attribute("name"))
+        el.send_keys("#01-01")
+
+        # submit and wait for redirect
+        btn = driver.find_element(By.CSS_SELECTOR, "button[type='submit']")
+        print("Clicking submit button")
+        btn.click()
+
         wait.until(EC.url_contains("/setup-2fa"))
-
+        print("Redirected to:", driver.current_url)
         assert "/setup-2fa" in driver.current_url
 
     finally:
