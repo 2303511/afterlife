@@ -33,26 +33,30 @@ jobs:
         working-directory: client
         run: npm ci
 
-      - name: Install MSW (Mock Service Worker)
+      - name: Install testing dependencies
         working-directory: client
-        run: npm install --save-dev msw
+        run: npm install --save-dev msw identity-obj-proxy
 
-      - name: Install jq for JSON patching
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y jq
-
-      - name: Patch package.json to transform ESM modules
+      - name: Add Jest config and setup file
         working-directory: client
         run: |
-          jq '. + {
-            jest: {
-              transformIgnorePatterns: [
-                "node_modules/(?!(axios|msw|@mswjs|@bundled-es-modules)/)"
-              ]
-            }
-          }' package.json > package.tmp.json
-          mv package.tmp.json package.json
+          cat > jest.config.js << 'EOF'
+          module.exports = {
+            testEnvironment: 'jsdom',
+            transformIgnorePatterns: [
+              "node_modules/(?!(axios|msw|@mswjs|@bundled-es-modules)/)"
+            ],
+            moduleNameMapper: {
+              '\\.(css|less|scss|sass)$': 'identity-obj-proxy'
+            },
+            setupFiles: ['<rootDir>/jest.setup.js']
+          };
+          EOF
+          cat > jest.setup.js << 'EOF'
+          const { TextEncoder, TextDecoder } = require('util');
+          global.TextEncoder = TextEncoder;
+          global.TextDecoder = TextDecoder;
+          EOF
 
       - name: Run Jest unit tests
         working-directory: client
