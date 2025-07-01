@@ -2,22 +2,16 @@ import React from 'react'
 import '@testing-library/jest-dom'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { MemoryRouter, Routes, Route } from 'react-router-dom'
-import { rest } from 'msw'
-import { setupServer } from 'msw/node'
+import axios from 'axios'
 import Register from '../Register'
 
-// --- Mock the register API
-const server = setupServer(
-  rest.post('/api/user/register', (req, res, ctx) => {
-    return res(ctx.status(200), ctx.json({ success: true }))
-  })
-)
+// 1) Mock axios.post
+jest.mock('axios')
 
-beforeAll(() => server.listen())
-afterEach(() => server.resetHandlers())
-afterAll(() => server.close())
+test('fills register form and navigates to /login on success', async () => {
+  // Stub the POST to return success
+  axios.post.mockResolvedValue({ data: { success: true } })
 
-test('fills out register form and redirects to /login', async () => {
   render(
     <MemoryRouter initialEntries={['/register']}>
       <Routes>
@@ -27,7 +21,7 @@ test('fills out register form and redirects to /login', async () => {
     </MemoryRouter>
   )
 
-  // fill each field
+  // Fill out the form
   fireEvent.change(screen.getByLabelText(/^Username$/i), {
     target: { value: 'test100' }
   })
@@ -52,18 +46,15 @@ test('fills out register form and redirects to /login', async () => {
   fireEvent.change(screen.getByLabelText(/^Address$/i), {
     target: { value: '123 Example St' }
   })
-
-  // select gender
   fireEvent.click(screen.getByLabelText(/^Male$/i))
-
   fireEvent.change(screen.getByLabelText(/^Password$/i), {
     target: { value: 'SecurePass123!' }
   })
 
-  // submit
+  // Submit
   fireEvent.click(screen.getByRole('button', { name: /register$/i }))
 
-  // wait for the fake LOGIN PAGE to render
+  // Wait for our fake LOGIN PAGE
   await waitFor(() => {
     expect(screen.getByText('LOGIN PAGE')).toBeInTheDocument()
   })
