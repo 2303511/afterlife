@@ -31,9 +31,6 @@ def generate_random_email():
 def fill_registration_form(driver, base_url, email):
     driver.get(f"{base_url}/register")
 
-    # 1) Inject stub after loading /register
-    driver.execute_script(STUB_SCRIPT)
-
     # 2) Fill out and submit the form once
     driver.find_element(By.NAME, "username").send_keys("test100")
     driver.find_element(By.NAME, "email").send_keys(email)
@@ -70,6 +67,5 @@ def test_register_and_dump_dom(driver):
     print(full_dom)
     print("\n===== END FULL LIVE DOM =====\n\n")
 
-    # Optionally assert something you expect on the login page:
-    # assert 'name="email"' in full_dom
-    # assert "Log In" in full_dom
+    assert "/login" in driver.current_url
+    assert driver.find_element(By.NAME, "email").is_displayed()
