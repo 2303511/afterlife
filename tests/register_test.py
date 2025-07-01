@@ -80,7 +80,7 @@ def fill_registration_form(driver, base_url, email):
     driver.find_element(By.CSS_SELECTOR, "button[type='submit']").click()
 
 def test_register_and_dump_dom(driver):
-    base_url = os.getenv("BASE_URL", "http://localhost")
+    base_url = os.getenv("BASE_URL", "http://localhost:8080")
     unique_email = generate_random_email()
 
     # Fill & submit exactly once
