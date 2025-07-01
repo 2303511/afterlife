@@ -17,11 +17,11 @@ def generate_random_email():
 
 @pytest.mark.selenium
 def test_register_up_to_2fa():
-    # 1) Base URL
+    # 1) Base URL (defaults to http://localhost on port 80)
     base = os.getenv("BASE_URL", "http://localhost")
     register_url = f"{base}/register"
 
-    # 2) Headless Chrome
+    # 2) Headless Chrome setup
     opts = Options()
     opts.add_argument("--headless")
     opts.add_argument("--no-sandbox")
@@ -34,7 +34,7 @@ def test_register_up_to_2fa():
     wait = WebDriverWait(driver, 15)
 
     try:
-        # Stub reCAPTCHA
+        # 3) Stub reCAPTCHA so form renders immediately
         driver.get("about:blank")
         driver.execute_script("""
           window.grecaptcha = {
@@ -43,10 +43,10 @@ def test_register_up_to_2fa():
           };
         """)
 
-        # Go to register page
+        # 4) Navigate to the registration page
         driver.get(register_url)
 
-        # Wait for the first field to show up (React mount)
+        # 5) Wait for React to mount the first input
         wait.until(EC.presence_of_element_located((By.NAME, "username")))
 
         # --- Personal Details ---
@@ -65,22 +65,19 @@ def test_register_up_to_2fa():
         driver.find_element(By.NAME, "password").send_keys("TestPassword123")
 
         # --- Mailing Address ---
-        # ensure section mounted by waiting for its header
-        wait.until(EC.presence_of_element_located(
-            (By.XPATH, "//h5[contains(text(),'Mailing Address')]")
-        ))
-
         driver.find_element(By.NAME, "address").send_keys("123 Example St")
 
-        postal = driver.find_element(By.NAME, "postalcode")
+        # Directly wait for the postalcode input by name
+        postal = wait.until(EC.presence_of_element_located((By.NAME, "postalcode")))
         driver.execute_script("arguments[0].scrollIntoView()", postal)
         postal.send_keys("123456")
 
-        unit = driver.find_element(By.NAME, "unitnumber")
+        # Directly wait for the unitnumber input by name
+        unit = wait.until(EC.presence_of_element_located((By.NAME, "unitnumber")))
         driver.execute_script("arguments[0].scrollIntoView()", unit)
         unit.send_keys("#01-01")
 
-        # Submit and verify redirect
+        # --- Submit and verify redirect to 2FA setup ---
         driver.find_element(By.CSS_SELECTOR, "button[type='submit']").click()
         wait.until(EC.url_contains("/setup-2fa"))
         assert "/setup-2fa" in driver.current_url
