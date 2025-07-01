@@ -49,6 +49,6 @@ jobs:
 
       - name: Run Selenium & Unit Tests
         env:
-          BASE_URL: http://localhost:3000
+          BASE_URL: http://localhost
         run: |
           pytest -q --maxfail=1 --disable-warnings
