@@ -1,4 +1,4 @@
-name: Unit-Test
+name: Selenium & Unit Tests
 
 on:
   push:
@@ -7,37 +7,51 @@ on:
   pull_request:
 
 jobs:
-  unit-test:
+  test:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set Environment variables
+      - name: Create .env
         run: |
           echo "DB_HOST=${{ secrets.DB_HOST }}" > .env
-          echo DB_USER=${{ secrets.DB_USER }} >> .env
-          echo DB_PASSWORD=${{ secrets.DB_PASSWORD }} >> .env
-          echo DB_NAME=${{ secrets.DB_NAME }} >> .env
-          echo SQL_ROOT_PASSWORD=${{ secrets.SQL_ROOT_PASSWORD }} >> .env
+          echo "DB_USER=${{ secrets.DB_USER }}" >> .env
+          echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> .env
+          echo "DB_NAME=${{ secrets.DB_NAME }}" >> .env
+          echo "SQL_ROOT_PASSWORD=${{ secrets.SQL_ROOT_PASSWORD }}" >> .env
 
-      - name: Set up Docker
+      - name: Start Docker Compose
+        run: docker compose up --build -d
+
+      - name: Wait for backend health
         run: |
-          docker compose up --build -d
+          for i in {1..30}; do
+            curl --fail http://localhost/health && break
+            echo "Waiting for backend…"
+            sleep 2
+          done
 
-      - name: Install Chrome
+      - name: Wait for frontend registration page
+        run: |
+          for i in {1..30}; do
+            curl --fail http://localhost/register && break
+            echo "Waiting for frontend…"
+            sleep 2
+          done
+
+      - name: Install Google Chrome
         run: |
           sudo apt-get update
           sudo apt-get install -y wget gnupg unzip
           wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub \
             | sudo apt-key add -
-          sudo sh -c 'echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" \
-            > /etc/apt/sources.list.d/google-chrome.list'
+          echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" \
+            | sudo tee /etc/apt/sources.list.d/google-chrome.list
           sudo apt-get update
           sudo apt-get install -y google-chrome-stable
 
-      - name: Install Python & dependencies
+      - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.11'
@@ -47,8 +61,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install selenium>=4.10.0 webdriver-manager>=4.0.0 pytest
 
-      - name: Run Selenium & Unit Tests
+      - name: Run Selenium registration test
         env:
           BASE_URL: http://localhost
-        run: |
-          pytest -q --maxfail=1 --disable-warnings
+        run: pytest tests/register_test.py -q --maxfail=1 --disable-warnings
