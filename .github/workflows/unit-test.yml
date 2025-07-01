@@ -1,38 +1,68 @@
-name: Frontend Unit Tests
+name: Selenium End-to-End Tests
 
 on:
   push:
-    branches:
-      - main
+    branches: [ main ]
   pull_request:
-    branches:
-      - main
+    branches: [ main ]
 
 jobs:
-  test:
+  e2e:
     runs-on: ubuntu-latest
+    env:
+      BASE_URL: http://localhost
 
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
 
-      - name: Use Node.js 18
-        uses: actions/setup-node@v4
+      - name: Create .env for Docker Compose
+        run: |
+          cat > .env <<EOF
+          DB_HOST=db
+          DB_USER=${{ secrets.DB_USER }}
+          DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+          DB_NAME=${{ secrets.DB_NAME }}
+          DB_ROOT_PASSWORD=${{ secrets.DB_ROOT_PASSWORD }}
+          EOF
+
+      - name: Start Docker Compose
+        run: |
+          docker compose up --build -d
+
+      - name: Wait for backend health-check
+        run: |
+          echo "Waiting for API…"
+          until curl -sf http://localhost/api/health; do
+            sleep 2
+          done
+
+      - name: Wait for frontend to serve /register
+        run: |
+          echo "Waiting for front-end…"
+          until curl -sf http://localhost/register; do
+            sleep 2
+          done
+
+      - name: Install Google Chrome
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y wget gnupg unzip
+          wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub \
+            | sudo apt-key add -
+          echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" \
+            | sudo tee /etc/apt/sources.list.d/google-chrome.list
+          sudo apt-get update
+          sudo apt-get install -y google-chrome-stable
+
+      - name: Setup Python & install test dependencies
+        uses: actions/setup-python@v4
         with:
-          node-version: '18'
+          python-version: '3.11'
+      - name: Install Selenium & Pytest
+        run: |
+          python -m pip install --upgrade pip
+          pip install selenium>=4.10.0 webdriver-manager>=4.0.0 pytest
 
-      - name: Cache npm dependencies
-        uses: actions/cache@v3
-        with:
-          path: client/node_modules
-          key: ${{ runner.os }}-node-${{ hashFiles('client/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
-
-      - name: Install dependencies
-        working-directory: client
-        run: npm ci
-
-      - name: Run only Register test
-        working-directory: client
-        run: npm test -- src/__tests__/Register.test.jsx -- --ci --coverage --watchAll=false
+      - name: Run Selenium registration test
+        run: pytest tests/register_test.py -q --maxfail=1 --disable-warnings
