@@ -35,27 +35,36 @@ jobs:
 
       - name: Install testing dependencies
         working-directory: client
-        run: npm install --save-dev msw identity-obj-proxy
+        run: npm install --save-dev msw identity-obj-proxy jq
 
-      - name: Add Jest config and setup file
+      - name: Patch package.json for Jest config
         working-directory: client
         run: |
-          cat > jest.config.js << 'EOF'
-          module.exports = {
-            testEnvironment: 'jsdom',
-            transformIgnorePatterns: [
-              "node_modules/(?!(axios|msw|@mswjs|@bundled-es-modules)/)"
-            ],
-            moduleNameMapper: {
-              '\\.(css|less|scss|sass)$': 'identity-obj-proxy'
-            },
-            setupFiles: ['<rootDir>/jest.setup.js']
-          };
-          EOF
-          cat > jest.setup.js << 'EOF'
+          jq '. + {
+            "jest": {
+              "transformIgnorePatterns": [
+                "node_modules/(?!(axios|msw|@mswjs|@bundled-es-modules)/)"
+              ],
+              "moduleNameMapper": {
+                "\\\\.(css|less|scss|sass)$": "identity-obj-proxy"
+              },
+              "setupFilesAfterEnv": ["<rootDir>/src/setupTests.js"]
+            }
+          }' package.json > package.tmp.json
+          mv package.tmp.json package.json
+
+      - name: Create src/setupTests.js for polyfills
+        working-directory: client
+        run: |
+          mkdir -p src
+          cat > src/setupTests.js << 'EOF'
+          // Polyfill TextEncoder / TextDecoder for MSW
           const { TextEncoder, TextDecoder } = require('util');
           global.TextEncoder = TextEncoder;
           global.TextDecoder = TextDecoder;
+
+          // Optional: extend jest-dom matchers
+          import '@testing-library/jest-dom';
           EOF
 
       - name: Run Jest unit tests
