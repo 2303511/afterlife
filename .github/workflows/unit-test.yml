@@ -51,4 +51,4 @@ jobs:
           pip install selenium>=4.10.0 webdriver-manager>=4.0.0 pytest
 
       - name: Run Selenium registration test
-        run: pytest tests/register_test.py -q --maxfail=1 --disable-warnings
+        run: pytest tests/register_test.py -q -s --maxfail=1 --disable-warnings
