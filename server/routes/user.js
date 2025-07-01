@@ -32,8 +32,8 @@ async function getUserRole(userID) {
 			INNER JOIN User u ON u.roleID = r.roleID 
 			WHERE u.userID = ?
 		`, [userID]);
-		
-		return role[0].roleName; 
+
+		return role[0].roleName;
 	} catch (error) {
 		console.error("Error fetching role:", error);
 		throw error;
@@ -43,8 +43,8 @@ async function getUserRole(userID) {
 // Register
 router.post("/register", async (req, res) => {
 	console.log("Register User");
-	
-    const {
+
+	const {
 		email,
 		password,
 		username,
@@ -55,7 +55,7 @@ router.post("/register", async (req, res) => {
 		nationality,
 		address,
 		gender,
-		postalcode, 
+		postalcode,
 		unitnumber
 	} = req.body;
 
@@ -66,6 +66,28 @@ router.post("/register", async (req, res) => {
 	}
 
 	try {
+
+		// Check for duplicates
+		const [existingUsers] = await db.query(
+			`SELECT username, email, contactNumber FROM User 
+				 WHERE username = ? OR email = ? OR contactNumber = ?`,
+			[username, email, contactnumber]
+		);
+
+		if (existingUsers.length > 0) {
+			const existing = existingUsers[0];
+
+			if (existing.username === username) {
+				return res.status(409).json({ error: "Username is already taken." });
+			}
+			if (existing.email === email) {
+				return res.status(409).json({ error: "Email is already registered." });
+			}
+			if (existing.contactNumber === contactnumber) {
+				return res.status(409).json({ error: "Contact number is already in use." });
+			}
+		}
+
 
 		// Generate UUID for userID
 		const userID = uuidv4();
@@ -79,7 +101,7 @@ router.post("/register", async (req, res) => {
 		const roleID = rows[0].roleID;
 
 		let finalAddress = `${address}, ${unitnumber}, ${postalcode}`;
-		
+
 		// Insert user 
 		const [result] = await db.query(
 			`INSERT INTO User
@@ -100,8 +122,8 @@ router.post("/register", async (req, res) => {
 				gender,
 				roleID,
 			]
-		);	
-		
+		);
+
 		res.json(result);
 	} catch (err) {
 		console.error(err);
@@ -136,17 +158,17 @@ router.post("/login", async (req, res) => {
 
 		// Store user id and role into session
 		req.session.userID = user.userID;
-		
+
 		const role = await getUserRole(user.userID);
 		if (!role) {
 			return res.status(500).json({ error: "User role not found" });
 		}
-		
+
 		req.session.role = role === "Applicant" ? "user" : role.toLowerCase();
 
 		// save latest login time
 		await db.query(`UPDATE User SET lastLogin = NOW() WHERE userID = ?`, [user.userID]);
-		
+
 		req.session.save(err => {
 			if (err) {
 				console.error("session save:", err);
@@ -154,7 +176,7 @@ router.post("/login", async (req, res) => {
 			}
 			res.json({ role: req.session.role });
 		});
-		
+
 	} catch (err) {
 		console.error(err);
 		res.status(500).json({ error: "Login Failed" });
@@ -181,7 +203,7 @@ router.post("/getUserByNRIC", async (req, res) => {
 	try {
 		const [user] = await db.query("SELECT * FROM User WHERE nric = ?", [userNRIC]);
 		if (user.length === 0) return res.status(404).json({ message: `User with NRIC ${userNRIC} not found` });
-		
+
 		res.json(user[0]); // return user details
 	} catch (err) {
 		console.error(err);
@@ -190,7 +212,7 @@ router.post("/getUserByNRIC", async (req, res) => {
 })
 
 // Logout
-router.post("/logout", (req, res) => {	
+router.post("/logout", (req, res) => {
 	req.session.destroy(err => {
 		if (err) {
 			console.error("Session destroy error:", err);
@@ -220,7 +242,7 @@ router.post("/edit_account", async (req, res) => {
 		if (email) {
 			const [emailRows] = await connection.query(
 				"SELECT userID FROM User WHERE email = ? AND userID <> ?",
-			[email, userID]);
+				[email, userID]);
 			if (emailRows.length > 0) {
 				await connection.rollback();
 				return res.status(400).json({ error: "Email already in use" });
@@ -291,16 +313,15 @@ router.post("/forget_password", async (req, res) => {
 			link: "replace this link with reset password link"
 		});
 
-		
+
 	} catch (err) {
 		console.error(err);
 		res.status(500).json({ error: "Failed to send email" });
 	}
 });
 
-module.exports = router;
 
-export function validateRegisterPayload(payload) {
+function validateRegisterPayload(payload) {
 	const {
 		email, password, username, fullname,
 		contactnumber, nric, dob, nationality,
@@ -331,4 +352,7 @@ export function validateRegisterPayload(payload) {
 
 	return null; // no error
 }
+
+module.exports = router;
+
 

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from "axios";
 
 import "bootstrap/dist/js/bootstrap.bundle.min";
+import { toast } from "react-toastify";
 
 // natoinalities
 import { nationalities } from "../../components/nationalities";
@@ -70,6 +71,11 @@ export default function Register() {
 			navigate("/login");
 			return response.data;
 		} catch (error) {
+			if (error.response && error.response.data?.error) {
+				toast.error(error.response.data.error); 
+			} else {
+				toast.error("Registration failed. Please try again.");
+			}
 			console.error("Failed to register user:", error);
 			return null;
 		}
