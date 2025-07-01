@@ -48,7 +48,7 @@ def test_register_and_redirect_to_login():
 
         # --- Fill out each field exactly as in your JSX ---
         driver.find_element(By.NAME, "username").send_keys("test444")
-        driver.find_element(By.NAME, "email").send_keys(test444@mail.com)
+        driver.find_element(By.NAME, "email").send_keys("test444@mail.com")
         driver.find_element(By.NAME, "fullname").send_keys("test444")
         driver.find_element(By.NAME, "contactnumber").send_keys("91234567")
         driver.find_element(By.NAME, "nric").send_keys("S1234567A")
