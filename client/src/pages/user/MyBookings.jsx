@@ -104,7 +104,7 @@ export default function MyBookings() {
 			console.log("Bookings fetched:", booking);
 			console.log(`length of Bookings: ${booking.length}`);
 
-			if (!booking || !Array.isArray(booking) || booking.length == 0) {
+			if (!booking || !Array.isArray(booking) || booking.length === 0) {
 				console.log("there are no bookings");
 				return;
 			};
@@ -198,7 +198,7 @@ export default function MyBookings() {
 				</div>
 			</div>
 		);
-	} else if (userBookings.length == 0) {
+	} else if (userBookings.length === 0) {
 		return (
 			<div className="container py-5">
 				<div className="text-center">
@@ -431,7 +431,7 @@ export default function MyBookings() {
 							</div>
 
 							<div className="modal-footer">
-								{bookingDetail.bookingType == "PreOrder" && (
+								{bookingDetail.bookingType === "PreOrder" && (
 									<button className="modal-btn primary" onClick={() => navigate(`/req-urn-placement?bookingID=${bookingDetail.bookingID}`)}>
 										Request Urn Placement
 									</button>

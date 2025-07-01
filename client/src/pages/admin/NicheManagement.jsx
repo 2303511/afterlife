@@ -1,8 +1,9 @@
+/* eslint-disable */
+
 import { useState } from "react";
 import FullNicheMap from "../../components/niche/FullNicheMap"; // adjust path if needed
 
 export default function NicheManagement() {
-  const [isForm, setIsForm] = useState(false);
   const [isBookButtonDisabled, setIsBookButtonDisabled] = useState(true);
 
   const [selectedBuilding, setSelectedBuilding] = useState(null);
@@ -35,7 +36,6 @@ export default function NicheManagement() {
     <div className="w-full px-6 py-6">
       <div className="max-w-screen-xl mx-auto">
         <FullNicheMap
-          setIsForm={setIsForm}
           buildingState={buildingState}
           handleBook={handleBook}
           isBookButtonDisabled={isBookButtonDisabled}

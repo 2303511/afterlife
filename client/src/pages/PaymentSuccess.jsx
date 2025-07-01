@@ -1,5 +1,5 @@
 import { Link, useSearchParams } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import axios from "axios";
 
 import { toast } from "react-toastify";
@@ -55,7 +55,7 @@ export default function PaymentSuccess() {
 		};
 
 		updateTransaction();
-	}, []);
+	}, [paymentAmount, searchParams]);
 
 	return (
 		<>

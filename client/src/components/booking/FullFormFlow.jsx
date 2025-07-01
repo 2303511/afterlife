@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 
 import { loadStripe } from "@stripe/stripe-js";
 import { Elements } from "@stripe/react-stripe-js";
@@ -81,7 +81,7 @@ export default function FullFormFlow({ selectedSlot, onCancel, setIsBookButtonDi
 				// 3. finally move to payment step:
 				setStep("payment");
 			} else if (res.data.errors) {
-				res.data.errors.map((err) => {
+				(res.data.errors || []).forEach((err) => {
 					toast.error(err);
 				});
 
@@ -89,6 +89,7 @@ export default function FullFormFlow({ selectedSlot, onCancel, setIsBookButtonDi
 			}
 		} catch (err) {
 			if (err.response && err.response.status === 400) {
+				// eslint-disable-next-line
 				for (const [key, value] of Object.entries(err.response.data.errors)) {
 					toast.error(value);
 				}

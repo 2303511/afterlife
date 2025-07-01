@@ -1,5 +1,5 @@
 // src/components/Navbar.js
-import { FaSearch, FaUser } from "react-icons/fa";
+import { FaSearch } from "react-icons/fa";
 import logo from "../../img/logo.svg";
 import { publicRoutes } from "../../config/routesConfig";
 

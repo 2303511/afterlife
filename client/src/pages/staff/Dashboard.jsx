@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from 'react-router-dom';
 import StatCard from "../../components/staffDashboard/StatCard";
 import "../../styles/Dashboard.css";
 import axios from 'axios';

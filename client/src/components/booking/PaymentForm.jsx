@@ -29,7 +29,7 @@ export default function PaymentForm({ onBack, bookingID, amount }) {
 				setStripePromise(loadStripe(publishableKey));
 
 				// 2b. to get the secret key
-				const secretKey = await axios.post("/api/payment/create-payment-intent", { amount: amount })
+				const secretKey = await axios.post("/api/payment/create-payment-intent", { amount: paymentAmount })
 				.then((res) => { return res.data.clientSecret; }); // this is client secret for stripe 
 
 				setClientSecret(secretKey);

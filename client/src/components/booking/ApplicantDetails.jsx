@@ -59,7 +59,7 @@ export default function ApplicantDetails({ formData, onChange, errors, width = 6
 			}
 		};
 		init();
-	}, []);
+	}, [handleLoadDetails]);
 
 	// handlers
 	// search by NRIC
@@ -122,7 +122,7 @@ export default function ApplicantDetails({ formData, onChange, errors, width = 6
 			<div className="d-flex justify-content-between align-items-center mt-4 mb-3">
 				<h5 className="mb-0">Applicant Details</h5>
 
-				{user?.role == "staff" && <Button onClick={() => setShowModal(true)}>Load My Details</Button>}
+				{user?.role === "staff" && <Button onClick={() => setShowModal(true)}>Load My Details</Button>}
 			</div>
 
 			<Row>

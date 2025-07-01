@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Form, Button } from "react-bootstrap";
 
@@ -65,7 +65,7 @@ export default function RequestUrnPlacement() {
 			}
 		};
 		init();
-	}, []);
+	}, [bookingID]);
 
 	// handlers
 	const handleChange = (e) => {
