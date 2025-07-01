@@ -11,87 +11,82 @@ from selenium.webdriver.support import expected_conditions as EC
 from webdriver_manager.chrome import ChromeDriverManager
 
 def generate_random_email():
-    """Generate a random email for CI testing."""
     return "ci_user_" + ''.join(
         random.choices(string.ascii_lowercase + string.digits, k=6)
     ) + "@example.com"
 
 @pytest.mark.selenium
 def test_register_up_to_2fa():
-    # 1) Determine base URL (defaults to port 80)
+    # 1) Base URL (port 80)
     base = os.getenv("BASE_URL", "http://localhost")
     register_url = f"{base}/register"
 
-    # 2) Chrome headless setup
-    options = Options()
-    options.add_argument("--headless")
-    options.add_argument("--no-sandbox")
-    options.add_argument("--disable-dev-shm-usage")
-    options.add_argument("--window-size=1920,1080")
-
-    service = Service(ChromeDriverManager().install())
-    driver = webdriver.Chrome(service=service, options=options)
-    wait = WebDriverWait(driver, 10)
+    # 2) Headless Chrome
+    opts = Options()
+    opts.add_argument("--headless")
+    opts.add_argument("--no-sandbox")
+    opts.add_argument("--disable-dev-shm-usage")
+    opts.add_argument("--window-size=1920,1080")
+    driver = webdriver.Chrome(
+        service=Service(ChromeDriverManager().install()),
+        options=opts
+    )
+    wait = WebDriverWait(driver, 15)
 
     try:
-        # 3) Stub reCAPTCHA so form renders immediately
+        # 3) Stub reCAPTCHA
         driver.get("about:blank")
         driver.execute_script("""
-            window.grecaptcha = {
-              ready: (cb) => cb(),
-              execute: () => Promise.resolve('fake-token')
-            };
+          window.grecaptcha = {
+            ready: cb => cb(),
+            execute: () => Promise.resolve('fake-token')
+          };
         """)
 
-        # 4) Navigate to the registration page
+        # 4) Load registration page
         driver.get(register_url)
 
-        # 5) Fill out Personal Details section
-        el = wait.until(EC.presence_of_element_located((By.NAME, "username")))
-        el.send_keys("ci_user")
+        # 5) Wait for React mount: page title + header
+        wait.until(lambda d: d.execute_script("return document.readyState") == "complete")
+        wait.until(EC.visibility_of_element_located((By.TAG_NAME, "h1")))
 
-        el = wait.until(EC.presence_of_element_located((By.NAME, "fullname")))
-        el.send_keys("CI User")
-
-        el = wait.until(EC.presence_of_element_located((By.NAME, "email")))
-        el.send_keys(generate_random_email())
-
-        el = wait.until(EC.presence_of_element_located((By.NAME, "nric")))
-        el.send_keys("S1234567A")
+        # --- Personal Details ---
+        wait.until(EC.presence_of_element_located((By.NAME, "username"))).send_keys("ci_user")
+        wait.until(EC.presence_of_element_located((By.NAME, "fullname"))).send_keys("CI User")
+        wait.until(EC.presence_of_element_located((By.NAME, "email"))).send_keys(generate_random_email())
+        wait.until(EC.presence_of_element_located((By.NAME, "nric"))).send_keys("S1234567A")
 
         male = wait.until(EC.element_to_be_clickable((By.ID, "male")))
         driver.execute_script("arguments[0].scrollIntoView()", male)
         male.click()
 
-        el = wait.until(EC.presence_of_element_located((By.NAME, "contactnumber")))
-        el.send_keys("91234567")
+        wait.until(EC.presence_of_element_located((By.NAME, "contactnumber"))).send_keys("91234567")
+        wait.until(EC.presence_of_element_located((By.NAME, "dob"))).send_keys("2000-01-01")
+        wait.until(EC.presence_of_element_located((By.NAME, "nationality"))).send_keys("Singaporean")
+        wait.until(EC.presence_of_element_located((By.NAME, "password"))).send_keys("TestPassword123")
 
-        el = wait.until(EC.presence_of_element_located((By.NAME, "dob")))
-        el.send_keys("2000-01-01")
+        # --- Mailing Address ---
+        # Wait for the Mailing Address header to appear
+        wait.until(EC.presence_of_element_located(
+            (By.XPATH, "//h5[contains(text(),'Mailing Address')]")
+        ))
 
-        el = wait.until(EC.presence_of_element_located((By.NAME, "nationality")))
-        el.send_keys("Singaporean")
+        # Address
+        addr = wait.until(EC.presence_of_element_located((By.NAME, "address")))
+        addr.send_keys("123 Example St")
 
-        el = wait.until(EC.presence_of_element_located((By.NAME, "password")))
-        el.send_keys("TestPassword123")
-
-        # 6) Fill out Mailing Address section
-        el = wait.until(EC.presence_of_element_located((By.NAME, "address")))
-        el.send_keys("123 Example St")
-
-        # 7) Locate postal-code & unit-number by placeholder
-        postal = wait.until(EC.presence_of_element_located(
-            (By.CSS_SELECTOR, "input[placeholder='Enter postal code']")))
+        # Postal Code (now present by name)
+        postal = wait.until(EC.presence_of_element_located((By.NAME, "postalcode")))
+        driver.execute_script("arguments[0].scrollIntoView()", postal)
         postal.send_keys("123456")
 
-        unit = wait.until(EC.presence_of_element_located(
-            (By.CSS_SELECTOR, "input[placeholder='Enter unit number']")))
+        # Unit Number
+        unit = wait.until(EC.presence_of_element_located((By.NAME, "unitnumber")))
+        driver.execute_script("arguments[0].scrollIntoView()", unit)
         unit.send_keys("#01-01")
 
-        # 8) Submit form and wait for redirect to 2FA setup
-        submit_btn = driver.find_element(By.CSS_SELECTOR, "button[type='submit']")
-        submit_btn.click()
-
+        # --- Submit & verify redirect ---
+        driver.find_element(By.CSS_SELECTOR, "button[type='submit']").click()
         wait.until(EC.url_contains("/setup-2fa"))
         assert "/setup-2fa" in driver.current_url
 
