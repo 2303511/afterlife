@@ -70,6 +70,11 @@ def test_register_redirects_to_login(driver):
 
     fill_registration_form(driver, base_url, unique_email)
 
-    # Wait for client-side redirect to /login
+    # Submit is inside fill_registration_form; but if you did it outside,
+    # it would look like this:
+    driver.find_element(By.CSS_SELECTOR, "button[type='submit']").click()
+    print("After click, URL:", driver.current_url)
+
+    # Now wait for client-side redirect to /login
     wait.until(EC.url_contains("/login"))
     assert "/login" in driver.current_url
