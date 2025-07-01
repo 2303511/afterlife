@@ -67,6 +67,9 @@ CREATE TABLE User (
     userAddress TEXT,
     gender ENUM('Male', 'Female', 'Others'),
     roleID CHAR(36),
+    temp2FASecret VARCHAR(255) NULL,
+    twoFASecret VARCHAR(255) NULL,
+    twoFAEnabled BOOLEAN DEFAULT FALSE,
     FOREIGN KEY (roleID) REFERENCES Role(roleID)
 );
 

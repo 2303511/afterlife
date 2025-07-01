@@ -15,6 +15,87 @@ const logFilePath = path.join(logsDir, 'login.logs');
 const rateLimit = require("express-rate-limit");
 //for recaptcha
 const axios = require('axios');
+//for 2FA
+const speakeasy = require('speakeasy');
+
+
+// Generate 2FA secret for new user
+router.post("/generate-2fa-secret", ensureAuth, async (req, res) => {
+	try {
+	  const userID = req.session.userID;
+	  console.log("getting a req for to generate secret for user id" , userID);
+	  
+	  // Generate a secret
+	  const secret = speakeasy.generateSecret({
+		name: "Afterlife 2FA",
+		issuer: "Afterlife"
+	  });
+	  
+	  // Store the secret temporarily (in memory or database)
+	  await db.query(
+		"UPDATE User SET temp2FASecret = ? WHERE userID = ?",
+		[secret.base32, userID]
+	  );
+	  
+	  console.log("Sending back secret  " , secret.base32);
+	  console.log("sending back url " , secret.otpauth_url);
+	  res.json({
+		secret: secret.base32,
+		otpauthUrl: secret.otpauth_url
+	  });
+	} catch (err) {
+	  console.error(err);
+	  res.status(500).json({ error: "Failed to generate 2FA secret" });
+	}
+  });
+
+
+
+// Verify 2FA token and complete registration
+router.post("/verify-2fa", ensureAuth, async (req, res) => {
+	try {
+	  const { token } = req.body;
+	  const userID = req.session.userID;
+	  console.log("received token is " , token);
+	  console.log("userid to verify 2fa is " , userID);
+	  
+	  // Get the temporary secret
+	  const [userRow] = await db.query(
+		"SELECT temp2FASecret FROM User WHERE userID = ?",
+		[userID]
+	  );
+	  
+	  if (!userRow[0] || !userRow[0].temp2FASecret) {
+		return res.status(400).json({ error: "No 2FA setup in progress" });
+	  }
+	  
+	  // Verify the token
+	  const verified = speakeasy.totp.verify({
+		secret: userRow[0].temp2FASecret,
+		encoding: 'base32',
+		token: token,
+		window: 1
+	  });
+	  
+	  if (verified) {
+		// Store the permanent secret and mark 2FA as enabled
+		console.log("the token matches , will complete the 2fa verification now");
+		await db.query(
+		  "UPDATE User SET twoFASecret = ?, temp2FASecret = NULL, twoFAEnabled = TRUE WHERE userID = ?",
+		  [userRow[0].temp2FASecret, userID]
+		);
+		
+		return res.json({ success: true });
+	  } else {
+		return res.status(400).json({ error: "Invalid token" });
+	  }
+	} catch (err) {
+	  console.error(err);
+	  res.status(500).json({ error: "Failed to verify 2FA token" });
+	}
+});
+
+
 
 
 //define rate limit characteristic here and add middle ware to the login fucnction
@@ -186,6 +267,25 @@ router.post("/register", registerLimiter, async (req, res) => {
 	if (!isValid){return res.status(400).json({ error: "recaptcha register failed" });}
 	console.log("recaptcha register verficication passed");
 
+	//check the necessary db stuff and return if smtg goes wrong 
+	//check duplicate email duplicate ic
+	const [emailCheck] = await db.query(
+		"SELECT email FROM User WHERE email = ?",
+		[email]
+	  );	  
+	if (emailCheck.length > 0) {
+		return res.status(400).json({ error: "Email already exists" });
+	}
+	console.log("no duplicate email");
+	const [nricCheck] = await db.query(
+		"SELECT nric FROM User WHERE nric = ?",
+		[nric]
+	  );
+	if (nricCheck.length > 0) {
+	return res.status(400).json({ error: "NRIC already exists" });
+	}
+	console.log("no duplicate ic");
+
 	try {
 		const userID = uuidv4();
 		const salt = await bcrypt.genSalt(10);
@@ -197,8 +297,8 @@ router.post("/register", registerLimiter, async (req, res) => {
 		
 		const [result] = await db.query(
 			`INSERT INTO User
-			(userID, username, email, hashedPassword, salt, fullName, contactNumber, nric, dob, nationality, userAddress, gender, roleID, lastLogin)
-			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
+			(userID, username, email, hashedPassword, salt, fullName, contactNumber, nric, dob, nationality, userAddress, gender, roleID, lastLogin, twoFAEnabled)
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(),FALSE)`,
 			[
 				userID,
 				username,
@@ -215,8 +315,38 @@ router.post("/register", registerLimiter, async (req, res) => {
 				roleID,
 			]
 		);	
-		
-		res.json({ success: true, userID });
+
+		// Create session for 2FA setup
+		req.session.regenerate((err) => {
+			if (err) {
+			  console.error("Session regeneration error:", err);
+			  return res.status(500).json({ error: "Registration failed" });
+			}
+	  
+			req.session.userID = userID;
+			req.session.role = 'pending'; // Temporary role for 2FA setup
+			console.log("session generated with userID , " , req.session.userID);
+			console.log("session generated with session role , " , req.session.role);
+			
+			req.session.save((saveErr) => {
+			  if (saveErr) {
+				console.error("Session save error:", saveErr);
+				return res.status(500).json({ error: "Registration failed" });
+			  }
+			  
+			  // Return success with redirect instruction
+			  console.log("returning to register jsx to get redirected to Setup2fA");
+			  res.json({ 
+				success: true,
+				twoFAEnabled : false, 
+				redirectTo: '/setup-2fa' 
+			  });
+			});
+		});
+
+
+		//will remove this when ltr done
+		//res.json({ success: true, userID });
 	} catch (err) {
 		console.error(err);
 		res.status(500).json({ error: "Registration Failed" });
@@ -245,11 +375,13 @@ router.post("/login", loginLimiter, async (req, res) => {
 	}
 	console.log("email backend regrex verification passed");
 
+
+
 	try {
 		await conn.beginTransaction();
 
 		const [userRow] = await conn.query(
-			"SELECT userID, salt, hashedPassword, currentSessionID FROM User WHERE email = ?",
+			"SELECT userID, salt, hashedPassword, currentSessionID, twoFAEnabled FROM User WHERE email = ?",
 			[email]
 		);
 		const user = userRow[0];
@@ -272,13 +404,57 @@ router.post("/login", loginLimiter, async (req, res) => {
 			return res.status(401).json({ error: "Invalid credentials" });
 		}
 
+		
 		if (user.currentSessionID) {
 			sessionStore.destroy(user.currentSessionID, err => {
 				if (err) console.error("Error destroying old session:", err);
 			});
 		}
+		console.log("s - destorying old session once password match");
 
-		req.session.regenerate(async err => {
+		//if all the password and email matches , check if 2fa setup 
+		//if not setup then redirect to setup page 
+		//if yes then redirect to the login2FA page to enter code 
+		// Create a temporary session for either 2FA verification or setup
+		req.session.regenerate(async (err) => {
+			if (err) {
+			  console.error("Session regeneration error:", err);
+			  await conn.rollback();
+			  return res.status(500).json({ error: "Session error" });
+			}
+	  
+			req.session.userID = user.userID;
+			console.log("s - pw match, req user id in session is" , req.session.userID );
+			
+			if (user.twoFAEnabled) {
+			  // If 2FA is enabled, mark as temporary session for verification
+			  console.log("s - user has 2fa setup " , req.session.userID );
+			  req.session.temp2FA = true;
+			  res.json({ 
+				success: true, 
+				twoFARequired: true,
+				redirectTo: '/login-2fa'
+			  });
+			} else {
+				console.log("s - user DO NOT HAVE  2fa setup  gonna send him to setup " , req.session.userID );
+				// If 2FA is not enabled, redirect to setup page
+				res.json({ 
+					success: true, 
+					twoFASetupRequired: true,
+					redirectTo: '/setup-2fa'
+					});
+			}
+	  
+			req.session.save((saveErr) => {
+			  if (saveErr) {
+				console.error("Session save error:", saveErr);
+				return res.status(500).json({ error: "Login failed" });
+			  }
+			});
+		});
+		
+
+/* 		req.session.regenerate(async err => {
 			if (err) {
 				console.error("Session regeneration error:", err);
 				await conn.rollback();
@@ -307,7 +483,7 @@ router.post("/login", loginLimiter, async (req, res) => {
 				}
 				res.json({ success: true, role: req.session.role });
 			});
-		});
+		}); */
 	} catch (err) {
 		console.error(err);
 		await conn.rollback();
@@ -316,6 +492,93 @@ router.post("/login", loginLimiter, async (req, res) => {
 		conn.release();
 	}
 });
+
+
+//new end point to check the 2fa, the check for password and user name will be the default /login
+//it will only come here if the user have 2fa setup properly and password is correct
+router.post("/verify-login-2fa", async (req, res) => {
+	try {
+		let conn; // Declare connection at the start
+		conn = await db.getConnection(); // Initialize connection
+		await conn.beginTransaction();
+
+		// 1. Check for temporary 2FA session
+		if (!req.session.userID || !req.session.temp2FA) {
+			return res.status(401).json({ 
+				error: "Invalid session. Please login again.",
+				redirectTo: '/login' 
+			});
+		}
+
+	
+		const { token } = req.body;
+		const userID = req.session.userID;
+		console.log("s - token receive is " , token);
+		console.log("s - token receive for USER ID is  " , userID);
+
+		// Get the user's 2FA secret
+		const [userEmail] = await db.query(
+			"SELECT email FROM User WHERE userID = ?",
+			[userID]
+			);
+
+		// Get the user's 2FA secret
+		const [userRow] = await db.query(
+			"SELECT twoFASecret FROM User WHERE userID = ?",
+			[userID]
+			);
+		// another check likely wont happen
+		if (!userRow[0] || !userRow[0].twoFASecret) {
+			return res.status(400).json({ error: "2FA not configured" });
+			}
+
+		
+		// Verify the token
+		const verified = speakeasy.totp.verify({
+			secret: userRow[0].twoFASecret,
+			encoding: 'base32',
+			token: token,
+			window: 1
+			});
+
+		if (verified) {
+			console.log("new 2fa code match with db secret  properly");
+			// Complete the login process
+			const roleName = await getUserRole(userID);
+			const role = roleName === "Applicant" ? "user" : roleName.toLowerCase();
+
+			// Update session with proper role and remove temp flag
+			req.session.role = role;
+			req.session.temp2FA = false;
+
+			// Update current session in DB
+			const newSID = req.sessionID;
+			await conn.query(
+				"UPDATE User SET currentSessionID = ?, lastLogin = NOW() WHERE userID = ?",
+				[newSID, userID]
+				);
+
+			// Log successful login
+			const traceId = uuidv4();
+			logLoginAttempt({traceId,email: userEmail, status: "SUCCESS Login (2FA verified)",req,role});
+
+			await conn.commit();
+			req.session.save(err => {
+				if (err) {
+					console.error("Session save error:", err);
+					return res.status(500).json({ error: "Verification failed" });
+				}
+				res.json({ success: true, role: req.session.role });
+			});
+		} else {
+			res.status(400).json({ error: "2FA verficiation failed" });
+			}
+	} catch (err) {
+	  console.error(err);
+	  res.status(500).json({ error: "Failed to verify 2FA token" });
+	}
+});
+  
 
 router.get("/getUserByID", ensureAuth, ensureSelfOrRole(["admin"]), async (req, res) => {
 	let userID = req.query.userID;

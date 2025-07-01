@@ -61,7 +61,7 @@ export default function Login() {
 			console.log("Got the token sending to backend now")
 
       // 1) Perform login
-      await axios.post(
+      const response = await axios.post(
         "/api/user/login",
         { email: form.email, password: form.password, recaptchaToken: token},
         {
@@ -70,7 +70,20 @@ export default function Login() {
         }
       );
 
-      // 2) Fetch session info
+      //password and things correct need 2fa now
+      if (response.data.success && response.data.redirectTo && response.data.twoFARequired === true) {
+        console.log("redirect to the login 2fa page to enter token")
+        navigate(response.data.redirectTo); // Server-controlled redirect
+      }
+
+      //password and things correct but 2fa not setup properly, force them to setup //twoFASetupRequired
+      if (response.data.success && response.data.redirectTo && response.data.twoFASetupRequired === true) {
+        console.log("redirect to setup 2fa page to setup")
+        navigate(response.data.redirectTo); // Server-controlled redirect
+      }
+
+
+      /* // 2) Fetch session info
       const res = await axios.get("/api/user/me", { withCredentials: true });
       const userData = { userID: res.data.userID, role: res.data.role };
       login(userData);
@@ -82,7 +95,7 @@ export default function Login() {
         navigate("/dashboard");
       } else if (res.data.role === "admin") {
         navigate("/admin-dashboard");
-      }
+      } */
     } catch (err) {
       if (err.response?.status === 401) {
         setError("Incorrect email or password.");

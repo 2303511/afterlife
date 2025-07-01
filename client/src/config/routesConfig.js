@@ -23,6 +23,8 @@ import Login from "../pages/public/Login";
 import Register from "../pages/public/Register";
 import LandingPage from "../pages/public/LandingPage";
 import Logout from "../pages/public/Logout";
+import Setup2FA from "../pages/public/Setup2FA";
+import Login2FA from "../pages/public/Login2FA";
 
 // hidden pages
 import RequestUrnPlacement from "../pages/user/RequestUrnPlacement";
@@ -52,6 +54,15 @@ export const publicRoutes = [
     label: "Register",
     path: "/register",
     element: <Register />,
+    
+  },
+  {
+    path: "/setup-2fa",
+    element: <Setup2FA />,
+  },
+  {
+    path: "/login-2fa",
+    element: <Login2FA />,
   }
 ];
 

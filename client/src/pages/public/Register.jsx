@@ -71,8 +71,7 @@ export default function Register() {
       const token = await window.grecaptcha.execute('6LcNiHIrAAAAADOLYumj1n6TlcxjTgjE6c55J0YO', { action: 'register' });
 			console.log("Got the token sending to backend now")
 
-
-      await axios.post(
+      const response = await axios.post(
         "/api/user/register",
         {...form,recaptchaToken: token},
         {
@@ -80,7 +79,18 @@ export default function Register() {
           withCredentials: true
         }
       );
-      navigate("/login");
+
+      //look at the response if the email and ic is good and redirect to 2FA set up 
+      console.log("response data success from register is ", response.data.success);
+      console.log("response data redirectTo from register is ", response.data.redirectTo);
+      console.log("response data 2faenabled from register is ", response.data.twoFAEnabled );
+      if (response.data.success && response.data.redirectTo && response.data.twoFAEnabled === false) {
+        console.log("getting redirected to 2fa page.jsx")
+        navigate(response.data.redirectTo); // Server-controlled redirect
+      }
+
+      
+      //navigate("/login");
     } catch (error) {
       console.error("Failed to register user:", error);
       // you might show a toast or set an error state here
