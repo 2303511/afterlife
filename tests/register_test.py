@@ -32,31 +32,38 @@ def test_register_and_redirect_to_login():
     wait = WebDriverWait(driver, 15)
 
     try:
-        # 2) Stub fetch so that all calls to /api/user/register succeed
+        # 2) Stub XHR so axios.post('/api/user/register') always returns {success:true}
         driver.get("about:blank")
         driver.execute_script("""
-          // keep the real fetch around
-          window._realFetch = window.fetch;
-          window.fetch = (url, opts) => {
-            // intercept the register endpoint
-            if (url.includes('/api/user/register')) {
-              return Promise.resolve({
-                ok: true,
-                json: () => Promise.resolve({ success: true })
-              });
-            }
-            // otherwise forward to real fetch
-            return window._realFetch(url, opts);
-          };
+          (function() {
+            const origOpen = XMLHttpRequest.prototype.open;
+            const origSend = XMLHttpRequest.prototype.send;
+            XMLHttpRequest.prototype.open = function(method, url) {
+              this._url = url;
+              return origOpen.apply(this, arguments);
+            };
+            XMLHttpRequest.prototype.send = function(body) {
+              if (this._url && this._url.includes('/api/user/register')) {
+                this.onload && this.onload({
+                  target: {
+                    status: 200,
+                    responseText: JSON.stringify({ success: true })
+                  }
+                });
+                return;
+              }
+              return origSend.apply(this, arguments);
+            };
+          })();
         """)
 
-        # 3) Load your Register page
+        # 3) Load the Register page
         driver.get(register_url)
 
-        # 4) Wait for React to render the username input
+        # 4) Wait for the form to mount
         wait.until(EC.presence_of_element_located((By.NAME, "username")))
 
-        # --- Fill the form ---
+        # --- Fill out each field exactly as in your JSX ---
         driver.find_element(By.NAME, "username").send_keys("ci_user")
         driver.find_element(By.NAME, "email").send_keys(generate_random_email())
         driver.find_element(By.NAME, "fullname").send_keys("CI User")
@@ -71,7 +78,7 @@ def test_register_and_redirect_to_login():
         driver.find_element(By.NAME, "nationality").send_keys("Singaporean")
         driver.find_element(By.NAME, "address").send_keys("123 Example St")
 
-        # gender radio
+        # gender radios
         male = wait.until(EC.element_to_be_clickable((By.ID, "male")))
         driver.execute_script("arguments[0].scrollIntoView()", male)
         male.click()
