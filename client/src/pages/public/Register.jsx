@@ -181,6 +181,12 @@ export default function Register() {
             </div>
           </div>
 
+          {/* contact number */}
+					<div className="col-md-6">
+						<label className="form-label">Contact Number</label>
+						<input type="tel" className="form-control" name="contactnumber" value={form.contactnumber} onChange={handleInputChange} placeholder="Enter contact number" required />
+					</div>
+
           {/* DOB */}
           <div className="col-md-6">
             <label className="form-label">Date of Birth</label>
