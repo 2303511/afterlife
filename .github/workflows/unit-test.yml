@@ -33,6 +33,22 @@ jobs:
         working-directory: client
         run: npm ci
 
+      - name: Install MSW (Mock Service Worker)
+        working-directory: client
+        run: npm install --save-dev msw
+
+      - name: Add Jest config for ESM modules
+        working-directory: client
+        run: |
+          cat > jest.config.js << 'EOF'
+          module.exports = {
+            // allow axios and msw to be transformed
+            transformIgnorePatterns: [
+              "node_modules/(?!(axios|msw)/)"
+            ]
+          };
+          EOF
+
       - name: Run Jest unit tests
         working-directory: client
         run: npm test -- --ci --coverage --watchAll=false
