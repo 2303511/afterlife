@@ -90,5 +90,41 @@ router.post("/create-block", async (req, res) => {
   }
 });
 
+// admin level
+router.post("/update-status", async (req, res) => {
+  const { nicheID, newStatus } = req.body;
+
+  // Validate input
+  const allowedStatuses = ["Available", "Reserved", "Occupied", "Pending"];
+  if (!nicheID || !newStatus) {
+      return res.status(400).json({ error: "Missing nicheID or newStatus." });
+  }
+
+  if (!allowedStatuses.includes(newStatus)) {
+      return res.status(400).json({ error: "Invalid status value." });
+  }
+
+  try {
+      // Check if niche exists
+      const [[existing]] = await db.query(`SELECT * FROM Niche WHERE nicheID = ?`, [nicheID]);
+      if (!existing) {
+          return res.status(404).json({ error: "Niche not found." });
+      }
+
+      // Update the status
+      await db.query(`
+          UPDATE Niche
+          SET status = ?, lastUpdated = NOW()
+          WHERE nicheID = ?
+      `, [newStatus, nicheID]);
+
+      res.status(200).json({ success: true, message: "Niche status updated successfully." });
+  } catch (err) {
+      console.error("Admin niche status update error:", err);
+      res.status(500).json({ error: "Failed to update niche status." });
+  }
+});
+
+
 
 module.exports = router;
