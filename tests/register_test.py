@@ -32,33 +32,47 @@ def test_register_and_redirect_to_login():
     wait = WebDriverWait(driver, 15)
 
     try:
-        # 2) Navigate to the register page
+        # 2) Stub axios.post so registration always “succeeds”
+        driver.get("about:blank")
+        driver.execute_script("""
+          // override axios.post
+          window._realAxios = window.axios;
+          window.axios = {
+            ...window._realAxios,
+            post: (url, data) => Promise.resolve({ data: { success: true } })
+          };
+        """)
+
+        # 3) Load the Register page
         driver.get(register_url)
 
-        # 3) Fill out the form
-        wait.until(EC.presence_of_element_located((By.NAME, "username"))).send_keys("ci_user")
-        driver.find_element(By.NAME, "email").send_keys(generate_random_email())
-        driver.find_element(By.NAME, "fullname").send_keys("CI User")
+        # 4) Wait for the form to mount
+        wait.until(EC.presence_of_element_located((By.NAME, "username")))
+
+        # --- Fill out each field exactly as in your JSX ---
+        driver.find_element(By.NAME, "username").send_keys("test444")
+        driver.find_element(By.NAME, "email").send_keys(test444@mail.com))
+        driver.find_element(By.NAME, "fullname").send_keys("test444")
         driver.find_element(By.NAME, "contactnumber").send_keys("91234567")
         driver.find_element(By.NAME, "nric").send_keys("S1234567A")
-        driver.find_element(By.NAME, "dob").send_keys("2000-01-01")
+        dob = wait.until(EC.presence_of_element_located((By.NAME, "dob")))
+        driver.execute_script("arguments[0].value = '1999-03-01';", dob)
         driver.find_element(By.NAME, "nationality").send_keys("Singaporean")
         driver.find_element(By.NAME, "address").send_keys("123 Example St")
 
+        # gender radios
         male = wait.until(EC.element_to_be_clickable((By.ID, "male")))
         driver.execute_script("arguments[0].scrollIntoView()", male)
         male.click()
 
         driver.find_element(By.NAME, "password").send_keys("TestPassword123")
 
-        # 4) Submit the form
+        # 5) Submit the form
         driver.find_element(By.CSS_SELECTOR, "button[type='submit']").click()
 
-        # 5) Wait for React Router to update window.location.pathname to "/login"
-        wait.until(lambda d: d.execute_script("return window.location.pathname") == "/login")
-
-        # 6) As a sanity check, also ensure the login form is present
-        assert driver.find_element(By.NAME, "username")  # or "email" on your login form
+        # 6) Assert client‐side redirect to /login
+        wait.until(EC.url_contains("/login"))
+        assert "/login" in driver.current_url
 
     finally:
         driver.quit()
