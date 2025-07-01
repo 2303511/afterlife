@@ -59,7 +59,7 @@ def fill_registration_form(driver, base_url, email):
     driver.find_element(By.CSS_SELECTOR, "button[type='submit']").click()
 
 def test_register_redirects_to_login(driver):
-    base_url = os.getenv("BASE_URL", "http://localhost:3000")
+    base_url = os.getenv("BASE_URL", "http://localhost")
     unique_email = generate_random_email()
     wait = WebDriverWait(driver, 15)
 
