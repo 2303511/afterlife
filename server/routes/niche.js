@@ -95,31 +95,44 @@ router.post("/update-status", ensureAuth, ensureRole(["admin"]), async (req, res
   const { nicheID, newStatus } = req.body;
 
   const allowedStatuses = ["Available", "Reserved", "Occupied", "Pending"];
-  if (!nicheID || !newStatus) {
-      return res.status(400).json({ error: "Missing nicheID or newStatus." });
+  if (!nicheID || !newStatus || !reason) {
+    return res.status(400).json({ error: "Missing required fields." });
   }
 
   if (!allowedStatuses.includes(newStatus)) {
-      return res.status(400).json({ error: "Invalid status value." });
+    return res.status(400).json({ error: "Invalid status value." });
+  }
+
+  if (!changedBy) {
+    return res.status(401).json({ error: "Not authenticated." });
   }
 
   try {
-      const [[existing]] = await db.query(`SELECT * FROM Niche WHERE nicheID = ?`, [nicheID]);
-      if (!existing) {
-          return res.status(404).json({ error: "Niche not found." });
-      }
+    // Check if niche exists
+    const [[existing]] = await db.query(`SELECT status FROM Niche WHERE nicheID = ?`, [nicheID]);
+    if (!existing) {
+      return res.status(404).json({ error: "Niche not found." });
+    }
 
-      await db.query(
-          `UPDATE Niche
-           SET status = ?, lastUpdated = NOW()
-           WHERE nicheID = ?`,
-          [newStatus, nicheID]
-      );
+    const previousStatus = existing.status;
 
-      res.status(200).json({ success: true, message: "Niche status updated successfully." });
+    // Update the status
+    await db.query(`
+      UPDATE Niche
+      SET status = ?, lastUpdated = NOW()
+      WHERE nicheID = ?
+    `, [newStatus, nicheID]);
+
+    // Insert into NicheStatusLog
+    await db.query(`
+      INSERT INTO NicheStatusLog (nicheID, previousStatus, newStatus, reason, changedBy)
+      VALUES (?, ?, ?, ?, ?)
+    `, [nicheID, previousStatus, newStatus, reason, changedBy]);
+
+    res.status(200).json({ success: true, message: "Niche status updated and logged." });
   } catch (err) {
-      console.error("Admin niche status update error:", err);
-      res.status(500).json({ error: "Failed to update niche status." });
+    console.error("Admin niche status update error:", err);
+    res.status(500).json({ error: "Failed to update niche status." });
   }
 });
 

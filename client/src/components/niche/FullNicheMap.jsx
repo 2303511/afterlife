@@ -136,9 +136,10 @@ export default function FullNicheMap({
 		try {
 			await axios.post("/api/niche/update-status", {
 				nicheID: selectedSlot.id,
-				newStatus: selectedSlot.status.charAt(0).toUpperCase() + selectedSlot.status.slice(1) // Ensure proper casing
-			});
-	
+				newStatus: selectedSlot.status.charAt(0).toUpperCase() + selectedSlot.status.slice(1),
+				reason: selectedSlot.overrideReason 
+			  });
+			  
 			// Update local state for optimistic UI
 			setSlots((prev) =>
 				prev.map((slot) => (slot.id === selectedSlot.id ? selectedSlot : slot))

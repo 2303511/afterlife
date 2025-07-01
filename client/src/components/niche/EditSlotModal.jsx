@@ -12,11 +12,11 @@ export default function EditSlotModal({
   const [isConfirmed, setIsConfirmed] = useState(false);
 
   useEffect(() => {
-    setIsConfirmed(false); // reset when modal opens
+    setIsConfirmed(false);
   }, [show]);
 
   const handleSave = () => {
-    if (isConfirmed) {
+    if (isConfirmed && selectedSlot.overrideReason?.trim()) {
       onSave();
     }
   };
@@ -29,6 +29,12 @@ export default function EditSlotModal({
       <Modal.Body>
         {selectedSlot && (
           <Form>
+            {/* Unified warning */}
+            <div className="alert alert-warning mb-4">
+              <strong>⚠ Manual Override Required:</strong><br />
+              Use this feature only when necessary. A clear reason is required and will be logged for review.
+            </div>
+
             <Form.Group className="mb-3">
               <Form.Label>Slot ID</Form.Label>
               <Form.Control type="text" value={selectedSlot.id} disabled />
@@ -50,13 +56,15 @@ export default function EditSlotModal({
               </Form.Select>
             </Form.Group>
 
-            <Form.Group className="mb-3">
-              <Form.Label>Reason for Override (optional)</Form.Label>
+            <Form.Group className="mb-2">
+              <Form.Label>
+                Reason for Override <span className="text-danger">(required)</span>
+              </Form.Label>
               <Form.Control
                 as="textarea"
-                rows={2}
-                placeholder="E.g. user payment stuck, system failed to update"
+                rows={3}
                 value={selectedSlot.overrideReason || ""}
+                placeholder="E.g. user payment stuck, system failed to update"
                 onChange={(e) =>
                   setSelectedSlot({
                     ...selectedSlot,
@@ -64,18 +72,15 @@ export default function EditSlotModal({
                   })
                 }
               />
+              <Form.Text className="text-muted">
+                Please describe the reason clearly and accurately.
+              </Form.Text>
             </Form.Group>
-
-            <div className="alert alert-warning mt-3">
-              <strong>⚠ Manual Override Warning:</strong><br />
-              Changing the status manually should <u>only</u> be done as a last resort.<br />
-              Ensure there are no pending bookings or system issues before proceeding.
-            </div>
 
             <Form.Check
               type="checkbox"
               id="confirmOverride"
-              label="I understand and wish to proceed with the override"
+              label="I understand and confirm this manual override"
               checked={isConfirmed}
               onChange={(e) => setIsConfirmed(e.target.checked)}
               className="mt-3"
@@ -90,7 +95,7 @@ export default function EditSlotModal({
         <Button
           variant="danger"
           onClick={handleSave}
-          disabled={!isConfirmed}
+          disabled={!isConfirmed || !selectedSlot.overrideReason?.trim()}
         >
           Save Changes
         </Button>

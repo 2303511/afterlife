@@ -81,6 +81,7 @@ CREATE TABLE Niche (
     nicheRow INT,
     nicheCode VARCHAR(50),
     status ENUM('Available', 'Pending', 'Reserved', 'Occupied'),
+    changeRemarks VARCHAR(255) NULL, -- admin comments on why this niche status was overriden
     lastUpdated TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (blockID) REFERENCES Block(blockID)
 );
@@ -146,3 +147,17 @@ CREATE TABLE PasswordResetToken (
   FOREIGN KEY (userID) REFERENCES User(userID) ON DELETE CASCADE,
   UNIQUE(token)
 );
+
+-- 9. for niche logging
+CREATE TABLE NicheStatusLog (
+    logID INT AUTO_INCREMENT PRIMARY KEY,
+    nicheID CHAR(36),
+    previousStatus ENUM('Available', 'Pending', 'Reserved', 'Occupied'),
+    newStatus ENUM('Available', 'Pending', 'Reserved', 'Occupied'),
+    reason TEXT,
+    changedBy CHAR(36), 
+    changedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (changedBy) REFERENCES User(userID),
+    FOREIGN KEY (nicheID) REFERENCES Niche(nicheID) ON DELETE SET NULL -- log gets kept even if niche is deleted
+);
+
