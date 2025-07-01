@@ -16,8 +16,8 @@ def generate_random_email():
     ) + "@example.com"
 
 @pytest.mark.selenium
-def test_register_up_to_2fa():
-    # 1) Base URL (defaults to http://localhost on port 80)
+def test_register_and_redirect_to_login():
+    # 1) Base URL
     base = os.getenv("BASE_URL", "http://localhost")
     register_url = f"{base}/register"
 
@@ -34,53 +34,35 @@ def test_register_up_to_2fa():
     wait = WebDriverWait(driver, 15)
 
     try:
-        # 3) Stub reCAPTCHA so form renders immediately
-        driver.get("about:blank")
-        driver.execute_script("""
-          window.grecaptcha = {
-            ready: cb => cb(),
-            execute: () => Promise.resolve('fake-token')
-          };
-        """)
-
-        # 4) Navigate to the registration page
+        # 3) Navigate to the register page
         driver.get(register_url)
 
-        # 5) Wait for React to mount the first input
+        # 4) Wait for the form to mount (username input)
         wait.until(EC.presence_of_element_located((By.NAME, "username")))
 
-        # --- Personal Details ---
+        # --- Fill out the form ---
         driver.find_element(By.NAME, "username").send_keys("ci_user")
-        driver.find_element(By.NAME, "fullname").send_keys("CI User")
         driver.find_element(By.NAME, "email").send_keys(generate_random_email())
+        driver.find_element(By.NAME, "fullname").send_keys("CI User")
+        driver.find_element(By.NAME, "contactnumber").send_keys("91234567")
         driver.find_element(By.NAME, "nric").send_keys("S1234567A")
+        driver.find_element(By.NAME, "dob").send_keys("2000-01-01")
+        driver.find_element(By.NAME, "nationality").send_keys("Singaporean")
+        driver.find_element(By.NAME, "address").send_keys("123 Example St")
 
+        # select gender
         male = wait.until(EC.element_to_be_clickable((By.ID, "male")))
         driver.execute_script("arguments[0].scrollIntoView()", male)
         male.click()
 
-        driver.find_element(By.NAME, "contactnumber").send_keys("91234567")
-        driver.find_element(By.NAME, "dob").send_keys("2000-01-01")
-        driver.find_element(By.NAME, "nationality").send_keys("Singaporean")
         driver.find_element(By.NAME, "password").send_keys("TestPassword123")
 
-        # --- Mailing Address ---
-        driver.find_element(By.NAME, "address").send_keys("123 Example St")
-
-        # Directly wait for the postalcode input by name
-        postal = wait.until(EC.presence_of_element_located((By.NAME, "postalcode")))
-        driver.execute_script("arguments[0].scrollIntoView()", postal)
-        postal.send_keys("123456")
-
-        # Directly wait for the unitnumber input by name
-        unit = wait.until(EC.presence_of_element_located((By.NAME, "unitnumber")))
-        driver.execute_script("arguments[0].scrollIntoView()", unit)
-        unit.send_keys("#01-01")
-
-        # --- Submit and verify redirect to 2FA setup ---
+        # 5) Submit
         driver.find_element(By.CSS_SELECTOR, "button[type='submit']").click()
-        wait.until(EC.url_contains("/setup-2fa"))
-        assert "/setup-2fa" in driver.current_url
+
+        # 6) Assert redirect to /login
+        wait.until(EC.url_contains("/login"))
+        assert "/login" in driver.current_url
 
     finally:
         driver.quit()
