@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - main
+  pull_request:
+    branches:
+      - main
 
 jobs:
   test:
@@ -34,17 +37,22 @@ jobs:
         working-directory: client
         run: npm install --save-dev msw
 
-      - name: Add Jest config for ESM modules
+      - name: Install jq for JSON patching
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y jq
+
+      - name: Patch package.json to transform ESM modules
         working-directory: client
         run: |
-          cat > jest.config.js << 'EOF'
-          module.exports = {
-            // allow axios and msw to be transformed
-            transformIgnorePatterns: [
-              "node_modules/(?!(axios|msw)/)"
-            ]
-          };
-          EOF
+          jq '. + {
+            jest: {
+              transformIgnorePatterns: [
+                "node_modules/(?!(axios|msw|@mswjs|@bundled-es-modules)/)"
+              ]
+            }
+          }' package.json > package.tmp.json
+          mv package.tmp.json package.json
 
       - name: Run Jest unit tests
         working-directory: client
