@@ -10,31 +10,6 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
 
-# Stub XHR so register always “succeeds”
-STUB_SCRIPT = """
-  (function() {
-    const origOpen = XMLHttpRequest.prototype.open;
-    const origSend = XMLHttpRequest.prototype.send;
-    XMLHttpRequest.prototype.open = function(method, url) {
-      this._url = url;
-      return origOpen.apply(this, arguments);
-    };
-    XMLHttpRequest.prototype.send = function(body) {
-      if (this._url && this._url.includes('/api/user/register')) {
-        setTimeout(() => {
-          this.readyState = 4;
-          this.status = 200;
-          this.responseText = JSON.stringify({ success: true });
-          this.onreadystatechange && this.onreadystatechange();
-          this.onload && this.onload({ target: this });
-        }, 0);
-        return;
-      }
-      return origSend.apply(this, arguments);
-    };
-  })();
-"""
-
 @pytest.fixture(scope="session")
 def driver():
     opts = Options()
