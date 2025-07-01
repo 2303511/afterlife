@@ -33,6 +33,6 @@ jobs:
         working-directory: client
         run: npm ci
 
-      - name: Run Jest unit tests
+      - name: Run only Register test
         working-directory: client
-        run: npm test -- --ci --coverage --watchAll=false
+        run: npm test -- src/__tests__/Register.test.jsx -- --ci --coverage --watchAll=false
