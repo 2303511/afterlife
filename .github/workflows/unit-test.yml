@@ -33,39 +33,6 @@ jobs:
         working-directory: client
         run: npm ci
 
-      - name: Install testing dependencies
-        working-directory: client
-        run: npm install --save-dev msw identity-obj-proxy jq
-
-      - name: Patch package.json for Jest
-        working-directory: client
-        run: |
-          jq '. + {
-            "jest": {
-              "transformIgnorePatterns": [
-                "node_modules/(?!(axios|msw|@mswjs|@bundled-es-modules)/)"
-              ],
-              "moduleNameMapper": {
-                "\\\\.(css|less|scss|sass)$": "identity-obj-proxy"
-              }
-            }
-          }' package.json > package.tmp.json
-          mv package.tmp.json package.json
-
-      - name: Ensure src/setupTests.js for polyfills
-        working-directory: client
-        run: |
-          mkdir -p src
-          cat > src/setupTests.js << 'EOF'
-          // Polyfill TextEncoder / TextDecoder for MSW
-          const { TextEncoder, TextDecoder } = require('util');
-          global.TextEncoder = TextEncoder;
-          global.TextDecoder = TextDecoder;
-
-          // Optional: extend jest-dom matchers
-          import '@testing-library/jest-dom';
-          EOF
-
       - name: Run Jest unit tests
         working-directory: client
         run: npm test -- --ci --coverage --watchAll=false
