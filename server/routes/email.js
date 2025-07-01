@@ -96,23 +96,50 @@ router.post('/sendDeniedRequest',
 
 // Send password reset link (public)
 router.post('/sendResetPassword', async (req, res) => {
-  const { to, link } = req.body;
-  const subject = 'Password reset';
-  const html = `
-    <p>Dear user,</p>
-    <p>Sorry to hear you’re having trouble logging into AfterLife. We got a message that you forgot your password.</p>
-    <p>If this was you, you can reset your password using this link:</p>
-    <p>${link}</p>
-    <p>If you didn’t request a login link or a password reset, you can ignore this message.</p>
-  `;
+  const { to: email } = req.body;
+  const db = require('../db'); // adjust if different
+  const crypto = require('crypto');
+
   try {
-    await sendMail(to, subject, html);
-    res.json({ success: true, message: 'Email sent successfully!' });
+    // 1. Check user
+    const [users] = await db.execute("SELECT userID FROM User WHERE email = ?", [email]);
+    if (users.length === 0) {
+      return res.status(200).json({ message: "If the email is registered, a reset link has been sent." });
+    }
+    const userID = users[0].userID;
+
+    // 2. Generate token
+    const token = crypto.randomBytes(32).toString("hex");
+    const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+
+    // 3. Store token
+    await db.execute(
+      "INSERT INTO PasswordResetToken (userID, token, expiresAt) VALUES (?, ?, ?)",
+      [userID, token, expiresAt]
+    );
+
+    // 4. Build link
+    // const resetLink = `${process.env.FRONTEND_RESET_URL || 'http://localhost/reset-password'}?token=${token}`;
+    const resetLink = `http://localhost/reset-password?token=${token}`;
+
+    // 5. Send email
+    const subject = 'Password Reset';
+    const html = `
+      <p>Dear user,</p>
+      <p>Sorry to hear you’re having trouble logging into AfterLife. We got a message that you forgot your password.</p>
+      <p>If this was you, you can reset your password using this link:</p>
+      <p><a href="${resetLink}">${resetLink}</a></p>
+      <p>This link will expire in 1 hour. If you didn’t request a password reset, you can ignore this message.</p>
+    `;
+    await sendMail(email, subject, html);
+
+    res.json({ success: true, message: 'If the email is registered, a reset link has been sent.' });
   } catch (err) {
-    console.error('Email error:', err);
-    res.status(500).json({ success: false, error: 'Failed to send email' });
+    console.error("Reset password error:", err);
+    res.status(500).json({ success: false, error: "Failed to send reset link" });
   }
 });
+
 
 // For booking-account creation
 async function sendAccountCreationEmail(to, fullName, tempPassword) {

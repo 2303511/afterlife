@@ -18,6 +18,7 @@ const blockRoute       = require("./routes/block");
 const dashboardRoute   = require("./routes/dashboard");
 const stripeRoute      = require("./routes/stripe");
 const emailRoutes      = require('./routes/email');
+const authRoutes       = require("./routes/auth");
 
 const app = express();
 
@@ -59,6 +60,7 @@ app.use("/api/block",       blockRoute);
 app.use("/api/dashboard",   dashboardRoute);
 app.use("/api/payment",     stripeRoute);
 app.use('/api/email',       emailRoutes.router);
+app.use("/api/auth",        authRoutes);
 
 const port = 8888;
 app.listen(port, () => {

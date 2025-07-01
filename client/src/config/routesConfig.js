@@ -1,6 +1,7 @@
 import { FaClipboardList, FaFileInvoice, FaBookOpen, FaUserCircle, FaListAlt, FaMapMarkedAlt } from "react-icons/fa";
 import { MdDashboard, MdAdminPanelSettings, MdApartment} from "react-icons/md";
 
+
 // Import all route components
 // user pages
 import MyBookings from "../pages/user/MyBookings"; 
@@ -25,6 +26,8 @@ import LandingPage from "../pages/public/LandingPage";
 import Logout from "../pages/public/Logout";
 import Setup2FA from "../pages/public/Setup2FA";
 import Login2FA from "../pages/public/Login2FA";
+import ResetPassword from "../pages/public/ResetPassword";
+
 
 // hidden pages
 import RequestUrnPlacement from "../pages/user/RequestUrnPlacement";
@@ -63,7 +66,11 @@ export const publicRoutes = [
   {
     path: "/login-2fa",
     element: <Login2FA />,
-  }
+  },
+  {
+  path: "/reset-password",
+  element: <ResetPassword />,
+  },
 ];
 
 // USER

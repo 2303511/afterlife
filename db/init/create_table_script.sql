@@ -135,3 +135,14 @@ CREATE TABLE sessions (
   `data`       TEXT         COLLATE utf8mb4_bin,
   PRIMARY KEY (`session_id`)
 ) ENGINE=InnoDB;
+
+CREATE TABLE PasswordResetToken (
+  tokenID INT AUTO_INCREMENT PRIMARY KEY,
+  userID CHAR(36) NOT NULL,
+  token VARCHAR(255) NOT NULL,
+  expiresAt DATETIME NOT NULL,
+  used BOOLEAN DEFAULT FALSE,
+  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (userID) REFERENCES User(userID) ON DELETE CASCADE,
+  UNIQUE(token)
+);
