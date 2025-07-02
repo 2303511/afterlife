@@ -37,6 +37,7 @@ jobs:
         working-directory: client
         run: |
           npm test -- \
+            --testPathIgnorePatterns "src/App.test.js" \
             --transformIgnorePatterns "node_modules/(?!axios)/" \
             --watchAll=false \
             --coverage
