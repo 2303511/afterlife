@@ -242,10 +242,10 @@ export default function BookingForm({ selectedSlot, onCancel, onSubmit, isModal 
 
     // Add DOB vs DOD check here:
     if (nextBeneficiaryData.dateOfBirth && nextBeneficiaryData.dateOfDeath) {
-      const dob = new Date(nextBeneficiaryData.dateOfBirth);
-      const dod = new Date(nextBeneficiaryData.dateOfDeath);
+      // const dob = new Date(nextBeneficiaryData.dateOfBirth);
+      // const dod = new Date(nextBeneficiaryData.dateOfDeath);
 
-      if (dod < dob) {
+      if (beneficiaryData.dateOfDeath < beneficiaryData.dateOfBirth) {
         allErrors.dateOfDeath = "Date of Death cannot be before Date of Birth";
       }
     }
@@ -312,10 +312,10 @@ export default function BookingForm({ selectedSlot, onCancel, onSubmit, isModal 
 
     // Business rule: Death after Birth
     if (beneficiaryData.dateOfBirth && beneficiaryData.dateOfDeath) {
-      const dob = new Date(beneficiaryData.dateOfBirth);
-      const dod = new Date(beneficiaryData.dateOfDeath);
+      // const dob = new Date(beneficiaryData.dateOfBirth);
+      // const dod = new Date(beneficiaryData.dateOfDeath);
 
-      if (dod < dob) {
+      if (beneficiaryData.dateOfDeath < beneficiaryData.dateOfBirth) {
         beneficiaryErrors.dateOfDeath = "Date of Death cannot be before Date of Birth";
       }
     }
