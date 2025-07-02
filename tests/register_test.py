@@ -1,13 +1,13 @@
 import os
 import random
 import string
+import time
 import pytest
 
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
-from selenium.webdriver.support.ui import WebDriverWait
 from webdriver_manager.chrome import ChromeDriverManager
 
 @pytest.fixture(scope="session")
@@ -21,18 +21,17 @@ def driver():
         service=Service(ChromeDriverManager().install()),
         options=opts
     )
-    drv.implicitly_wait(10)
+    drv.implicitly_wait(2)
     yield drv
     drv.quit()
 
 def generate_random_email():
-    return "ci_user_" + "".join(
-        random.choices(string.ascii_lowercase + string.digits, k=6)
-    ) + "@example.com"
+    return "ci_" + ''.join(random.choices(string.ascii_lowercase + string.digits, k=6)) + "@example.com"
 
 def fill_registration_form(driver, base_url, email):
     driver.get(f"{base_url}/register")
 
+    # 2) Fill out and submit the form once
     driver.find_element(By.NAME, "username").send_keys("test100")
     driver.find_element(By.NAME, "email").send_keys(email)
     driver.find_element(By.NAME, "fullname").send_keys("Test User")
@@ -48,29 +47,25 @@ def fill_registration_form(driver, base_url, email):
 
     driver.find_element(By.NAME, "nationality").send_keys("Singaporean")
     driver.find_element(By.NAME, "address").send_keys("123 Example St")
-
-    male = driver.find_element(By.ID, "male")
-    driver.execute_script("arguments[0].scrollIntoView()", male)
-    male.click()
-
+    driver.find_element(By.ID, "male").click()
     driver.find_element(By.NAME, "password").send_keys("SecurePass123!")
     driver.find_element(By.CSS_SELECTOR, "button[type='submit']").click()
 
-def test_register_redirects_to_login(driver):
-    base_url = os.getenv("BASE_URL", "http://localhost")
+def test_register_and_dump_dom(driver):
+    base_url = os.getenv("BASE_URL", "http://localhost:8080")
     unique_email = generate_random_email()
 
-    # 1) Fill & submit the real form against your backend
+    # Fill & submit exactly once
     fill_registration_form(driver, base_url, unique_email)
 
-    # 2) Dump the full page source for debugging
-    print("\n\n===== PAGE SOURCE AFTER REGISTRATION SUBMIT =====\n")
-    print(driver.page_source)
-    print("\n===== END PAGE SOURCE =====\n\n")
+    # Give React a moment to render the login page
+    time.sleep(5)
 
-    # 3) Wait for the React client to redirect to /login
-    # wait.until(lambda d: d.execute_script("return window.location.pathname") == "/login")
+    # Dump the full live DOM
+    full_dom = driver.find_element(By.TAG_NAME, "html").get_attribute("outerHTML")
+    print("\n\n===== FULL LIVE DOM =====\n")
+    print(full_dom)
+    print("\n===== END FULL LIVE DOM =====\n\n")
 
-    # # 4) Assert final URL
-    # assert "/login" in driver.current_url
-
+    assert "/login" in driver.current_url
+    assert driver.find_element(By.NAME, "email").is_displayed()
