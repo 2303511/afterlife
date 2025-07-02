@@ -1,12 +1,15 @@
+// client/src/__tests__/Register.test.jsx
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import axios from 'axios';
 import Register from '../pages/public/Register';
 import userEvent from '@testing-library/user-event';
 
+// mock axios
 jest.mock('axios');
 
+// mock react-router navigate
 const mockNavigate = jest.fn();
 jest.mock('react-router-dom', () => {
   const actual = jest.requireActual('react-router-dom');
@@ -23,42 +26,60 @@ describe('Register Page', () => {
   });
 
   test('renders all form fields and submit button', () => {
-    render(<Register />);
+    const { container } = render(<Register />);
 
-    expect(screen.getByLabelText(/username/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/full name/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/contact number/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/nric/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/date of birth/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/nationality/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/address/i)).toBeInTheDocument();
+    // text inputs by placeholder
+    expect(screen.getByPlaceholderText(/enter username/i)).toBeInTheDocument();
+    expect(screen.getByPlaceholderText(/enter email/i)).toBeInTheDocument();
+    expect(screen.getByPlaceholderText(/enter full name/i)).toBeInTheDocument();
+    expect(screen.getByPlaceholderText(/enter contact number/i)).toBeInTheDocument();
+    expect(screen.getByPlaceholderText(/enter nric/i)).toBeInTheDocument();
+    expect(screen.getByPlaceholderText(/enter nationality/i)).toBeInTheDocument();
+    expect(screen.getByPlaceholderText(/enter address/i)).toBeInTheDocument();
+    expect(screen.getByPlaceholderText(/enter password/i)).toBeInTheDocument();
+
+    // date input via name selector
+    const dobInput = container.querySelector('input[name="dob"]');
+    expect(dobInput).toBeInTheDocument();
+
+    // radio inputs still have htmlFor/id linkage
     expect(screen.getByLabelText(/male/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/female/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/password/i)).toBeInTheDocument();
 
+    // submit button
     expect(screen.getByRole('button', { name: /register/i })).toBeInTheDocument();
   });
 
   test('submits form and navigates to login on success', async () => {
+    // arrange: mock successful response
     axios.post.mockResolvedValue({ data: { message: 'ok' } });
 
-    render(<Register />);
-    const user = userEvent.setup();
+    const { container } = render(<Register />);
 
-    await user.type(screen.getByLabelText(/username/i), 'testuser');
-    await user.type(screen.getByLabelText(/email/i), 'test@example.com');
-    await user.type(screen.getByLabelText(/full name/i), 'Test User');
-    await user.type(screen.getByLabelText(/contact number/i), '12345678');
-    await user.type(screen.getByLabelText(/nric/i), 'S1234567A');
-    await user.type(screen.getByLabelText(/date of birth/i), '1990-01-01');
-    await user.type(screen.getByLabelText(/nationality/i), 'Singaporean');
-    await user.type(screen.getByLabelText(/address/i), '123 Test Street');
-    await user.click(screen.getByLabelText(/male/i));
-    await user.type(screen.getByLabelText(/password/i), 'password123');
+    // fill out form
+    await userEvent.type(screen.getByPlaceholderText(/enter username/i), 'testuser');
+    await userEvent.type(screen.getByPlaceholderText(/enter email/i), 'test@example.com');
+    await userEvent.type(screen.getByPlaceholderText(/enter full name/i), 'Test User');
+    await userEvent.type(screen.getByPlaceholderText(/enter contact number/i), '12345678');
+    await userEvent.type(screen.getByPlaceholderText(/enter nric/i), 'S1234567A');
 
-    await user.click(screen.getByRole('button', { name: /register/i }));
+    // date input
+    const dob = container.querySelector('input[name="dob"]');
+    await userEvent.clear(dob);
+    await userEvent.type(dob, '1990-01-01');
 
+    await userEvent.type(screen.getByPlaceholderText(/enter nationality/i), 'Singaporean');
+    await userEvent.type(screen.getByPlaceholderText(/enter address/i), '123 Test Street');
+
+    // select gender
+    await userEvent.click(screen.getByLabelText(/male/i));
+
+    await userEvent.type(screen.getByPlaceholderText(/enter password/i), 'password123');
+
+    // submit form
+    await userEvent.click(screen.getByRole('button', { name: /register/i }));
+
+    // assert axios called and navigation happened
     await waitFor(() => {
       expect(axios.post).toHaveBeenCalledWith(
         '/api/user/register',
