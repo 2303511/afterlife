@@ -676,6 +676,22 @@ router.post("/getUserByNRIC", ensureAuth, ensureRole(["admin"]), async (req, res
 	}
 });
 
+router.get("/findExistingUser", async (req, res) => {
+	const { attr, value } = req.query;
+
+	console.log(`now tracking attr: ${attr} and value: ${value}`)
+
+	try {
+		const [entry] = await db.query(`SELECT * FROM User WHERE ${attr} = ?`, [ value ]);
+		console.log("this is entry");
+		console.log(entry);
+		res.json(entry); // return user details
+	} catch (err) {
+		console.error(err);
+		res.status(500).json({ error: `Failed to fetch user with ID ${userID}` });
+	}
+})
+
 // Logout
 router.post("/logout", ensureAuth, async (req, res) => {	
 	const uid = req.session.userID;

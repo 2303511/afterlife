@@ -10,7 +10,7 @@ import { retrieveSession } from "../../utils/retrieveSession.js";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
-export default function ApplicantDetails({ formData, onChange, errors, width = 600, setApplicantData }) {
+export default function ApplicantDetails({ formData, onChange, errors, width = 600, setApplicantData, onLoadExistingUser, existingUserData, setShowExistingUserModal, showExistingUserModal }) {
 	// if its for staff, width is bigger so it can accomodate to old width
 	// if its for user bookings, width is smaller so need to resize.
 	const isLargeScreen = width > 500 ? true : false;
@@ -50,7 +50,7 @@ export default function ApplicantDetails({ formData, onChange, errors, width = 6
 			if (!!currSession) setUser(currSession);
 			else {
 				toast.error(`Failed to find user in session`);
-				return null
+				return null;
 			}
 
 			if (currSession?.role === "user") {
@@ -62,6 +62,10 @@ export default function ApplicantDetails({ formData, onChange, errors, width = 6
 		};
 		init();
 	}, []);
+
+	useEffect(() => {
+		if (showExistingUserModal && existingUserData) setFieldDisabled(true);
+	}, [showExistingUserModal, existingUserData]);
 
 	// handlers
 	// search by NRIC
@@ -188,7 +192,6 @@ export default function ApplicantDetails({ formData, onChange, errors, width = 6
 					</Form.Group>
 				</Col>
 
-				{/* TODO */}
 				<Col md={isLargeScreen ? 4 : 6}>
 					<Form.Group className="mb-3">
 						<Form.Label>Gender</Form.Label>
@@ -225,15 +228,7 @@ export default function ApplicantDetails({ formData, onChange, errors, width = 6
 				<Col md={isLargeScreen ? 6 : 12}>
 					<Form.Group className="mb-3">
 						<Form.Label>Email Address</Form.Label>
-						<Form.Control
-							type="email"
-							name="email"
-							value={formData.email}
-							onChange={onChange}
-							isInvalid={!!errors.email}
-							readOnly={fieldDisabled}
-							style={fieldDisabled ? { backgroundColor: "#e9ecef", cursor: "not-allowed" } : {}}
-						/>
+						<Form.Control type="email" name="email" value={formData.email} onChange={onChange} isInvalid={!!errors.email} readOnly={fieldDisabled} style={fieldDisabled ? { backgroundColor: "#e9ecef", cursor: "not-allowed" } : {}} />
 						<Form.Control.Feedback type="invalid">{errors.email}</Form.Control.Feedback>
 					</Form.Group>
 				</Col>
@@ -303,6 +298,8 @@ export default function ApplicantDetails({ formData, onChange, errors, width = 6
 							<br />
 							<strong>Contact:</strong> {userPreview.contactNumber}
 							<br />
+							<strong>Email:</strong> {userPreview.email}
+							<br />
 							<strong>Address:</strong> {userPreview.userAddress}
 							<br />
 							<strong>DOB:</strong> {userPreview.dob?.split("T")[0]}
@@ -320,6 +317,48 @@ export default function ApplicantDetails({ formData, onChange, errors, width = 6
 					</Button>
 				</Modal.Footer>
 			</Modal>
+
+			{/* if there was an existing user data, load it up */}
+			{existingUserData && user?.role === "staff" && showExistingUserModal && (
+				<Modal show={showExistingUserModal} onHide={() => {
+					setShowExistingUserModal(false);
+					setFieldDisabled(false);
+					
+					}} centered>
+					<Modal.Header closeButton>
+						<Modal.Title>Existing User Found</Modal.Title>
+					</Modal.Header>
+
+					<Modal.Body>
+						{existingUserData ? (
+						<>
+							<p><strong>Name:</strong> {existingUserData.fullName}</p>
+							<p><strong>Email:</strong> {existingUserData.email}</p>
+							{/* add more fields as needed */}
+						</>
+						) : (
+						<p>No user data available.</p>
+						)}
+					</Modal.Body>
+					<Modal.Footer>
+						<Button variant="secondary" onClick={() => {
+							setShowExistingUserModal(false);
+							setFieldDisabled(false);
+							
+							}}>Cancel</Button>
+						<Button
+						variant="primary"
+						onClick={() => {
+							onLoadExistingUser(existingUserData);
+							setShowExistingUserModal(false);
+						}}
+						>
+							Load
+						</Button>
+					</Modal.Footer>
+				</Modal>
+
+			)}
 		</>
 	);
 }

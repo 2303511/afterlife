@@ -176,6 +176,10 @@ router.post("/submitBooking", ensureAuth, upload.fields([
             if (existingUser) {
                 finalUserID = existingUser.userID;
 
+                console.log(existingUser.fullName !== fullName)
+                console.log(existingUser.contactNumber !== mobileNumber)
+                console.log(existingUser.dob !== dob)
+
                 if (
                     existingUser.fullName !== fullName ||
                     existingUser.contactNumber !== mobileNumber ||
@@ -184,7 +188,7 @@ router.post("/submitBooking", ensureAuth, upload.fields([
                     throw new Error("NRIC conflict with existing user details.");
                 }
 
-            } else {
+            } else { // if the user does not exist
                 // Create new user
                 finalUserID = uuidv4();
                 const randomPassword = generateRandomPassword();
