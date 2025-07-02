@@ -11,13 +11,14 @@ import "react-toastify/dist/ReactToastify.css";
 
 import { useNavigate } from "react-router-dom";
 
-export default function PaymentForm({ onBack, bookingID, amount }) {
+export default function PaymentForm({ onBack, bookingID, applicantEmail, amount }) {
   const navigate = useNavigate();
 	const [paymentMethod, setPaymentMethod] = useState("");
 	const [paymentAmount, setPaymentAmount] = useState("");
 	const [stripePromise, setStripePromise] = useState(null);
 	const [clientSecret, setClientSecret] = useState("");
 
+	// when the payment method is set to card, just prepare all of the required stuff for stripe
 	useEffect(() => {
 		// When "Card" is selected, load Stripe client + intent
 		if (paymentMethod === "Card") {
@@ -49,24 +50,12 @@ export default function PaymentForm({ onBack, bookingID, amount }) {
 			return;
 		}
 
-		// Handle Cash, Cheque, Waived directly
-		try {
-			const res = await axios.post("/api/booking/updateBookingTransaction", {
-				paymentMethod: paymentMethod,
-				paymentAmount: paymentMethod === "Waived" ? "0.00" : paymentAmount,
-				bookingID
-			});
+		// save the payment method within session storage
+		sessionStorage.setItem("paymentMethod", paymentMethod);
+		sessionStorage.setItem("userEmail", applicantEmail);
 
-			if (res.data.success) {
-				// redirect user to booking success page
-				navigate(`/payment-success?bookingID=${bookingID}`);
-			} else {
-				toast.error("Booking failed.");
-			}
-		} catch (err) {
-			console.error("Error updating transaction:", err);
-			toast.error("Server error while updating transaction.");
-		}
+		// navigate to the payment success page
+		navigate(`/payment-success?bookingID=${bookingID}`);
 	};
 
 	return (

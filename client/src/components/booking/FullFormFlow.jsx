@@ -26,6 +26,7 @@ export default function FullFormFlow({ selectedSlot, onCancel, setIsBookButtonDi
 	const [stripePromise, setStripePromise] = useState(null);
 	const [clientSecret, setClientSecret] = useState("");
 	const [bookingID, setBookingID] = useState("");
+	const [applicantEmail, setApplicantEmail] = useState("");
 
 	// get the form width
 	const { ref, width = 0 } = useResizeDetector();
@@ -127,7 +128,8 @@ export default function FullFormFlow({ selectedSlot, onCancel, setIsBookButtonDi
 				{step === "booking" && (
 					<BookingForm
 						selectedSlot={selectedSlot}
-						onSubmit={async (formData) => {
+						onSubmit={async (formData, applicantData) => {
+							setApplicantEmail(applicantData.email);  // ✅ Save it
 							setBookingFormData(formData); // temporarily store data
 							await handleSubmit(formData); // push other details to database first
 						}}
@@ -146,12 +148,13 @@ export default function FullFormFlow({ selectedSlot, onCancel, setIsBookButtonDi
 						}}
 						bookingID={bookingID}
 						amount={amount}
+						applicantEmail={applicantEmail}
 					/>
 				) : (
 					!!stripePromise &&
 					!!clientSecret && (
 						<Elements stripe={stripePromise} options={{ clientSecret }}>
-							<CheckoutForm bookingID={bookingID} />
+							<CheckoutForm bookingID={bookingID} amount={amount}/>
 						</Elements>
 					)
 				))}

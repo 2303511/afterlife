@@ -391,7 +391,7 @@ export default function BookingForm({ selectedSlot, onCancel, onSubmit, isModal 
       console.log(`${pair[0]}:`, pair[1]);
     }*/
 
-    onSubmit(formData);
+    onSubmit(formData, applicantData);
   };
 
   return (
