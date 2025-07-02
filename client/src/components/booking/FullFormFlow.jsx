@@ -43,7 +43,7 @@ export default function FullFormFlow({ selectedSlot, onCancel, setIsBookButtonDi
 				return null
 			}
 
-			setAmount(100); // TODO: RETRIEVE AMOUNT
+			setAmount(100); // set defaut amount...
 			sessionStorage.setItem("paymentAmount", 100); 
 
 			let res_user = await axios.get(`/api/user/getUserByID?userID=${currentUser.userID}`);	
