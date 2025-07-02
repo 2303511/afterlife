@@ -11,6 +11,9 @@ services:
   frontend:
     build: ./client
     command: npm start
+    volumes:
+      - ./client:/app      # Mount source code
+      - /app/node_modules  # Prevent overwriting node_modules
     environment:
       - HOST=0.0.0.0
       - PORT=8080
@@ -23,7 +26,8 @@ services:
     build: ./server
     command: npm run dev # with nodemon
     volumes:
-      - ./server:/index
+      - ./server:/app      # Mount source code
+      - /app/node_modules  # Prevent overwriting node_modules
     expose:
       - "8888"
     environment:
