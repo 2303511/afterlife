@@ -79,14 +79,14 @@ const validateFile = async (file, fieldName) => {
         throw new Error(`${fieldName} must be one of: ${ALLOWED_FILE_TYPES.join(', ')}`);
     }
 
-    //count the number of .
-    // Count additional dots in the base filename
+    // count the number of . in file name
     const dotCount = (file.originalname.match(/\./g) || []).length;
     if (dotCount > 1) {
         throw new Error(`${fieldName} filename contains suspicious double extensions or dots. Please rename the file.`);
     }
 
     //cannot start with . also 
+    //prevent file like .htaccess
     if (file.originalname.startsWith('.')) {
         throw new Error(`${fieldName} filename is not allowed to start with a dot.`);
     }
@@ -133,7 +133,7 @@ const validateFileBooking = async  (req, res, next) => {
         console.log('- userRole:', req.body.userRole);
 
         // Validate body fields
-        // will stop not stop when it detects as error, will check thru the whole req.body
+        // will  not stop when it detects as error, will check thru the whole req.body
         // will farm all the errors first
         const { error } = joiValidatorRequirement.validate(req.body, { abortEarly: false });
         console.log("successful check thru the whole form");
