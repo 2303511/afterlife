@@ -42,9 +42,9 @@ describe('Register Page', () => {
     const dobInput = container.querySelector('input[name="dob"]');
     expect(dobInput).toBeInTheDocument();
 
-    // radio inputs still have htmlFor/id linkage
-    expect(screen.getByLabelText(/male/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/female/i)).toBeInTheDocument();
+    // radio inputs by exact label match
+    expect(screen.getByLabelText(/^male$/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/^female$/i)).toBeInTheDocument();
 
     // submit button
     expect(screen.getByRole('button', { name: /register/i })).toBeInTheDocument();
@@ -71,8 +71,8 @@ describe('Register Page', () => {
     await userEvent.type(screen.getByPlaceholderText(/enter nationality/i), 'Singaporean');
     await userEvent.type(screen.getByPlaceholderText(/enter address/i), '123 Test Street');
 
-    // select gender
-    await userEvent.click(screen.getByLabelText(/male/i));
+    // select gender via exact label match
+    await userEvent.click(screen.getByLabelText(/^male$/i));
 
     await userEvent.type(screen.getByPlaceholderText(/enter password/i), 'password123');
 
