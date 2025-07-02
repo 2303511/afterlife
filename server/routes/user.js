@@ -662,12 +662,15 @@ router.get("/getUserByID", ensureAuth, ensureSelfOrRole(["admin"]), async (req, 
 	}
 });
 
-router.post("/getUserByNRIC", ensureAuth, ensureRole(["admin"]), async (req, res) => {
+router.post("/getUserByNRIC", ensureAuth, ensureRole(["staff", "admin"]), async (req, res) => {
 	let userNRIC = req.body.nric;
 
 	try {
 		const [user] = await db.query("SELECT * FROM User WHERE nric = ?", [userNRIC]);
 		if (user.length === 0) return res.status(404).json({ message: `User with NRIC ${userNRIC} not found` });
+
+		console.log("we got user details!!");
+		console.log(user[0]);
 
 		res.json(user[0]); // return user details
 	} catch (err) {
