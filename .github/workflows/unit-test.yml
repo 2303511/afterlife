@@ -1,85 +1,45 @@
-name: Selenium End-to-End Tests
+name: React Unit Tests
 
 on:
   push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
+    branches:
+      - main
 
 jobs:
-  e2e:
+  unit-tests:
     runs-on: ubuntu-latest
-    env:
-      BASE_URL: http://localhost:8080
+    strategy:
+      matrix:
+        node-version: [18.x]
 
     steps:
-      - name: Check out code
+      - name: Checkout code
         uses: actions/checkout@v4
 
-      # 1) Build your front-end
-      - name: Install front-end dependencies
-        working-directory: client
-        run: |
-          npm ci
-
-      - name: Build front-end
-        working-directory: client
-        env:
-          CI: false    # disable CRA's warnings-as-errors
-        run: |
-          npm run build
-
-      # 2) Serve the built bundle on port 8080
-      - name: Install static-server & wait-on
-        run: |
-          npm install -g serve wait-on
-
-      - name: Run static server
-        run: |
-          serve -s client/build -l 8080 &
-
-      - name: Wait for front-end to respond
-        run: |
-          npx wait-on http://localhost:8080/register
-
-      # 3) Start your back-end (Docker Compose)
-      - name: Create .env for Docker Compose
-        run: |
-          cat > .env <<EOF
-          DB_HOST=db
-          DB_USER=${{ secrets.DB_USER }}
-          DB_PASSWORD=${{ secrets.DB_PASSWORD }}
-          DB_NAME=${{ secrets.DB_NAME }}
-          DB_ROOT_PASSWORD=${{ secrets.DB_ROOT_PASSWORD }}
-          EOF
-
-      - name: Start Docker Compose
-        run: |
-          docker compose up --build -d
-
-      # 4) Install Chrome & Python for Selenium
-      - name: Install Google Chrome
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y wget gnupg unzip
-          wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub \
-            | sudo apt-key add -
-          echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" \
-            | sudo tee /etc/apt/sources.list.d/google-chrome.list
-          sudo apt-get update
-          sudo apt-get install -y google-chrome-stable
-
-      - name: Setup Python & Selenium
-        uses: actions/setup-python@v4
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
         with:
-          python-version: '3.11'
+          node-version: ${{ matrix.node-version }}
 
-      - name: Install test dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install selenium webdriver-manager pytest
+      - name: Cache dependencies
+        uses: actions/cache@v3
+        with:
+          path: client/node_modules
+          key: ${{ runner.os }}-node-${{ matrix.node-version }}-${{ hashFiles('client/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-${{ matrix.node-version }}-
 
-      # 5) Run your Selenium registration test
-      - name: Run Selenium registration test
-        run: |
-          pytest tests/register_test.py -q -s --maxfail=1
+      - name: Install dependencies
+        working-directory: client
+        run: npm ci
+
+      - name: Run Jest unit tests
+        working-directory: client
+        run: npm test -- --watchAll=false --coverage
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: coverage-report
+          path: client/coverage
