@@ -35,7 +35,11 @@ jobs:
 
       - name: Run Jest unit tests
         working-directory: client
-        run: npm test -- --watchAll=false --coverage
+        run: |
+          npm test -- \
+            --transformIgnorePatterns "node_modules/(?!axios)/" \
+            --watchAll=false \
+            --coverage
 
       - name: Upload coverage report
         if: always()
