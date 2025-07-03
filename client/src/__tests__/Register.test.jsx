@@ -10,7 +10,7 @@ import userEvent from '@testing-library/user-event';
 jest.mock('axios');
 
 // mock react-router navigate
-type mockNavigate = jest.fn();
+const mockNavigate = jest.fn();
 jest.mock('react-router-dom', () => {
   const actual = jest.requireActual('react-router-dom');
   return {
@@ -36,7 +36,6 @@ describe('Register Page', () => {
   it('renders all form fields and submit button', () => {
     render(<Register />);
 
-    // verify inputs by placeholder
     expect(screen.getByPlaceholderText(/enter username/i)).toBeInTheDocument();
     expect(screen.getByPlaceholderText(/enter email/i)).toBeInTheDocument();
     expect(screen.getByPlaceholderText(/enter full name/i)).toBeInTheDocument();
@@ -45,25 +44,20 @@ describe('Register Page', () => {
     expect(screen.getByPlaceholderText(/enter address/i)).toBeInTheDocument();
     expect(screen.getByPlaceholderText(/enter password/i)).toBeInTheDocument();
 
-    // date input fallback
     const dobInput = screen.queryByLabelText(/date of birth/i) || document.querySelector('input[name="dob"]');
     expect(dobInput).toBeInTheDocument();
 
-    // gender radios
     expect(screen.getByLabelText(/^male$/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/^female$/i)).toBeInTheDocument();
 
-    // register button
     expect(screen.getByRole('button', { name: /register/i })).toBeInTheDocument();
   });
 
   it('submits form and navigates to login on success', async () => {
-    // mock successful API response
     axios.post.mockResolvedValue({ data: { success: true, redirectTo: '/login', twoFAEnabled: false } });
 
     render(<Register />);
 
-    // fill form fields
     await userEvent.type(screen.getByPlaceholderText(/enter username/i), 'testuser');
     await userEvent.type(screen.getByPlaceholderText(/enter email/i), 'test@example.com');
     await userEvent.type(screen.getByPlaceholderText(/enter full name/i), 'Test User');
@@ -74,7 +68,6 @@ describe('Register Page', () => {
     await userEvent.clear(dob);
     await userEvent.type(dob, '1990-01-01');
 
-    // select nationality
     const nationalitySelect = screen.getByRole('combobox');
     await userEvent.selectOptions(nationalitySelect, 'Singaporean');
 
@@ -82,10 +75,8 @@ describe('Register Page', () => {
     await userEvent.click(screen.getByLabelText(/^male$/i));
     await userEvent.type(screen.getByPlaceholderText(/enter password/i), 'password123');
 
-    // submit form
     await userEvent.click(screen.getByRole('button', { name: /register/i }));
 
-    // assertions
     await waitFor(() => {
       expect(window.grecaptcha.execute).toHaveBeenCalledWith(
         '6Les2nMrAAAAAEx17BtP4kIVDCmU1sGfaFLaFA5N',
