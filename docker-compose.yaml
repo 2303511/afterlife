@@ -21,12 +21,8 @@ services:
 
   frontend:
     build: ./client
-    command: npm start
-    environment:
-      - HOST=0.0.0.0
-      - PORT=8080
     expose:
-      - "8080"
+      - "80"
     depends_on:
       - backend
 
