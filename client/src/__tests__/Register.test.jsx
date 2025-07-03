@@ -1,26 +1,31 @@
 // client/src/__tests__/Register.test.jsx
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import axios from 'axios';
 import Register from '../pages/public/Register';
 import userEvent from '@testing-library/user-event';
 
-// 1) mock axios
+// mock axios
 jest.mock('axios');
 
-// 2) mock react-router navigate
+// mock react-router navigate
 const mockNavigate = jest.fn();
 jest.mock('react-router-dom', () => {
   const actual = jest.requireActual('react-router-dom');
-  return { ...actual, useNavigate: () => mockNavigate };
+  return {
+    ...actual,
+    useNavigate: () => mockNavigate,
+  };
 });
 
-// 3) stub grecaptcha before component mounts
+// Stub grecaptcha before component mounts
 beforeAll(() => {
   Object.defineProperty(window, 'grecaptcha', {
     configurable: true,
-    value: { execute: jest.fn().mockResolvedValue('test-token') },
+    value: {
+      execute: jest.fn().mockResolvedValue('test-token'),
+    },
   });
 });
 
@@ -32,23 +37,30 @@ describe('Register Page', () => {
 
   it('renders all form fields and submit button', () => {
     render(<Register />);
-    // ... (same render assertions as before) ...
+
+    // personal details fields
+    expect(screen.getByPlaceholderText(/enter username/i)).toBeInTheDocument();
+    expect(screen.getByPlaceholderText(/enter email/i)).toBeInTheDocument();
+    expect(screen.getByPlaceholderText(/enter full name/i)).toBeInTheDocument();
+    expect(screen.getByPlaceholderText(/enter contact number/i)).toBeInTheDocument();
+    expect(screen.getByPlaceholderText(/enter nric/i)).toBeInTheDocument();
+    const dobInput = screen.queryByLabelText(/date of birth/i) || document.querySelector('input[name="dob"]');
+    expect(dobInput).toBeInTheDocument();
+    expect(screen.getByRole('combobox')).toBeInTheDocument(); // nationality select
+    expect(screen.getByPlaceholderText(/enter address/i)).toBeInTheDocument();
+    expect(screen.getByPlaceholderText(/enter postal code/i)).toBeInTheDocument();
+    expect(screen.getByPlaceholderText(/enter unit number/i)).toBeInTheDocument();
+    expect(screen.getByPlaceholderText(/enter password/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/^male$/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/^female$/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /register/i })).toBeInTheDocument();
   });
 
-  it('submits form and navigates to setup-2fa when 2FA is enabled', async () => {
-    // arrange: mock API response
-    axios.post.mockResolvedValue({
-      data: { success: true, redirectTo: '/setup-2fa', twoFAEnabled: true }
-    });
+  it('submits form and navigates to login on success', async () => {
+    // mock successful API response
+    axios.post.mockResolvedValue({ data: { success: true, redirectTo: '/login', twoFAEnabled: false } });
 
     render(<Register />);
-
-    // --- WAIT FOR THE SCRIPT TO APPEAR & FIRE its load ---
-    const script = await waitFor(() =>
-      document.querySelector('script[src*="recaptcha/api.js"]')
-    );
-    fireEvent.load(script);
 
     // fill out form fields
     await userEvent.type(screen.getByPlaceholderText(/enter username/i), 'testuser');
@@ -64,7 +76,7 @@ describe('Register Page', () => {
     await userEvent.selectOptions(screen.getByRole('combobox'), 'Singaporean');
     await userEvent.type(screen.getByPlaceholderText(/enter address/i), '123 Test Street');
     await userEvent.type(screen.getByPlaceholderText(/enter postal code/i), '123456');
-    await userEvent.type(screen.getByPlaceholderText(/enter unit number/i), '05-01');
+    await userEvent.type(screen.getByPlaceholderText(/enter unit number/i), '123');
     await userEvent.click(screen.getByLabelText(/^male$/i));
     await userEvent.type(screen.getByPlaceholderText(/enter password/i), 'password123');
 
@@ -73,19 +85,19 @@ describe('Register Page', () => {
 
     // assertions
     await waitFor(() => {
-      // 1) reCAPTCHA executed
+      // recaptcha should have been executed
       expect(window.grecaptcha.execute).toHaveBeenCalledWith(
         '6Les2nMrAAAAAEx17BtP4kIVDCmU1sGfaFLaFA5N',
         { action: 'register' }
       );
-      // 2) API call happened
+      // verify API call happened (loose check)
       expect(axios.post).toHaveBeenCalledWith(
         '/api/user/register',
         expect.any(Object),
         expect.any(Object)
       );
-      // 3) navigation goes to setup-2fa
-      expect(mockNavigate).toHaveBeenCalledWith('/setup-2fa');
+      // navigation should occur
+      expect(mockNavigate).toHaveBeenCalledWith('/login');
     });
   });
 });
