@@ -1,6 +1,6 @@
 // client/src/__tests__/Register.test.jsx
 import React from 'react';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import axios from 'axios';
 import Register from '../pages/public/Register';
@@ -38,32 +38,24 @@ describe('Register Page', () => {
   it('renders all form fields and submit button', () => {
     render(<Register />);
 
-    // personal details fields
     expect(screen.getByPlaceholderText(/enter username/i)).toBeInTheDocument();
     expect(screen.getByPlaceholderText(/enter email/i)).toBeInTheDocument();
     expect(screen.getByPlaceholderText(/enter full name/i)).toBeInTheDocument();
     expect(screen.getByPlaceholderText(/enter contact number/i)).toBeInTheDocument();
     expect(screen.getByPlaceholderText(/enter nric/i)).toBeInTheDocument();
 
-    // date of birth (fallback to name selector)
-    const dobInput = screen.queryByLabelText(/date of birth/i)
+    // date of birth (no htmlFor on label, so fallback)
+    const dob = screen.queryByLabelText(/date of birth/i)
       || document.querySelector('input[name="dob"]');
-    expect(dobInput).toBeInTheDocument();
+    expect(dob).toBeInTheDocument();
 
-    // nationality select
-    expect(screen.getByRole('combobox')).toBeInTheDocument();
-
-    // address / postal / unit / password
+    expect(screen.getByRole('combobox')).toBeInTheDocument(); // nationality
     expect(screen.getByPlaceholderText(/enter address/i)).toBeInTheDocument();
     expect(screen.getByPlaceholderText(/enter postal code/i)).toBeInTheDocument();
     expect(screen.getByPlaceholderText(/enter unit number/i)).toBeInTheDocument();
     expect(screen.getByPlaceholderText(/enter password/i)).toBeInTheDocument();
-
-    // gender radios
     expect(screen.getByLabelText(/^male$/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/^female$/i)).toBeInTheDocument();
-
-    // submit button
     expect(screen.getByRole('button', { name: /register/i })).toBeInTheDocument();
   });
 
@@ -78,6 +70,10 @@ describe('Register Page', () => {
     });
 
     render(<Register />);
+
+    // **VERY IMPORTANT**: simulate reCAPTCHA script load
+    const script = document.querySelector('script[src*="recaptcha/api.js"]');
+    fireEvent.load(script);
 
     // fill out form fields
     await userEvent.type(screen.getByPlaceholderText(/enter username/i), 'testuser');
@@ -108,7 +104,7 @@ describe('Register Page', () => {
         { action: 'register' }
       );
 
-      // 2) API call happened (we don't care about exact payload here)
+      // 2) API call happened
       expect(axios.post).toHaveBeenCalledWith(
         '/api/user/register',
         expect.any(Object),
