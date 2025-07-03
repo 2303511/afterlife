@@ -21,7 +21,6 @@ services:
 
   frontend:
     build: ./client
-    command: npm start
     volumes:
       - ./client:/app      # Mount source code
       - /app/node_modules  # Prevent overwriting node_modules
