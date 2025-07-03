@@ -19,7 +19,14 @@ const axios = require('axios');
 const speakeasy = require('speakeasy');
 //for server side validation
 const validator = require("validator");
-
+//for denying compromised passwords
+const denylistPath = path.join(__dirname, 'compromised.txt');
+const denylist = new Set(
+  fs.readFileSync(denylistPath, 'utf-8')
+    .split(/\r?\n/)
+    .map(p => p.trim().toLowerCase()) 
+    .filter(Boolean) 
+);
 
 // Generate 2FA secret for new user
 router.post("/generate-2fa-secret", ensureAuth, async (req, res) => {
@@ -145,6 +152,10 @@ const registerLimiter = rateLimit({
 		return res.status(options.statusCode).json(options.message);
 	}
 });
+
+function areCompromisedPassword(password) {
+	return denylist.has(password.toLowerCase());
+}
 
 //logs login logs to /app/logs/login.logs
 function logLoginAttempt({ traceId, email, status, req, role }) {
@@ -332,7 +343,7 @@ router.post("/register", registerLimiter, async (req, res) => {
 	if (!email || !validator.isEmail(email)) {
 		errors.email = "Invalid email format";
 	}
-
+	
 	if (!password || password.length < 8 ) {
 		errors.password = "Password must be 8+ characters ";
 	}
