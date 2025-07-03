@@ -10,6 +10,7 @@ logs/
 *.pid
 *.seed
 *.pid.lock
+**/.logs
 
 # === Environment Files ===
 **/.env
@@ -36,4 +37,4 @@ coverage/
 *.sqlite
 *.sqlite3
 *.bak
-
+*.pem

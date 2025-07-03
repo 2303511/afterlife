@@ -1,5 +1,3 @@
-import { useEffect } from "react";
-
 // import images
 import landingImage from "../../img/landing-image.png"; // replace with your actual image path
 import logo from "../../img/logo.svg"; // replace with your actual logo path

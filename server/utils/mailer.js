@@ -14,14 +14,22 @@ const transporter = nodemailer.createTransport({
 
 // Generic function to send email
 async function sendMail(to, subject, htmlContent) {
-  const mailOptions = {
-    from: `"AfterLife Admin" <${process.env.MAIL_USER}>`,
-    to,
-    subject,
-    html: htmlContent
-  };
-
-  return transporter.sendMail(mailOptions);
-}
+    const mailOptions = {
+      from: `"AfterLife Support" <${process.env.MAIL_USER}>`,
+      to,
+      subject,
+      html: htmlContent
+    };
+  
+    try {
+      const info = await transporter.sendMail(mailOptions);
+      console.log("Email sent:", info.response);
+      return info;
+    } catch (err) {
+      console.error("Email failed to send:", err);
+      throw err;
+    }
+  }
+  
 
 module.exports = sendMail;

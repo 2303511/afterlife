@@ -3,14 +3,17 @@ const router = express.Router();
 const Stripe = require("stripe");
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY); // use dotenv!
 
-router.get("/config", (req, res) => {
+const { ensureAuth } = require("../middleware/auth.js");
+
+router.get("/config", ensureAuth, (req, res) => {
 	res.send({
 		publishableKey: process.env.STRIPE_PUBLISHABLE_KEY
 	});
 });
 
-router.post("/create-payment-intent", async (req, res) => {
-	const paymentAmount = req.body.amount * 100; // stripe always takes in the value in cents.hence need to *100
+router.post("/create-payment-intent", ensureAuth, async (req, res) => {
+    const paymentAmount = process.env.PAYMENT_AMOUNT * 100;
+	// const paymentAmount = req.body.amount * 100; // stripe always takes in the value in cents.hence need to *100
 
 	try {
 		const paymentIntent = await stripe.paymentIntents.create({
@@ -31,6 +34,7 @@ router.post("/create-payment-intent", async (req, res) => {
 	}
 });
 
+// TODO: XH REMEMBER THIS
 router.post("/webhook", express.raw({ type: "application/json" }), (req, res) => {
     const sig = req.headers["stripe-signature"];
 

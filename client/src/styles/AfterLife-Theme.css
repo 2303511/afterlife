@@ -398,8 +398,8 @@
 }
 
 .beneficiary-avatar {
-	width: 50px;
-	height: 50px;
+	width: 4rem;
+	aspect-ratio: 1 / 1; /* ensures equal height and width*/
 	background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
 	border-radius: 50%;
 	display: flex;

@@ -1,16 +1,16 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useContext } from "react";
 import axios from "axios";
 
 import CopyableField from "../../components/CopyableField";
 
 // src/pages/MyPayments.js
 export default function MyPayments() {
-	const [userID] = useState(sessionStorage.getItem("userId"));
 	const [payments, setPayments] = useState([]);
-
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState(null);
-
+	const { user } = useContext(require("../../auth/AuthContext").AuthContext);
+	const userID   = user?.userID;
+	
 	// getter for all
 	const fetchDetails = async (endpoint, idLabel, indivID) => {
 		console.log(`[Frontend] Fetching details for ${endpoint}:`, indivID);
@@ -18,6 +18,7 @@ export default function MyPayments() {
 		try {
 			const response = await axios.get(`/api/${endpoint}`, {
 				params: { [idLabel]: indivID },
+				withCredentials: true,
 				headers: {
 					"Content-Type": "application/json"
 				}

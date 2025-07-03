@@ -1,67 +1,123 @@
-const express = require('express');
-const router = express.Router();
-const db = require('../db');
+// routes/payment.js
 
-// GET all payments
-router.get('/', async (req, res) => {
-    console.log('Fetching all payments');
+const express            = require("express");
+const router             = express.Router();
+const db                 = require("../db");
+const { 
+  ensureAuth, 
+  ensureRole, 
+  ensureSelfOrRole 
+} = require("../middleware/auth.js");
+
+// GET all payments (staff/admin only)
+router.get(
+  "/",
+  ensureAuth,
+  ensureRole(["staff","admin"]),
+  async (req, res) => {
     try {
-        const [payments] = await db.query('SELECT * FROM Payment');
-        res.json(payments);
+      const [payments] = await db.query("SELECT * FROM Payment");
+      res.json(payments);
     } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: 'Failed to fetch payments' });
+      console.error(err);
+      res.status(500).json({ error: "Failed to fetch payments" });
     }
-});
+  }
+);
 
-// GET payment by ID
-router.get('/getPaymentByID', async (req, res) => {
+// GET payment by ID (self or staff/admin)
+router.get(
+  "/getPaymentByID",
+  ensureAuth,
+  async (req, res) => {
     const paymentID = req.query.paymentID;
-    console.log('Fetching payment with ID:', paymentID);
-
-    if (!paymentID) {  
-        return res.status(400).json({ error: 'Payment ID is required' });
+    if (!paymentID) {
+      return res.status(400).json({ error: "Payment ID is required" });
     }
-
     try {
-        const [payment] = await db.query('SELECT * FROM Payment WHERE paymentID = ?', [paymentID]);
-        console.log('Payment fetched:', payment);
-        
-        if (payment.length === 0) {
-            return res.status(404).json({ error: 'Payment not found' });
-        }
-        
-        res.json(payment[0]);
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: 'Failed to fetch payment' });
-    }
-});
+      // Join Payment -> Booking to determine owner
+      const [[payment]] = await db.query(`
+        SELECT p.*, bk.paidByID
+        FROM Payment AS p
+        JOIN Booking AS bk ON bk.paymentID = p.paymentID
+        WHERE p.paymentID = ?
+      `, [paymentID]);
 
-// get Payment By User ID
-router.get('/getPaymentByUserID', async (req, res) => {
+      if (!payment) {
+        return res.status(404).json({ error: "Payment not found" });
+      }
+
+      // authorize: staff/admin or the user who paid
+      if (
+        req.session.role !== "staff" &&
+        req.session.role !== "admin" &&
+        payment.paidByID !== req.session.userID
+      ) {
+        return res.status(403).json({ error: "Forbidden" });
+      }
+
+      // strip out internal paidByID before returning
+      const { paidByID, ...publicPayment } = payment;
+      res.json(publicPayment);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: "Failed to fetch payment" });
+    }
+  }
+);
+
+// GET payment by User ID (self or staff/admin)
+router.get(
+  "/getPaymentByUserID",
+  ensureAuth,
+  ensureSelfOrRole(["staff","admin"]),
+  async (req, res) => {
     const userID = req.query.userID;
-    console.log('Fetching payment with ID:', userID);
-
-    if (!userID) {  
-        return res.status(400).json({ error: 'User ID is required' });
+    if (!userID) {
+      return res.status(400).json({ error: "User ID is required" });
     }
-
     try {
-        const [payment] = await db.query('SELECT * FROM Payment WHERE userID = ?', [userID]);
-        console.log(`Payment Fetched: ${payment}`);
-        
-        if (payment.length === 0) {
-            return res.status(404).json({ error: `Payment by User ID ${userID} not found` });
-        }
-        console.log(`this is payment: ${payment}`);
-        console.log(payment);
-        
-        res.json(payment[0]);
+      const [payments] = await db.query(
+        "SELECT * FROM Payment WHERE paidByID = ?",
+        [userID]
+      );
+      res.json(payments.length ? payments : []);
     } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: `Failed to fetch payment by User ID ${userID}` });
+      console.error(err);
+      res.status(500).json({ error: `Failed to fetch payments for user ${userID}` });
     }
-});
+  }
+);
 
-module.exports = router;
+// get payment summary (internal helper)
+async function getPaymentSummary(bookingID) {
+  if (!bookingID) {
+    throw new Error("Booking ID is required");
+  }
+  const [paymentSummary] = await db.query(`
+    SELECT 
+      u.fullName,
+      bnf.beneficiaryName,
+      bl.blockName,
+      lv.levelNumber,
+      nc.nicheColumn,
+      nc.nicheRow,
+      bk.bookingType,
+      p.amount,
+      p.paymentDate, 
+      p.paymentMethod
+    FROM Booking bk
+    JOIN User u ON bk.paidByID = u.userID
+    JOIN Beneficiary bnf ON bk.beneficiaryID = bnf.beneficiaryID
+    JOIN Niche nc ON bk.nicheID = nc.nicheID
+    JOIN Block bl ON nc.blockID = bl.blockID
+    JOIN Level lv ON bl.levelID = lv.levelID
+    JOIN Payment p ON bk.paymentID = p.paymentID
+    WHERE bk.bookingID = ?;
+  `, [bookingID]);
+
+  if (paymentSummary.length === 0) return null;
+  return paymentSummary[0];
+}
+
+module.exports = { router, getPaymentSummary };

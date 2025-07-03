@@ -16,7 +16,7 @@ export default function BookingApproval() {
 
 
     useEffect(() => {
-        axios.get(`/api/booking/approval/${bookingID}`)
+        axios.get(`/api/booking/approval/${bookingID}`, { withCredentials: true })
             .then(res => {
                 console.log("Booking fetched:", res.data);
                 setBooking(res.data);
@@ -38,8 +38,9 @@ export default function BookingApproval() {
         try {
             const res = await axios.post('/api/booking/approve', {
                 bookingID: booking.bookingID,
-                nicheID: booking.nicheID
-            });
+                nicheID: booking.nicheID,
+                bookingType: booking.bookingType
+            }, { withCredentials: true });
 
             if (res.data.success) {
                 toast.success('Booking approved!');
@@ -76,7 +77,7 @@ export default function BookingApproval() {
             const res = await axios.post('/api/email/sendDeniedRequest', {
                 to: booking.email,
                 reason: denialReason
-            });
+            }, { withCredentials: true });
 
             if (res.data.success) {
                 toast.success("Denial email sent.");

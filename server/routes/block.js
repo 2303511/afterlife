@@ -1,13 +1,11 @@
 const express = require('express');
-const router = express.Router();
-const db = require('../db');
+const router  = express.Router();
+const db      = require('../db');
+const { ensureAuth } = require('../middleware/auth.js');
 
-router.get("/", async (req, res) => {
-    console.log("Fetching all blocks");
-    
+router.get("/", ensureAuth, async (req, res) => {
     try {
         const [blocks] = await db.query("SELECT * from Block");
-        console.log("Blocks fetched:", blocks);
         res.json(blocks);
     } catch (err) {
         console.error(err);
@@ -15,14 +13,12 @@ router.get("/", async (req, res) => {
     }
 });
 
-router.get("/getBlockByID", async (req, res) => {
+router.get("/getBlockByID", ensureAuth, async (req, res) => {
     const blockID = req.query.blockID
-    console.log("Fetching block by Block ID:", blockID);
     
     try {
         var block = await db.query("SELECT * from Block WHERE blockID=?", [blockID]);
         block = block?.[0];
-        console.log("Block fetched:", block[0]);
         res.json(block[0]);
     } catch (err) {
         console.error(err);

@@ -11,32 +11,29 @@ import "react-toastify/dist/ReactToastify.css";
 
 import { useNavigate } from "react-router-dom";
 
-export default function PaymentForm({ onBack, bookingID }) {
+export default function PaymentForm({ onBack, bookingID, applicantEmail }) {
   const navigate = useNavigate();
 	const [paymentMethod, setPaymentMethod] = useState("");
 	const [paymentAmount, setPaymentAmount] = useState("");
 	const [stripePromise, setStripePromise] = useState(null);
 	const [clientSecret, setClientSecret] = useState("");
 
+	// when the payment method is set to card, just prepare all of the required stuff for stripe
 	useEffect(() => {
 		// When "Card" is selected, load Stripe client + intent
 		if (paymentMethod === "Card") {
 			const setupStripe = async () => {
-            // 2a. this is going to ask from stripe config
-        const publishableKey = await axios.get("/api/payment/config").then((res) => {
-          return res.data.publishableKey;
-        });
-        setStripePromise(loadStripe(publishableKey));
+				// 2a. this is going to ask from stripe config
+				const publishableKey = await axios.get("/api/payment/config").then((res) => {
+				return res.data.publishableKey;
+				});
+				setStripePromise(loadStripe(publishableKey));
 
-        // 2b. to get the secret key
-        const secretKey = await axios
-          .post("/api/payment/create-payment-intent", {
-            amount: 100, // TODO: UPDATE THE PRICE OF THE NICHE
-          })
-          .then((res) => {
-            return res.data.clientSecret; // this is client secret for stripe
-          });
-        setClientSecret(secretKey);
+				// 2b. to get the secret key
+				const secretKey = await axios.post("/api/payment/create-payment-intent")
+				.then((res) => { return res.data.clientSecret; }); // this is client secret for stripe 
+
+				setClientSecret(secretKey);
 			};
 
 			setupStripe();
@@ -44,7 +41,7 @@ export default function PaymentForm({ onBack, bookingID }) {
 			setStripePromise(null);
 			setClientSecret("");
 		}
-	}, [paymentMethod, paymentAmount]);
+	}, [paymentMethod]);
 
 	const handleSubmit = async (e) => {
 		e.preventDefault();
@@ -53,24 +50,12 @@ export default function PaymentForm({ onBack, bookingID }) {
 			return;
 		}
 
-		// Handle Cash, Cheque, Waived directly
-		try {
-			const res = await axios.post("/api/booking/updateBookingTransaction", {
-				paymentMethod: paymentMethod,
-				paymentAmount: paymentMethod === "Waived" ? "0.00" : paymentAmount,
-				bookingID
-			});
+		// save the payment method within session storage
+		sessionStorage.setItem("paymentMethod", paymentMethod);
+		sessionStorage.setItem("userEmail", applicantEmail);
 
-			if (res.data.success) {
-				// redirect user to booking success page
-				navigate(`/payment-success?bookingID=${bookingID}`);
-			} else {
-				toast.error("Booking failed.");
-			}
-		} catch (err) {
-			console.error("Error updating transaction:", err);
-			toast.error("Server error while updating transaction.");
-		}
+		// navigate to the payment success page
+		navigate(`/payment-success?bookingID=${bookingID}`);
 	};
 
 	return (

@@ -1,5 +1,6 @@
-import React, { useState, useRef } from "react";
+import { useState, useEffect } from "react";
 import { Button, Form, Accordion } from "react-bootstrap";
+import axios from "axios";
 
 import ApplicantDetails from './ApplicantDetails';
 import BeneficiaryDetails from './BeneficiaryDetails';
@@ -13,12 +14,17 @@ export default function BookingForm({ selectedSlot, onCancel, onSubmit, isModal 
   // const [bookingType, setBookingType] = useState("");
   const [bookingType, setBookingType] = useState("PreOrder");
 
+  // existing modal data
+  const [existingUserData, setExistingUserData] = useState(null);
+  const [showExistingUserModal, setShowExistingUserModal] = useState(false); // do not show the existing user found modal
+
   const [applicantData, setApplicantData] = useState({
     fullName: "",
     gender: "",
     nationality: "",
     nationalID: "",
     mobileNumber: "",
+    email:"",
     address: "",
     postalCode: "",
     unitNumber: "",
@@ -39,6 +45,7 @@ export default function BookingForm({ selectedSlot, onCancel, onSubmit, isModal 
   //   beneficiaryUnitNumber: ""
   // });
 
+	
   // const [applicantData, setApplicantData] = useState({
   //   fullName: "John Doe",
   //   gender: "Male",
@@ -65,6 +72,31 @@ export default function BookingForm({ selectedSlot, onCancel, onSubmit, isModal 
     inscription: "test test"
   });
 
+  // to make sure that all the input fields are proper
+  const lookupFields = { // must validate if the field exists too!!
+    mobileNumber: {
+      formatter: (v) => v.replace(/\D/g, ""),
+      minLength: 8,
+      label: "Mobile Number"
+    },
+    nationalID: {
+      formatter: (v) => v.toUpperCase(),
+      minLength: 9, // or whatever
+      label: "National ID"
+    },
+    email: {
+      formatter: (v) => v.trim(),
+      minLength: 5,
+      label: "Email"
+    }
+  };
+
+  // Fields that just need formatting (no lookup)
+  const formatOnlyFields = {
+    unitNumber: (v) => v.replace(/[^0-9-]/g, ""),
+    postalCode: (v) => v.replace(/\D/g, "")
+  };
+
   const [files, setFiles] = useState({
     birthCert: null,
     deathCert: null
@@ -76,6 +108,20 @@ export default function BookingForm({ selectedSlot, onCancel, onSubmit, isModal 
     beneficiary: {}
   });
 
+  // user session
+  const [user, setUser] = useState(undefined);
+
+  useEffect(() => {
+    axios.get("/api/user/me", { withCredentials: true })
+      .then(res => {
+        setUser(res.data);
+      })
+      .catch(err => console.error("Failed to fetch session:", err));
+  }, []);
+
+  if (user === undefined) return null; 
+
+  // when the new file is uploaded
   const onFileChange = (e, type) => {
     const file = e.target.files[0];
 
@@ -95,27 +141,22 @@ export default function BookingForm({ selectedSlot, onCancel, onSubmit, isModal 
   };
 
   // handlers
-  const handleApplicantChange = (e) => {
+  const handleApplicantChange = async (e) => {
     let { name, value } = e.target;
 
-    if (name === "mobileNumber") {
-      value = value.replace(/\D/g, "");
-    }
-    if (name === "unitNumber") {
-      value = value.replace(/[^0-9-]/g, "");
-    }
-    if (name === "postalCode") {
-      value = value.replace(/\D/g, "");
-    }
-    if (name === "nationalID") {
-      value = value.toUpperCase();
+    // Run formatter if defined (for both lookup + format-only fields)
+    if (lookupFields[name]?.formatter) { // for email, nric, mobile number
+      value = lookupFields[name].formatter(value);
+    } else if (formatOnlyFields[name]) { // for unit number, postal code
+      value = formatOnlyFields[name](value);
     }
 
+    // Always update applicant data immediately
     const nextApplicantData = { ...applicantData, [name]: value };
     setApplicantData(nextApplicantData);
 
+    // Run validation for that field
     const singleFieldError = validateFormData(nextApplicantData, applicantRules, applicantFieldLabels)[name];
-
     setErrors((prevErrors) => ({
       ...prevErrors,
       applicant: {
@@ -123,6 +164,55 @@ export default function BookingForm({ selectedSlot, onCancel, onSubmit, isModal 
         [name]: singleFieldError || ""
       }
     }));
+
+    // Lookup check for specific fields
+  if (user?.role === "staff" && lookupFields[name] && value.length >= lookupFields[name].minLength) {
+      try {
+        let tempName = "";
+        if (name === "nationalID") tempName = "nric";
+        else if (name === "mobileNumber") tempName = "contactNumber";
+        else tempName = name;
+
+        // 1. check for existing field
+        const res = await axios.get(`/api/user/findExistingUser?attr=${tempName}&value=${encodeURIComponent(value)}`);
+        const match = res.data;
+
+        // 2. if found value
+        if (Array.isArray(match) && match.length > 0) {
+          console.log(`Existing record found for ${name}:`, match[0]);
+
+          // 2a. update the value 
+          setExistingUserData(match[0]);
+          setShowExistingUserModal(true);
+
+          setErrors((prev) => ({
+            ...prev,
+            applicant: {
+              ...prev.applicant,
+              [name]: `${lookupFields[name].label} exists`,
+            },
+          }));
+        } 
+        // 3. if cannot find existing value
+        else {
+          // 3a. reset all the values
+          setExistingUserData(null);
+          setShowExistingUserModal(false);
+
+          setErrors((prev) => ({
+            ...prev,
+            applicant: {
+              ...prev.applicant,
+              [name]: "",
+            },
+          }));
+        }
+      } 
+      // 4. try and catch values
+      catch (err) { // have issues tryna find the existing value
+        console.error(`Error checking existing ${name}:`, err);
+      }
+    }
   };
 
 
@@ -152,10 +242,10 @@ export default function BookingForm({ selectedSlot, onCancel, onSubmit, isModal 
 
     // Add DOB vs DOD check here:
     if (nextBeneficiaryData.dateOfBirth && nextBeneficiaryData.dateOfDeath) {
-      const dob = new Date(nextBeneficiaryData.dateOfBirth);
-      const dod = new Date(nextBeneficiaryData.dateOfDeath);
+      // const dob = new Date(nextBeneficiaryData.dateOfBirth);
+      // const dod = new Date(nextBeneficiaryData.dateOfDeath);
 
-      if (dod < dob) {
+      if (beneficiaryData.dateOfDeath < beneficiaryData.dateOfBirth) {
         allErrors.dateOfDeath = "Date of Death cannot be before Date of Birth";
       }
     }
@@ -169,7 +259,28 @@ export default function BookingForm({ selectedSlot, onCancel, onSubmit, isModal 
         [name]: singleFieldError || ""
       }
     }));
-};
+  
+  };
+
+  const onLoadExistingUser = (user) => {
+    const loadedData = {
+      fullName: user.fullName,
+      gender: user.gender,
+      nationality: user.nationality,
+      nationalID: user.nric,
+      mobileNumber: user.contactNumber,
+      email: user.email,
+      address: user.userAddress?.split(",")[0] || "",
+      postalCode: user.userAddress?.split(", ")[2] || "",
+      unitNumber: user.userAddress?.split(", ")[1] || "",
+      dob: user.dob?.split("T")[0] || ""
+    };
+
+    setApplicantData(loadedData);
+
+    toast.success("User data loaded into form.");
+  };
+
 
 
   // Step completion status
@@ -201,10 +312,10 @@ export default function BookingForm({ selectedSlot, onCancel, onSubmit, isModal 
 
     // Business rule: Death after Birth
     if (beneficiaryData.dateOfBirth && beneficiaryData.dateOfDeath) {
-      const dob = new Date(beneficiaryData.dateOfBirth);
-      const dod = new Date(beneficiaryData.dateOfDeath);
+      // const dob = new Date(beneficiaryData.dateOfBirth);
+      // const dod = new Date(beneficiaryData.dateOfDeath);
 
-      if (dod < dob) {
+      if (beneficiaryData.dateOfDeath < beneficiaryData.dateOfBirth) {
         beneficiaryErrors.dateOfDeath = "Date of Death cannot be before Date of Birth";
       }
     }
@@ -243,8 +354,6 @@ export default function BookingForm({ selectedSlot, onCancel, onSubmit, isModal 
         });
       }
 
-      console.log(`bookingTypeError: ${bookingTypeError}`);
-
       setErrors({
         bookingType: bookingTypeError,
         applicant: applicantErrors,
@@ -275,14 +384,14 @@ export default function BookingForm({ selectedSlot, onCancel, onSubmit, isModal 
     formData.append("birthCertFile", files.birthCert);
     formData.append("deathCertFile", files.deathCert);
 
+    formData.append("userRole", user?.role); // e.g., "user", "staff", "admin"
+
+    //console.log("going to payment !!");
     /*for (let pair of formData.entries()) {
       console.log(`${pair[0]}:`, pair[1]);
     }*/
-    console.log`going to payment !!`;
-    for (let pair of formData.entries()) {
-      console.log(`${pair[0]}:`, pair[1]);
-    }
-    onSubmit(formData);
+
+    onSubmit(formData, applicantData);
   };
 
   return (
@@ -368,6 +477,10 @@ export default function BookingForm({ selectedSlot, onCancel, onSubmit, isModal 
                 errors={errors?.applicant || {}}
                 width={width}
                 setApplicantData={setApplicantData}
+                onLoadExistingUser={onLoadExistingUser}
+                existingUserData={existingUserData}
+                setShowExistingUserModal={setShowExistingUserModal}
+                showExistingUserModal={showExistingUserModal}
               />
             </Accordion.Body>
           </Accordion.Item>
@@ -391,7 +504,7 @@ export default function BookingForm({ selectedSlot, onCancel, onSubmit, isModal 
               />
 
               {/* if staff, redirect to payment page */}
-              {(sessionStorage.getItem("role") === "staff" || sessionStorage.getItem("role") === "admin") && (
+              {(user?.role === "staff" || user?.role === "admin") && (
                 <Button
                   type="submit"
                   variant="success"
@@ -403,7 +516,7 @@ export default function BookingForm({ selectedSlot, onCancel, onSubmit, isModal 
               )}
 
               {/* if user, proceed to payment. */}
-              {sessionStorage.getItem("role") === "user" && (
+              {user?.role === "user" && (
                 <Button
                   type="submit"
                   variant="success"

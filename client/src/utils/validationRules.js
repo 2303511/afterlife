@@ -1,11 +1,13 @@
 // validationRules.js
 
+// BOOKING FORM
 export const applicantFieldLabels = {
     fullName: "Full Name",
     gender: "Gender",
     nationality: "Nationality",
     nationalID: "NRIC",
     mobileNumber: "Mobile Number",
+    email: "Email",
     address: "Mailing Address",
     postalCode: "Postal Code",
     unitNumber: "Unit Number",
@@ -26,6 +28,11 @@ export const applicantFieldLabels = {
       required: true,
       pattern: /^[89]\d{7}$/,
       message: "Mobile number must start with 8 or 9 and be 8 digits"
+    },
+    email: {
+      required: true,
+      pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/, // Simple email regex
+      message: "Email format is invalid"
     },
     address: { required: true },
     postalCode: {

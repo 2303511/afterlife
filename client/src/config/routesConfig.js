@@ -1,23 +1,38 @@
 import { FaClipboardList, FaFileInvoice, FaBookOpen, FaUserCircle, FaListAlt, FaMapMarkedAlt } from "react-icons/fa";
-import { MdDashboard, MdAdminPanelSettings, MdApartment} from "react-icons/md";
+import { MdDashboard, MdAdminPanelSettings, MdApartment, MdManageAccounts} from "react-icons/md";
+
 
 // Import all route components
+// user pages
 import MyBookings from "../pages/user/MyBookings"; 
 import MyPayments from "../pages/user/MyPayments";
 import NicheBooking from "../pages/user/NicheBooking";
 import Profile from "../pages/Profile";
 
+// staff pages
 import Dashboard from "../pages/staff/Dashboard";
 import SearchBooking from "../pages/staff/SearchBooking";
-import NicheManagement from "../pages/staff/NicheManagement";
+import NicheBookingStaff from "../pages/staff/NicheBookingStaff";
 import BookingApproval from "../pages/staff/BookingApproval";
 import PendingApprovals from "../pages/staff/PendingApprovals";
 
+// admin pages
 import AdminDashboard from "../pages/admin/AdminDashboard";
-import BuildingManagement from "../pages/admin/BuildingManagement";
+import NicheManagement from "../pages/admin/NicheManagement";
+import UserManagement from "../pages/admin/UserManagement";
+
 import Login from "../pages/public/Login";
 import Register from "../pages/public/Register";
 import LandingPage from "../pages/public/LandingPage";
+import Logout from "../pages/public/Logout";
+import Setup2FA from "../pages/public/Setup2FA";
+import Login2FA from "../pages/public/Login2FA";
+import ResetPassword from "../pages/public/ResetPassword";
+
+
+// hidden pages
+import RequestUrnPlacement from "../pages/user/RequestUrnPlacement";
+import PaymentSuccess from '../pages/PaymentSuccess';
 
 // PUBLIC
 export const publicRoutes = [
@@ -43,7 +58,20 @@ export const publicRoutes = [
     label: "Register",
     path: "/register",
     element: <Register />,
-  }
+    
+  },
+  {
+    path: "/setup-2fa",
+    element: <Setup2FA />,
+  },
+  {
+    path: "/login-2fa",
+    element: <Login2FA />,
+  },
+  {
+  path: "/reset-password",
+  element: <ResetPassword />,
+  },
 ];
 
 // USER
@@ -76,6 +104,12 @@ export const userRoutes = [
     element: <Profile />,
     requiredRoles: ["user", "staff", "admin"]
   },
+  {
+    label: "Logout",
+    path: "/logout",
+    element: <Logout />,
+    requiredRoles: ["user", "staff", "admin"]
+  }
 ];
 
 // STAFF
@@ -102,12 +136,12 @@ export const staffRoutes = [
     requiredRoles: ["staff"]
   },
   {
-    label: "Niche Management",
-    path: "/niche-management",
+    label: "Niche Booking",
+    path: "/niche-booking",
     icon: <FaMapMarkedAlt />,
-    element: <NicheManagement />,
+    element: <NicheBookingStaff />,
     requiredRoles: ["staff"]
-  },
+  }
 ];
 
 // ADMIN
@@ -120,12 +154,19 @@ export const adminRoutes = [
     requiredRoles: ["admin"]
   },
   {
-    label: "Building Management",
-    path: "/building-management",
-    icon: <MdApartment />,
-    element: <BuildingManagement />,
+    label: "Niche Management",
+    path: "/niche-management",
+    icon: <FaMapMarkedAlt />,
+    element: <NicheManagement />,
     requiredRoles: ["admin"]
   },
+  {
+    label: "User Management",
+    path: "/user-management",
+    icon: <MdManageAccounts />,
+    element: <UserManagement />,
+    requiredRoles: ["admin"]
+  }
 ];
 
 export const hiddenRoutes = [
@@ -133,7 +174,18 @@ export const hiddenRoutes = [
     path: "/booking-approval/:bookingID",
     element: <BookingApproval />,
     requiredRoles: ["staff"]
-  }
+  },
+  {
+    path: "/payment-success",
+    element: <PaymentSuccess />,
+    requiredRoles: ["user", "staff"]
+  },
+  {
+    label: "RequestUrnPlacement",
+    path: "/req-urn-placement",
+    element: <RequestUrnPlacement />,
+    requiredRoles: ["user"]
+  },
 ];
 
 

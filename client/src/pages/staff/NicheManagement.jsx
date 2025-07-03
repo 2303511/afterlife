@@ -6,14 +6,14 @@ import FullFormFlow from "../../components/booking/FullFormFlow";
 
 export default function NicheManagement() {
 	const [isForm, setIsForm] = useState(null);
-  const formRef = useRef(null);
+  	const formRef = useRef(null);
 
 	// to pass data from FullNicheMap to FullFormFlow
 	const [selectedBuilding, setSelectedBuilding] = useState("");
 	const [selectedLevel, setSelectedLevel] = useState("");
 	const [selectedBlock, setSelectedBlock] = useState("");
 	const [gridDisabled, setGridDisabled] = useState(false);
-  const [isBookButtonDisabled, setIsBookButtonDisabled] = useState(true);
+  	const [isBookButtonDisabled, setIsBookButtonDisabled] = useState(true);
 
 	// selectedSlotId = ID of the selected Slot
 	const [selectedSlotId, setSelectedSlotId] = useState(null);

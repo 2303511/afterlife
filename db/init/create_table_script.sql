@@ -14,6 +14,7 @@ DROP TABLE IF EXISTS Block;
 DROP TABLE IF EXISTS Level;
 DROP TABLE IF EXISTS Building;
 DROP TABLE IF EXISTS Role;
+DROP TABLE IF EXISTS sessions;
 
 -- Re-enable foreign key checks
 SET FOREIGN_KEY_CHECKS = 1;
@@ -50,21 +51,25 @@ CREATE TABLE Block (
 -- 5. User table (depends on Role)
 CREATE TABLE User (
     userID CHAR(36) PRIMARY KEY,
-    username VARCHAR(255),
-    email VARCHAR(255),
+    username VARCHAR(255) UNIQUE, -- add unique
+    email VARCHAR(255) UNIQUE, -- add unique
     hashedPassword VARCHAR(255),
     salt VARCHAR(255), 
-    failLoginCount INT DEFAULT 0, 
+    currentSessionID VARCHAR(128) COLLATE utf8mb4_bin,
+    failLoginCount INT DEFAULT 0,
     accountCreatedAt DATETIME DEFAULT CURRENT_TIMESTAMP, 
     lastLogin DATETIME NULL,
     fullName VARCHAR(255),
-    contactNumber VARCHAR(20),
-    nric VARCHAR(20),
+    contactNumber VARCHAR(20) UNIQUE, -- add unique
+    nric VARCHAR(20) UNIQUE, -- add unique
     dob DATE,
     nationality VARCHAR(255),
     userAddress TEXT,
     gender ENUM('Male', 'Female', 'Others'),
     roleID CHAR(36),
+    temp2FASecret VARCHAR(255) NULL,
+    twoFASecret VARCHAR(255) NULL,
+    twoFAEnabled BOOLEAN DEFAULT FALSE,
     FOREIGN KEY (roleID) REFERENCES Role(roleID)
 );
 
@@ -76,6 +81,7 @@ CREATE TABLE Niche (
     nicheRow INT,
     nicheCode VARCHAR(50),
     status ENUM('Available', 'Pending', 'Reserved', 'Occupied'),
+    changeRemarks VARCHAR(255) NULL, -- admin comments on why this niche status was overriden
     lastUpdated TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (blockID) REFERENCES Block(blockID)
 );
@@ -123,3 +129,35 @@ CREATE TABLE Booking (
     FOREIGN KEY (paymentID) REFERENCES Payment(paymentID),
     FOREIGN KEY (beneficiaryID) REFERENCES Beneficiary(beneficiaryID)
 );
+
+CREATE TABLE sessions (
+  `session_id` VARCHAR(128) COLLATE utf8mb4_bin NOT NULL,
+  `expires`    INT UNSIGNED NOT NULL,
+  `data`       TEXT         COLLATE utf8mb4_bin,
+  PRIMARY KEY (`session_id`)
+) ENGINE=InnoDB;
+
+CREATE TABLE PasswordResetToken (
+  tokenID INT AUTO_INCREMENT PRIMARY KEY,
+  userID CHAR(36) NOT NULL,
+  token VARCHAR(255) NOT NULL,
+  expiresAt DATETIME NOT NULL,
+  used BOOLEAN DEFAULT FALSE,
+  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (userID) REFERENCES User(userID) ON DELETE CASCADE,
+  UNIQUE(token)
+);
+
+-- 9. for niche logging
+CREATE TABLE NicheStatusLog (
+    logID INT AUTO_INCREMENT PRIMARY KEY,
+    nicheID CHAR(36),
+    previousStatus ENUM('Available', 'Pending', 'Reserved', 'Occupied'),
+    newStatus ENUM('Available', 'Pending', 'Reserved', 'Occupied'),
+    reason TEXT,
+    changedBy CHAR(36), 
+    changedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (changedBy) REFERENCES User(userID),
+    FOREIGN KEY (nicheID) REFERENCES Niche(nicheID) ON DELETE SET NULL -- log gets kept even if niche is deleted
+);
+
