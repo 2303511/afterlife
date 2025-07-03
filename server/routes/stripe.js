@@ -12,7 +12,8 @@ router.get("/config", ensureAuth, (req, res) => {
 });
 
 router.post("/create-payment-intent", ensureAuth, async (req, res) => {
-	const paymentAmount = req.body.amount * 100; // stripe always takes in the value in cents.hence need to *100
+    const paymentAmount = process.env.PAYMENT_AMOUNT * 100;
+	// const paymentAmount = req.body.amount * 100; // stripe always takes in the value in cents.hence need to *100
 
 	try {
 		const paymentIntent = await stripe.paymentIntents.create({

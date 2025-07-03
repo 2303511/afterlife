@@ -7,7 +7,10 @@ import { PaymentElement } from "@stripe/react-stripe-js";
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
-export default function CheckoutForm({ onSubmit, bookingID }) {
+export default function CheckoutForm(
+  { onSubmit,
+    bookingID
+  }) {
   // import stripe elements
   const stripe = useStripe();
   const elements = useElements();

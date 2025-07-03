@@ -51,8 +51,8 @@ CREATE TABLE Block (
 -- 5. User table (depends on Role)
 CREATE TABLE User (
     userID CHAR(36) PRIMARY KEY,
-    username VARCHAR(255),
-    email VARCHAR(255),
+    username VARCHAR(255) UNIQUE, -- add unique
+    email VARCHAR(255) UNIQUE, -- add unique
     hashedPassword VARCHAR(255),
     salt VARCHAR(255), 
     currentSessionID VARCHAR(128) COLLATE utf8mb4_bin,
@@ -60,8 +60,8 @@ CREATE TABLE User (
     accountCreatedAt DATETIME DEFAULT CURRENT_TIMESTAMP, 
     lastLogin DATETIME NULL,
     fullName VARCHAR(255),
-    contactNumber VARCHAR(20),
-    nric VARCHAR(20),
+    contactNumber VARCHAR(20) UNIQUE, -- add unique
+    nric VARCHAR(20) UNIQUE, -- add unique
     dob DATE,
     nationality VARCHAR(255),
     userAddress TEXT,

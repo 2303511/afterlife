@@ -54,6 +54,7 @@ export default function NicheBooking() {
 
 	return (
 		<Container fluid>
+			<h2>Niche Booking</h2>
 			<Row>
 				<Col xs={12} md={12} lg={12} xl={12}>
 					<FullNicheMap setIsForm={setIsForm} buildingState={buildingState} handleBook={handleBook} isBookButtonDisabled={isBookButtonDisabled} setIsBookButtonDisabled={setIsBookButtonDisabled}/>

@@ -179,15 +179,23 @@ router.post("/submitBooking", ensureAuth, upload.fields([
             if (existingUser) {
                 finalUserID = existingUser.userID;
 
+                // for dob
+                const normalizedDob = new Date(dob).toISOString().split("T")[0]; // handles both '2025-07-02' and ISO strings
+                const dbDob = new Date(existingUser.dob).toISOString().split("T")[0];
+
+                console.log(existingUser.fullName !== fullName)
+                console.log(existingUser.contactNumber !== mobileNumber)
+                console.log(normalizedDob !== dbDob)
+
                 if (
                     existingUser.fullName !== fullName ||
                     existingUser.contactNumber !== mobileNumber ||
-                    existingUser.dob !== dob
+                    normalizedDob !== dbDob
                 ) {
                     throw new Error("NRIC conflict with existing user details.");
                 }
 
-            } else {
+            } else { // if the user does not exist
                 // Create new user
                 finalUserID = uuidv4();
                 const randomPassword = generateRandomPassword();
@@ -280,7 +288,7 @@ router.post("/submitBooking", ensureAuth, upload.fields([
 
 
 // after the user completes payment, need to update the booking to fully paid. 
-router.post("/updateBookingTransaction", ensureAuth, ensureSelfOrRole(["staff","admin"]), async (req, res) => {
+router.post("/updateBookingTransaction", ensureAuth, ensureSelfOrRole(["user", "staff","admin"]), async (req, res) => {
     const dbConn = await db.getConnection();
     await dbConn.beginTransaction();
 

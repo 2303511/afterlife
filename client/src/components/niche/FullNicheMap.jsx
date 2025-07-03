@@ -1,3 +1,5 @@
+/* eslint-disable */
+
 import { useState, useEffect, useRef } from "react";
 
 import axios from "axios";

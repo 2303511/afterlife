@@ -1,5 +1,5 @@
 import { Link, useSearchParams } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import axios from "axios";
 
 import { toast } from "react-toastify";
@@ -11,6 +11,7 @@ import "../styles/AfterLife-Theme.css";
 export default function PaymentSuccess() {
 	const [searchParams] = useSearchParams();
 	const paymentAmount = sessionStorage.getItem("paymentAmount");
+	const paymentMethod = sessionStorage.getItem("paymentMethod") || "Credit Card";
 	
 	useEffect(() => {
 		const updateTransaction = async () => {
@@ -23,8 +24,8 @@ export default function PaymentSuccess() {
 
 				try {
 					const res_update = await axios.post("/api/booking/updateBookingTransaction", {
-						paymentMethod: "Credit Card",
-						paymentAmount,
+						paymentMethod,
+						paymentAmount: paymentMethod === "Waived" ? "0.00" : paymentAmount,
 						bookingID
 					});
 
@@ -55,7 +56,7 @@ export default function PaymentSuccess() {
 		};
 
 		updateTransaction();
-	}, []);
+	}, [paymentAmount, searchParams]);
 
 	return (
 		<>
