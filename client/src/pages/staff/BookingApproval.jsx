@@ -76,6 +76,7 @@ export default function BookingApproval() {
         try {
             const res = await axios.post('/api/email/sendDeniedRequest', {
                 to: booking.email,
+                fullName: booking.fullName,
                 reason: denialReason
             }, { withCredentials: true });
 

@@ -76,10 +76,10 @@ router.post('/sendDeniedRequest',
   ensureAuth,
   ensureRole(['staff','admin']),
   async (req, res) => {
-    const { to, reason } = req.body;
+    const { to, fullName, reason } = req.body;
     const subject = 'Your Urn Placement Request Was Rejected';
     const html = `
-      <p>Dear user,</p>
+      <p>Dear ${fullName},</p>
       <p>Your request was rejected for the following reason:</p>
       <p><strong>${reason}</strong></p>
       <p>Please update and resubmit your request if applicable.</p>
