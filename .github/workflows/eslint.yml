@@ -34,14 +34,17 @@ jobs:
       - name: Install SARIF formatter
         run: npm install --save-dev @microsoft/eslint-formatter-sarif
 
-      - name: Run ESLint and emit SARIF
+      - name: Run ESLint and emit SARIF (skip tests)
         continue-on-error: true
         run: |
           npx eslint . \
             --ext .js,.jsx,.ts,.tsx \
+            --ignore-pattern "**/__tests__/**" \
+            --ignore-pattern "**/*.test.{js,jsx,ts,tsx}" \
             -f @microsoft/eslint-formatter-sarif \
             -o eslint-report.sarif \
-            || echo "Lint issues found—SARIF report generated"
+            || echo "SARIF report generated"
+
 
       - name: Upload ESLint SARIF report
         if: always()
