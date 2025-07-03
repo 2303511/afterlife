@@ -274,7 +274,7 @@ router.get("/update_role", ensureAuth, ensureRole(["admin"]), async (req, res) =
 
 
 // Get user role
-async function getUserRole(userID) {b
+async function getUserRole(userID) {
 	try {
 		const [role] = await db.query(`
 			SELECT roleName 
