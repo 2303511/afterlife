@@ -38,7 +38,7 @@ describe('Register Page', () => {
   it('renders all form fields and submit button', () => {
     render(<Register />);
 
-    // personal details
+    // personal details fields
     expect(screen.getByPlaceholderText(/enter username/i)).toBeInTheDocument();
     expect(screen.getByPlaceholderText(/enter email/i)).toBeInTheDocument();
     expect(screen.getByPlaceholderText(/enter full name/i)).toBeInTheDocument();
@@ -46,7 +46,7 @@ describe('Register Page', () => {
     expect(screen.getByPlaceholderText(/enter nric/i)).toBeInTheDocument();
     const dobInput = screen.queryByLabelText(/date of birth/i) || document.querySelector('input[name="dob"]');
     expect(dobInput).toBeInTheDocument();
-    expect(screen.getByRole('combobox')).toBeInTheDocument(); // nationality
+    expect(screen.getByRole('combobox')).toBeInTheDocument(); // nationality select
     expect(screen.getByPlaceholderText(/enter address/i)).toBeInTheDocument();
     expect(screen.getByPlaceholderText(/enter postal code/i)).toBeInTheDocument();
     expect(screen.getByPlaceholderText(/enter unit number/i)).toBeInTheDocument();
@@ -57,48 +57,63 @@ describe('Register Page', () => {
   });
 
   it('submits form and navigates to login on success', async () => {
+    // mock successful API response
     axios.post.mockResolvedValue({ data: { success: true, redirectTo: '/login', twoFAEnabled: false } });
 
     render(<Register />);
 
-    // fill personal details
+    // fill out form fields
     await userEvent.type(screen.getByPlaceholderText(/enter username/i), 'testuser');
     await userEvent.type(screen.getByPlaceholderText(/enter email/i), 'test@example.com');
     await userEvent.type(screen.getByPlaceholderText(/enter full name/i), 'Test User');
     await userEvent.type(screen.getByPlaceholderText(/enter contact number/i), '12345678');
     await userEvent.type(screen.getByPlaceholderText(/enter nric/i), 'S1234567A');
+
     const dob = document.querySelector('input[name="dob"]');
     await userEvent.clear(dob);
     await userEvent.type(dob, '1990-01-01');
 
-    // nationality
     await userEvent.selectOptions(screen.getByRole('combobox'), 'Singaporean');
-
-    // mailing address
     await userEvent.type(screen.getByPlaceholderText(/enter address/i), '123 Test Street');
     await userEvent.type(screen.getByPlaceholderText(/enter postal code/i), '123456');
     await userEvent.type(screen.getByPlaceholderText(/enter unit number/i), '123');
-
-    // gender & password
     await userEvent.click(screen.getByLabelText(/^male$/i));
     await userEvent.type(screen.getByPlaceholderText(/enter password/i), 'password123');
 
-    // submit form
+    // submit the form
     await userEvent.click(screen.getByRole('button', { name: /register/i }));
 
+    // assertions
     await waitFor(() => {
-      // recaptcha
+      // recaptcha should have been executed
       expect(window.grecaptcha.execute).toHaveBeenCalledWith(
         '6Les2nMrAAAAAEx17BtP4kIVDCmU1sGfaFLaFA5N',
         { action: 'register' }
       );
-      // api call
+      // axios.post should include recaptchaToken and form data
       expect(axios.post).toHaveBeenCalledWith(
         '/api/user/register',
-        expect.objectContaining({ recaptchaToken: 'test-token' }),
-        expect.objectContaining({ headers: { 'Content-Type': 'application/json' }, withCredentials: true })
+        expect.objectContaining({
+          username: 'testuser',
+          email: 'test@example.com',
+          fullname: 'Test User',
+          contactnumber: '12345678',
+          nric: 'S1234567A',
+          dob: '1990-01-01',
+          nationality: 'Singaporean',
+          address: '123 Test Street',
+          postalcode: '123456',
+          unitnumber: '123',
+          gender: 'Male',
+          password: 'password123',
+          recaptchaToken: 'test-token'
+        }),
+        expect.objectContaining({
+          headers: { 'Content-Type': 'application/json' },
+          withCredentials: true
+        })
       );
-      // navigation
+      // navigation should occur
       expect(mockNavigate).toHaveBeenCalledWith('/login');
     });
   });
