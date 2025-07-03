@@ -83,6 +83,8 @@ router.post('/sendDeniedRequest',
       <p>Your request was rejected for the following reason:</p>
       <p><strong>${reason}</strong></p>
       <p>Please update and resubmit your request if applicable.</p>
+      <p>If you have any questions or require further assistance, feel free to contact our support team.</p>
+      <p>Warm regards,<br/><strong>AfterLife Support Team</strong><br/>aftlifesup@gmail.com</p>
     `;
     try {
       await sendMail(to, subject, html);
@@ -149,7 +151,9 @@ async function sendAccountCreationEmail(to, fullName, tempPassword) {
     <p>An account has been created for you on AfterLife.</p>
     <p><strong>Temporary password:</strong> ${tempPassword}</p>
     <p>Please log in and change your password as soon as possible.</p>
-    <p><a href="https://yourdomain.com/login">Click here to log in</a></p>
+    <p><a href="https://afterlifeservices.app/login">Click here to log in</a></p>
+    <p>If you have any questions or require further assistance, feel free to contact our support team.</p>
+    <p>Warm regards,<br/><strong>AfterLife Support Team</strong><br/>aftlifesup@gmail.com</p>
   `;
   return sendMail(to, subject, html);
 }
