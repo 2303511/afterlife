@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import axios from 'axios';
 import Register from '../pages/public/Register';
@@ -18,7 +18,7 @@ jest.mock('react-router-dom', () => {
   };
 });
 
-// 3) Stub grecaptcha
+// 3) Stub grecaptcha before running tests
 beforeAll(() => {
   window.grecaptcha = {
     execute: jest.fn().mockResolvedValue('dummy-token'),
@@ -41,24 +41,26 @@ describe('Register Page', () => {
     expect(screen.getByPlaceholderText(/enter email/i)).toBeInTheDocument();
     expect(screen.getByPlaceholderText(/enter nric/i)).toBeInTheDocument();
     expect(screen.getByPlaceholderText(/enter contact number/i)).toBeInTheDocument();
+    expect(screen.getByPlaceholderText(/enter password/i)).toBeInTheDocument();
 
-    // date of birth (use name selector)
-    const dobInput = container.querySelector('input[name="dob"]');
-    expect(dobInput).toBeInTheDocument();
-
-    // nationality (use name selector)
-    const nationalitySelect = container.querySelector('select[name="nationality"]');
-    expect(nationalitySelect).toBeInTheDocument();
+    // date of birth and nationality via name selector
+    expect(container.querySelector('input[name="dob"]')).toBeInTheDocument();
+    expect(container.querySelector('select[name="nationality"]')).toBeInTheDocument();
 
     // gender radios
     expect(screen.getByLabelText(/^male$/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/^female$/i)).toBeInTheDocument();
 
+    // address, postal code, unit number
+    expect(screen.getByPlaceholderText(/enter address/i)).toBeInTheDocument();
+    expect(screen.getByPlaceholderText(/enter postal code/i)).toBeInTheDocument();
+    expect(screen.getByPlaceholderText(/enter unit number/i)).toBeInTheDocument();
+
     // submit button
     expect(screen.getByRole('button', { name: /register/i })).toBeInTheDocument();
   });
 
-  test('submits form and navigates to setup-2fa', async () => {
+  test('submits form and navigates to setup-2fa after registration', async () => {
     // arrange: mock API response for 2FA flow
     axios.post.mockResolvedValue({
       data: { success: true, redirectTo: '/setup-2fa', twoFAEnabled: true },
@@ -66,7 +68,13 @@ describe('Register Page', () => {
 
     const { container } = render(<Register />);
 
-    // fill out the form
+    // wait for reCAPTCHA script to be appended and loaded
+    const script = await waitFor(() =>
+      document.querySelector('script[src*="recaptcha/api.js"]')
+    );
+    fireEvent.load(script);
+
+    // fill out form
     await userEvent.type(screen.getByPlaceholderText(/enter username/i), 'testuser');
     await userEvent.type(screen.getByPlaceholderText(/enter full name/i), 'Test User');
     await userEvent.type(screen.getByPlaceholderText(/enter email/i), 'test@example.com');
@@ -87,39 +95,36 @@ describe('Register Page', () => {
     await userEvent.click(screen.getByLabelText(/^male$/i));
     await userEvent.type(screen.getByPlaceholderText(/enter password/i), 'password123');
 
-    // submit
+    // submit form
     await userEvent.click(screen.getByRole('button', { name: /register/i }));
 
     // assertions
     await waitFor(() => {
-      // recaptcha executed
       expect(window.grecaptcha.execute).toHaveBeenCalledWith(
         '6Les2nMrAAAAAEx17BtP4kIVDCmU1sGfaFLaFA5N',
         { action: 'register' }
       );
 
-      // axios.post called with form + token
       expect(axios.post).toHaveBeenCalledWith(
         '/api/user/register',
         expect.objectContaining({
-          username:       'testuser',
-          fullname:       'Test User',
-          email:          'test@example.com',
-          contactnumber:  '12345678',
-          nric:           'S1234567A',
-          dob:            '1990-01-01',
-          nationality:    'Singaporean',
-          address:        '123 Test Street',
-          postalcode:     '123456',
-          unitnumber:     '05-01',
-          gender:         'Male',
-          password:       'password123',
+          username: 'testuser',
+          fullname: 'Test User',
+          email: 'test@example.com',
+          contactnumber: '12345678',
+          nric: 'S1234567A',
+          dob: '1990-01-01',
+          nationality: 'Singaporean',
+          address: '123 Test Street',
+          postalcode: '123456',
+          unitnumber: '05-01',
+          gender: 'Male',
+          password: 'password123',
           recaptchaToken: 'dummy-token',
         }),
         { headers: { 'Content-Type': 'application/json' }, withCredentials: true }
       );
 
-      // navigation
       expect(mockNavigate).toHaveBeenCalledWith('/setup-2fa');
     });
   });
