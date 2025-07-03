@@ -118,7 +118,12 @@ export default function Register() {
 };
 
   const handleInputChange = async (e) => {
-    const { name, value } = e.target;
+    let { name, value } = e.target;
+
+    // 🔒 remove commas from address
+    if (name === "address") {
+      value = value.replace(/,/g, ""); // or just: value.replaceAll(",", "")
+    }
 
     // update form
     setForm((prev) => ({ ...prev, [name]: value }));
