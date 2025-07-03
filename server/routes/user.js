@@ -347,6 +347,9 @@ router.post("/register", registerLimiter, async (req, res) => {
 	if (!password || password.length < 8 ) {
 		errors.password = "Password must be 8+ characters ";
 	}
+	if (areCompromisedPassword(password)) {
+		errors.password = "Password chosen has been compromised in a data breach. Please choose a different password.";
+	}
 
 	if (!contactnumber || !/^\+?\d{8,15}$/.test(contactnumber)) {
 		errors.contactnumber = "Invalid contact number";
