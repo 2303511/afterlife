@@ -19,7 +19,6 @@ import PendingApprovals from "../pages/staff/PendingApprovals";
 // admin pages
 import AdminDashboard from "../pages/admin/AdminDashboard";
 import NicheManagement from "../pages/admin/NicheManagement";
-import BuildingManagement from "../pages/admin/BuildingManagement";
 import Login from "../pages/public/Login";
 import Register from "../pages/public/Register";
 import LandingPage from "../pages/public/LandingPage";
