@@ -6,10 +6,10 @@ import axios from 'axios';
 import Register from '../pages/public/Register';
 import userEvent from '@testing-library/user-event';
 
-// mock axios
+// 1) Mock axios
 jest.mock('axios');
 
-// mock react-router navigate
+// 2) Mock react-router-dom’s useNavigate
 const mockNavigate = jest.fn();
 jest.mock('react-router-dom', () => {
   const actual = jest.requireActual('react-router-dom');
@@ -19,85 +19,148 @@ jest.mock('react-router-dom', () => {
   };
 });
 
+// 3) Stub grecaptcha so recaptchaLoaded flips immediately
+beforeAll(() => {
+  window.grecaptcha = {
+    execute: jest.fn().mockResolvedValue('dummy-token'),
+  };
+});
+
 describe('Register Page', () => {
   beforeEach(() => {
     axios.post.mockClear();
     mockNavigate.mockClear();
+    window.grecaptcha.execute.mockClear();
   });
 
-  test('renders all form fields and submit button', () => {
-    const { container } = render(<Register />);
+  test('renders all form fields and the Register button', () => {
+    render(<Register />);
 
-    // text inputs by placeholder
+    // text inputs
     expect(screen.getByPlaceholderText(/enter username/i)).toBeInTheDocument();
-    expect(screen.getByPlaceholderText(/enter email/i)).toBeInTheDocument();
     expect(screen.getByPlaceholderText(/enter full name/i)).toBeInTheDocument();
-    expect(screen.getByPlaceholderText(/enter contact number/i)).toBeInTheDocument();
+    expect(screen.getByPlaceholderText(/enter email/i)).toBeInTheDocument();
     expect(screen.getByPlaceholderText(/enter nric/i)).toBeInTheDocument();
-    expect(screen.getByPlaceholderText(/enter nationality/i)).toBeInTheDocument();
+    expect(screen.getByPlaceholderText(/enter contact number/i)).toBeInTheDocument();
     expect(screen.getByPlaceholderText(/enter address/i)).toBeInTheDocument();
+    expect(screen.getByPlaceholderText(/enter postal code/i)).toBeInTheDocument();
+    expect(screen.getByPlaceholderText(/enter unit number/i)).toBeInTheDocument();
     expect(screen.getByPlaceholderText(/enter password/i)).toBeInTheDocument();
 
-    // date input via name selector
-    const dobInput = container.querySelector('input[name="dob"]');
-    expect(dobInput).toBeInTheDocument();
+    // date of birth
+    expect(screen.getByLabelText(/date of birth/i)).toBeInTheDocument();
 
-    // radio inputs by exact label match
+    // nationality
+    expect(screen.getByLabelText(/nationality/i)).toBeInTheDocument();
+
+    // gender radios
     expect(screen.getByLabelText(/^male$/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/^female$/i)).toBeInTheDocument();
 
     // submit button
-    expect(screen.getByRole('button', { name: /register/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /register/i })
+    ).toBeInTheDocument();
   });
 
-  test('submits form and navigates to login on success', async () => {
-    // arrange: mock successful response
-    axios.post.mockResolvedValue({ data: { message: 'ok' } });
+  test('submits form and navigates to setup-2fa when 2FA is enabled', async () => {
+    // arrange: mock API response for 2FA flow
+    axios.post.mockResolvedValue({
+      data: {
+        success: true,
+        redirectTo: '/setup-2fa',
+        twoFAEnabled: true
+      }
+    });
 
-    const { container } = render(<Register />);
+    render(<Register />);
 
-    // fill out form
-    await userEvent.type(screen.getByPlaceholderText(/enter username/i), 'testuser');
-    await userEvent.type(screen.getByPlaceholderText(/enter email/i), 'test@example.com');
-    await userEvent.type(screen.getByPlaceholderText(/enter full name/i), 'Test User');
-    await userEvent.type(screen.getByPlaceholderText(/enter contact number/i), '12345678');
-    await userEvent.type(screen.getByPlaceholderText(/enter nric/i), 'S1234567A');
+    // fill out the form
+    await userEvent.type(
+      screen.getByPlaceholderText(/enter username/i),
+      'testuser'
+    );
+    await userEvent.type(
+      screen.getByPlaceholderText(/enter full name/i),
+      'Test User'
+    );
+    await userEvent.type(
+      screen.getByPlaceholderText(/enter email/i),
+      'test@example.com'
+    );
+    await userEvent.type(
+      screen.getByPlaceholderText(/enter nric/i),
+      'S1234567A'
+    );
+    await userEvent.type(
+      screen.getByPlaceholderText(/enter contact number/i),
+      '12345678'
+    );
 
-    // date input
-    const dob = container.querySelector('input[name="dob"]');
+    const dob = screen.getByLabelText(/date of birth/i);
     await userEvent.clear(dob);
     await userEvent.type(dob, '1990-01-01');
 
-    await userEvent.type(screen.getByPlaceholderText(/enter nationality/i), 'Singaporean');
-    await userEvent.type(screen.getByPlaceholderText(/enter address/i), '123 Test Street');
+    await userEvent.selectOptions(
+      screen.getByLabelText(/nationality/i),
+      'Singaporean'
+    );
 
-    // select gender via exact label match
+    await userEvent.type(
+      screen.getByPlaceholderText(/enter address/i),
+      '123 Test Street'
+    );
+    await userEvent.type(
+      screen.getByPlaceholderText(/enter postal code/i),
+      '123456'
+    );
+    await userEvent.type(
+      screen.getByPlaceholderText(/enter unit number/i),
+      '05-01'
+    );
+
     await userEvent.click(screen.getByLabelText(/^male$/i));
+    await userEvent.type(
+      screen.getByPlaceholderText(/enter password/i),
+      'password123'
+    );
 
-    await userEvent.type(screen.getByPlaceholderText(/enter password/i), 'password123');
+    // submit
+    await userEvent.click(
+      screen.getByRole('button', { name: /register/i })
+    );
 
-    // submit form
-    await userEvent.click(screen.getByRole('button', { name: /register/i }));
-
-    // assert axios called and navigation happened
+    // assertions
     await waitFor(() => {
+      // grecaptcha should have been invoked
+      expect(window.grecaptcha.execute).toHaveBeenCalledWith(
+        '6Les2nMrAAAAAEx17BtP4kIVDCmU1sGfaFLaFA5N',
+        { action: 'register' }
+      );
+
+      // axios.post called with all fields + recaptcha + credentials
       expect(axios.post).toHaveBeenCalledWith(
         '/api/user/register',
         expect.objectContaining({
-          username: 'testuser',
-          email: 'test@example.com',
-          fullname: 'Test User',
-          contactnumber: '12345678',
-          nric: 'S1234567A',
-          dob: '1990-01-01',
-          nationality: 'Singaporean',
-          address: '123 Test Street',
-          gender: 'Male',
-          password: 'password123',
+          username:       'testuser',
+          fullname:       'Test User',
+          email:          'test@example.com',
+          contactnumber:  '12345678',
+          nric:           'S1234567A',
+          dob:            '1990-01-01',
+          nationality:    'Singaporean',
+          address:        '123 Test Street',
+          postalcode:     '123456',
+          unitnumber:     '05-01',
+          gender:         'Male',
+          password:       'password123',
+          recaptchaToken: 'dummy-token'
         }),
-        { headers: { 'Content-Type': 'application/json' } }
+        { headers: { 'Content-Type': 'application/json' }, withCredentials: true }
       );
-      expect(mockNavigate).toHaveBeenCalledWith('/login');
+
+      // navigation to /setup-2fa
+      expect(mockNavigate).toHaveBeenCalledWith('/setup-2fa');
     });
   });
 });
