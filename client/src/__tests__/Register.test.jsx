@@ -1,5 +1,6 @@
+// src/__tests__/Register.test.jsx
 import React from 'react';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import axios from 'axios';
 import Register from '../pages/public/Register';
@@ -18,7 +19,7 @@ jest.mock('react-router-dom', () => {
   };
 });
 
-// 3) Stub grecaptcha before running tests
+// 3) Stub grecaptcha
 beforeAll(() => {
   window.grecaptcha = {
     execute: jest.fn().mockResolvedValue('dummy-token'),
@@ -35,26 +36,27 @@ describe('Register Page', () => {
   test('renders all form fields and the Register button', () => {
     const { container } = render(<Register />);
 
-    // text inputs
+    // Personal Details
     expect(screen.getByPlaceholderText(/enter username/i)).toBeInTheDocument();
     expect(screen.getByPlaceholderText(/enter full name/i)).toBeInTheDocument();
     expect(screen.getByPlaceholderText(/enter email/i)).toBeInTheDocument();
-    expect(screen.getByPlaceholderText(/enter nric/i)).toBeInTheDocument();
     expect(screen.getByPlaceholderText(/enter contact number/i)).toBeInTheDocument();
+    expect(screen.getByPlaceholderText(/enter nric/i)).toBeInTheDocument();
+    // date of birth
+    expect(container.querySelector('input[name="dob"]')).toBeInTheDocument();
+    // nationality
+    expect(container.querySelector('select[name="nationality"]')).toBeInTheDocument();
+    // password
     expect(screen.getByPlaceholderText(/enter password/i)).toBeInTheDocument();
 
-    // date of birth and nationality via name selector
-    expect(container.querySelector('input[name="dob"]')).toBeInTheDocument();
-    expect(container.querySelector('select[name="nationality"]')).toBeInTheDocument();
+    // Mailing Address
+    expect(screen.getByPlaceholderText(/enter address/i)).toBeInTheDocument();
+    expect(screen.getByPlaceholderText(/enter postal code/i)).toBeInTheDocument();
+    expect(screen.getByPlaceholderText(/enter unit number/i)).toBeInTheDocument();
 
     // gender radios
     expect(screen.getByLabelText(/^male$/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/^female$/i)).toBeInTheDocument();
-
-    // address, postal code, unit number
-    expect(screen.getByPlaceholderText(/enter address/i)).toBeInTheDocument();
-    expect(screen.getByPlaceholderText(/enter postal code/i)).toBeInTheDocument();
-    expect(screen.getByPlaceholderText(/enter unit number/i)).toBeInTheDocument();
 
     // submit button
     expect(screen.getByRole('button', { name: /register/i })).toBeInTheDocument();
@@ -63,18 +65,16 @@ describe('Register Page', () => {
   test('submits form and navigates to setup-2fa after registration', async () => {
     // arrange: mock API response for 2FA flow
     axios.post.mockResolvedValue({
-      data: { success: true, redirectTo: '/setup-2fa', twoFAEnabled: true },
+      data: {
+        success: true,
+        redirectTo: '/setup-2fa',
+        twoFAEnabled: true,
+      },
     });
 
     const { container } = render(<Register />);
 
-    // wait for reCAPTCHA script to be appended and loaded
-    const script = await waitFor(() =>
-      document.querySelector('script[src*="recaptcha/api.js"]')
-    );
-    fireEvent.load(script);
-
-    // fill out form
+    // fill out the form
     await userEvent.type(screen.getByPlaceholderText(/enter username/i), 'testuser');
     await userEvent.type(screen.getByPlaceholderText(/enter full name/i), 'Test User');
     await userEvent.type(screen.getByPlaceholderText(/enter email/i), 'test@example.com');
@@ -85,8 +85,8 @@ describe('Register Page', () => {
     await userEvent.clear(dob);
     await userEvent.type(dob, '1990-01-01');
 
-    const nationality = container.querySelector('select[name="nationality"]');
-    await userEvent.selectOptions(nationality, 'Singaporean');
+    const nationalitySelect = container.querySelector('select[name="nationality"]');
+    await userEvent.selectOptions(nationalitySelect, 'Singaporean');
 
     await userEvent.type(screen.getByPlaceholderText(/enter address/i), '123 Test Street');
     await userEvent.type(screen.getByPlaceholderText(/enter postal code/i), '123456');
@@ -95,36 +95,39 @@ describe('Register Page', () => {
     await userEvent.click(screen.getByLabelText(/^male$/i));
     await userEvent.type(screen.getByPlaceholderText(/enter password/i), 'password123');
 
-    // submit form
+    // submit
     await userEvent.click(screen.getByRole('button', { name: /register/i }));
 
     // assertions
     await waitFor(() => {
+      // recaptcha was triggered
       expect(window.grecaptcha.execute).toHaveBeenCalledWith(
         '6Les2nMrAAAAAEx17BtP4kIVDCmU1sGfaFLaFA5N',
         { action: 'register' }
       );
 
+      // API was called with form + token + credentials
       expect(axios.post).toHaveBeenCalledWith(
         '/api/user/register',
         expect.objectContaining({
-          username: 'testuser',
-          fullname: 'Test User',
-          email: 'test@example.com',
+          username:      'testuser',
+          fullname:      'Test User',
+          email:         'test@example.com',
           contactnumber: '12345678',
-          nric: 'S1234567A',
-          dob: '1990-01-01',
-          nationality: 'Singaporean',
-          address: '123 Test Street',
-          postalcode: '123456',
-          unitnumber: '05-01',
-          gender: 'Male',
-          password: 'password123',
+          nric:          'S1234567A',
+          dob:           '1990-01-01',
+          nationality:   'Singaporean',
+          address:       '123 Test Street',
+          postalcode:    '123456',
+          unitnumber:    '05-01',
+          gender:        'Male',
+          password:      'password123',
           recaptchaToken: 'dummy-token',
         }),
         { headers: { 'Content-Type': 'application/json' }, withCredentials: true }
       );
 
+      // and we navigated to setup-2fa
       expect(mockNavigate).toHaveBeenCalledWith('/setup-2fa');
     });
   });
