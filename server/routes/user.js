@@ -224,8 +224,9 @@ router.get("/all_users", ensureAuth, ensureRole(["admin"]), async (req, res) => 
 });
 
 // Update user role
-router.get("/update_role", ensureAuth, ensureRole(["admin"]), async (req, res) => {
+router.post("/update_role", ensureAuth, ensureRole(["admin"]), async (req, res) => {
 	const { userID, role } = req.body;
+	console.log("this is in update role, new role:", role);
 	if (!userID || !role)
 		return res.status(400).json({ error: "userID and role are required" });
 

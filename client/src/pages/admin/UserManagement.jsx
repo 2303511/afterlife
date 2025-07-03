@@ -86,7 +86,7 @@ export default function UserManagement() {
     const saveRoleChange = async () => {
         if (!confirmData) return;
         try {
-            await axios.put(
+            await axios.post(
                 "/api/user/update_role",
                 { userID: confirmData.userID, role: confirmData.newRole },
                 { withCredentials: true }
