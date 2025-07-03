@@ -1,5 +1,5 @@
 import { FaClipboardList, FaFileInvoice, FaBookOpen, FaUserCircle, FaListAlt, FaMapMarkedAlt } from "react-icons/fa";
-import { MdDashboard, MdAdminPanelSettings, MdApartment} from "react-icons/md";
+import { MdDashboard, MdAdminPanelSettings, MdApartment, MdManageAccounts} from "react-icons/md";
 
 
 // Import all route components
@@ -20,6 +20,8 @@ import PendingApprovals from "../pages/staff/PendingApprovals";
 import AdminDashboard from "../pages/admin/AdminDashboard";
 import NicheManagement from "../pages/admin/NicheManagement";
 import BuildingManagement from "../pages/admin/BuildingManagement";
+import UserManagement from "../pages/admin/UserManagement";
+
 import Login from "../pages/public/Login";
 import Register from "../pages/public/Register";
 import LandingPage from "../pages/public/LandingPage";
@@ -164,6 +166,13 @@ export const adminRoutes = [
     path: "/building-management",
     icon: <MdApartment />,
     element: <BuildingManagement />,
+    requiredRoles: ["admin"]
+  },
+  {
+    label: "User Management",
+    path: "/user-management",
+    icon: <MdManageAccounts />,
+    element: <UserManagement />,
     requiredRoles: ["admin"]
   }
 ];

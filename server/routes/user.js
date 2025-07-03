@@ -24,80 +24,78 @@ const validator = require("validator");
 // Generate 2FA secret for new user
 router.post("/generate-2fa-secret", ensureAuth, async (req, res) => {
 	try {
-	  const userID = req.session.userID;
-	  console.log("getting a req for to generate secret for user id" , userID);
-	  
-	  // Generate a secret
-	  const secret = speakeasy.generateSecret({
-		name: "Afterlife 2FA",
-		issuer: "Afterlife"
-	  });
-	  
-	  // Store the secret temporarily (in memory or database)
-	  await db.query(
-		"UPDATE User SET temp2FASecret = ? WHERE userID = ?",
-		[secret.base32, userID]
-	  );
-	  
-	  console.log("Sending back secret  " , secret.base32);
-	  console.log("sending back url " , secret.otpauth_url);
-	  res.json({
-		secret: secret.base32,
-		otpauthUrl: secret.otpauth_url
-	  });
-	} catch (err) {
-	  console.error(err);
-	  res.status(500).json({ error: "Failed to generate 2FA secret" });
-	}
-  });
+		const userID = req.session.userID;
+		console.log("getting a req for to generate secret for user id" , userID);
+		
+		// Generate a secret
+		const secret = speakeasy.generateSecret({
+			name: "Afterlife 2FA",
+			issuer: "Afterlife"
+		});
+		
+		// Store the secret temporarily (in memory or database)
+		await db.query(
+			"UPDATE User SET temp2FASecret = ? WHERE userID = ?",
+			[secret.base32, userID]
+		);
+		
+		console.log("Sending back secret  " , secret.base32);
+		console.log("sending back url " , secret.otpauth_url);
+		res.json({
+			secret: secret.base32,
+			otpauthUrl: secret.otpauth_url
+		});
+		} catch (err) {
+		console.error(err);
+		res.status(500).json({ error: "Failed to generate 2FA secret" });
+		}
+	});
 
 
 
 // Verify 2FA token and complete registration
 router.post("/verify-2fa", ensureAuth, async (req, res) => {
 	try {
-	  const { token } = req.body;
-	  const userID = req.session.userID;
-	  console.log("received token is " , token);
-	  console.log("userid to verify 2fa is " , userID);
-	  
-	  // Get the temporary secret
-	  const [userRow] = await db.query(
-		"SELECT temp2FASecret FROM User WHERE userID = ?",
-		[userID]
-	  );
-	  
-	  if (!userRow[0] || !userRow[0].temp2FASecret) {
-		return res.status(400).json({ error: "No 2FA setup in progress" });
-	  }
-	  
-	  // Verify the token
-	  const verified = speakeasy.totp.verify({
-		secret: userRow[0].temp2FASecret,
-		encoding: 'base32',
-		token: token,
-		window: 1
-	  });
-	  
-	  if (verified) {
-		// Store the permanent secret and mark 2FA as enabled
-		console.log("the token matches , will complete the 2fa verification now");
-		await db.query(
-		  "UPDATE User SET twoFASecret = ?, temp2FASecret = NULL, twoFAEnabled = TRUE WHERE userID = ?",
-		  [userRow[0].temp2FASecret, userID]
+		const { token } = req.body;
+		const userID = req.session.userID;
+		console.log("received token is " , token);
+		console.log("userid to verify 2fa is " , userID);
+		
+		// Get the temporary secret
+		const [userRow] = await db.query(
+			"SELECT temp2FASecret FROM User WHERE userID = ?",
+			[userID]
 		);
 		
-		return res.json({ success: true });
-	  } else {
-		return res.status(400).json({ error: "Invalid token" });
-	  }
-	} catch (err) {
-	  console.error(err);
-	  res.status(500).json({ error: "Failed to verify 2FA token" });
+		if (!userRow[0] || !userRow[0].temp2FASecret) {
+			return res.status(400).json({ error: "No 2FA setup in progress" });
+		}
+		
+		// Verify the token
+		const verified = speakeasy.totp.verify({
+			secret: userRow[0].temp2FASecret,
+			encoding: 'base32',
+			token: token,
+			window: 1
+		});
+		
+		if (verified) {
+			// Store the permanent secret and mark 2FA as enabled
+			console.log("the token matches , will complete the 2fa verification now");
+			await db.query(
+			"UPDATE User SET twoFASecret = ?, temp2FASecret = NULL, twoFAEnabled = TRUE WHERE userID = ?",
+			[userRow[0].temp2FASecret, userID]
+			);
+			
+			return res.json({ success: true });
+		} else {
+			return res.status(400).json({ error: "Invalid token" });
+		}
+		} catch (err) {
+		console.error(err);
+		res.status(500).json({ error: "Failed to verify 2FA token" });
 	}
 });
-
-
 
 
 //define rate limit characteristic here and add middle ware to the login fucnction
@@ -172,11 +170,11 @@ function logLoginAttempt({ traceId, email, status, req, role }) {
 
 	fs.appendFile(logFilePath, logLine, (err) => {
 		if (err){
-		  console.error("Failed to write login log:", err);
+			console.error("Failed to write login log:", err);
 		} else {
-		  console.log("Log to file successful");
+			console.log("Log to file successful");
 		}
-	  });
+	});
 }
 
 
@@ -201,8 +199,6 @@ async function recaptchaServerCheck(recaptchaToken){
 }
 
 
-
-
 // Get user id and role in session
 router.get("/me", ensureAuth, (req, res) => {
 	if (!req.session.userID) {
@@ -212,9 +208,14 @@ router.get("/me", ensureAuth, (req, res) => {
 });
 
 // GET all users
-router.get("/", ensureAuth, ensureRole(["admin"]), async (req, res) => {
+router.get("/all_users", ensureAuth, ensureRole(["admin"]), async (req, res) => {
 	try {
 		const [users] = await db.query("SELECT * FROM User");
+		for (const user of users) {
+			const role = await getUserRole(user.userID);
+			user.role = role?.toLowerCase();
+		}
+
 		res.json(users);
 	} catch (err) {
 		console.error(err);
@@ -222,8 +223,58 @@ router.get("/", ensureAuth, ensureRole(["admin"]), async (req, res) => {
 	}
 });
 
+// Update user role
+router.get("/update_role", ensureAuth, ensureRole(["admin"]), async (req, res) => {
+	const { userID, role } = req.body;
+	if (!userID || !role)
+		return res.status(400).json({ error: "userID and role are required" });
+
+	const allowedRoles = ["applicant", "staff", "admin"];
+	if (!allowedRoles.includes(role))
+		return res.status(400).json({ error: `Role must be one of ${allowedRoles.join(", ")}` });
+
+	if (userID === req.session.userID)
+		return res.status(403).json({ error: "You cannot change your own role" });
+
+	const connection = await db.getConnection();
+	try {
+		await connection.beginTransaction();
+
+		const roleName = role.charAt(0).toUpperCase() + role.slice(1);
+		const [roleRows] = await connection.query(
+			"SELECT roleID FROM Role WHERE roleName = ?",
+			[roleName]
+		);
+
+		if (roleRows.length === 0) {
+			await connection.rollback();
+			return res.status(400).json({ error: "Role not found in Role table" });
+		}
+		const newRoleID = roleRows[0].roleID;
+
+		const [result] = await connection.query(
+			"UPDATE User SET roleID = ? WHERE userID = ?",
+			[newRoleID, userID]
+		);
+		if (result.affectedRows === 0) {
+			await connection.rollback();
+			return res.status(404).json({ error: "User not found" });
+		}
+
+		await connection.commit();
+		res.json({ message: "Role updated successfully" });
+	} catch (err) {
+		await connection.rollback();
+		console.error("update_role error:", err);
+		res.status(500).json({ error: "Failed to update role" });
+	} finally {
+		connection.release();
+	}
+});
+
+
 // Get user role
-async function getUserRole(userID) {
+async function getUserRole(userID) {b
 	try {
 		const [role] = await db.query(`
 			SELECT roleName 
