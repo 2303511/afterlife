@@ -6,6 +6,9 @@ import axios from "axios";
 import "bootstrap/dist/js/bootstrap.bundle.min";
 import { nationalities } from "../../components/nationalities";
 
+import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
 export default function Register() {
   const [form, setForm] = useState({
     username: "",
@@ -25,6 +28,8 @@ export default function Register() {
   const [errors, setErrors] = useState({});
   const navigate = useNavigate();
   const [recaptchaLoaded, setRecaptchaLoaded] = useState(false);
+  const checkExistingFields = ["nric", "contactnumber", "email"];
+  const [errorExists, setErrorExists] = useState([]);
 
   useEffect(() => {
     const loadRecaptcha = () => {
@@ -99,15 +104,76 @@ export default function Register() {
     return Object.values(newErrors).every((v) => v === "");
   };
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
+  const isValidField = (name, value) => {
+  switch (name) {
+    case "nric":
+      return value.length === 9;
+    case "contactnumber":
+      return value.length === 8 && /^\d+$/.test(value);
+    case "email":
+      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+    default:
+      return false;
+  }
+};
+
+  const handleInputChange = async (e) => {
+    let { name, value } = e.target;
+
+    // 🔒 remove commas from address
+    if (name === "address") {
+      value = value.replace(/,/g, ""); // or just: value.replaceAll(",", "")
+    }
+
+    // update form
     setForm((prev) => ({ ...prev, [name]: value }));
+
+    // Reset errors for this field initially
+    setErrorExists((prev) => prev.filter((err) => !err.includes(name)));
+
+    // early return if field is not in check list
+    if (!checkExistingFields.includes(name)) return;
+
+    // validate value before lookup
+    if (!isValidField(name, value)) return;
+
+    // map frontend name to DB field
+    const fieldMap = {
+      nric: "nric",
+      contactnumber: "contactNumber",
+      email: "email"
+    };
+
+    const attr = fieldMap[name];
+    
+    try {
+      const res = await axios.get(`/api/user/findExistingUser?attr=${attr}&value=${encodeURIComponent(value)}`);
+      const match = res.data;
+  
+      // 2. if found value
+      if (Array.isArray(match) && match.length > 0) {
+        toast.error(`${name} already exists.`);
+        // 3. add to errors found
+        setErrorExists((prev) => [...prev, `${name} already exists`]);
+      } 
+      
+    } catch (err) {
+      console.error("Failed to check existing user:", err);
+    }
+
   };
 
   const handleRegister = async (e) => {
     e.preventDefault();
     if (!validateForm()) return;
     if (!recaptchaLoaded) return console.error("reCAPTCHA not loaded");
+    console.log(`this is number of error found ${errorExists.length}`);
+    if (errorExists.length > 0) {
+      errorExists.map((err) => {
+        toast.error(err);
+      });
+      return; // there are errors. 
+    }
 
     try {
       const token = await window.grecaptcha.execute("6Les2nMrAAAAAEx17BtP4kIVDCmU1sGfaFLaFA5N", { action: "register" });

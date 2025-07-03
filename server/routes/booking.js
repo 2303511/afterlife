@@ -293,7 +293,8 @@ router.post("/updateBookingTransaction", ensureAuth, ensureSelfOrRole(["user", "
     await dbConn.beginTransaction();
 
     try {
-        const { paymentMethod, paymentAmount, bookingID } = req.body
+        let { paymentMethod, paymentAmount, bookingID } = req.body
+        paymentAmount = paymentAmount || process.env.PAYMENT_AMOUNT;
 
         const paymentID = uuidv4();
         const paymentDate = new Date().toISOString().split("T")[0];
