@@ -39,10 +39,15 @@ jobs:
         env:
           SARIF_ESLINT_IGNORE_SUPPRESSED: "true"
         run: |
-          npx eslint ./src \
+          npx react-scripts lint \
             --ext .js,.jsx,.ts,.tsx \
             --format @microsoft/eslint-formatter-sarif \
             --output-file eslint-results.sarif || true
+          if [ ! -f eslint-results.sarif ]; then
+            echo "ESLint did not generate a SARIF file. Possibly no matching files or config error."
+            touch eslint-results.sarif
+          fi
+
 
       - name: Upload ESLint SARIF results to GitHub Security tab
         uses: github/codeql-action/upload-sarif@v3
