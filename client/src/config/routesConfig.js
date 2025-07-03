@@ -19,7 +19,6 @@ import PendingApprovals from "../pages/staff/PendingApprovals";
 // admin pages
 import AdminDashboard from "../pages/admin/AdminDashboard";
 import NicheManagement from "../pages/admin/NicheManagement";
-import BuildingManagement from "../pages/admin/BuildingManagement";
 import UserManagement from "../pages/admin/UserManagement";
 
 import Login from "../pages/public/Login";
@@ -159,13 +158,6 @@ export const adminRoutes = [
     path: "/niche-management",
     icon: <FaMapMarkedAlt />,
     element: <NicheManagement />,
-    requiredRoles: ["admin"]
-  },
-  {
-    label: "Building Management",
-    path: "/building-management",
-    icon: <MdApartment />,
-    element: <BuildingManagement />,
     requiredRoles: ["admin"]
   },
   {
