@@ -159,13 +159,6 @@ export const adminRoutes = [
     element: <NicheManagement />,
     requiredRoles: ["admin"]
   },
-  {
-    label: "Building Management",
-    path: "/building-management",
-    icon: <MdApartment />,
-    element: <BuildingManagement />,
-    requiredRoles: ["admin"]
-  }
 ];
 
 export const hiddenRoutes = [
