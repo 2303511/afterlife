@@ -73,7 +73,7 @@ export default function FullFormFlow({ selectedSlot, onCancel, setIsBookButtonDi
 				console.log("Booking confirmed! Now fetching Stripe keys...");
 
 				// 2. FETCH STRIPE KEYS !
-				await handleCard();
+				if (user?.role === "user") await handleCard();
 
 				// 3. finally move to payment step:
 				setStep("payment");
