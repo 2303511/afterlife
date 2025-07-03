@@ -24,7 +24,7 @@ export default function Login() {
   useEffect(() => {
       const loadRecaptcha = () => {
           const script = document.createElement('script');
-          script.src = 'https://www.google.com/recaptcha/api.js?render=6LcNiHIrAAAAADOLYumj1n6TlcxjTgjE6c55J0YO';
+          script.src = 'https://www.google.com/recaptcha/api.js?render=6Les2nMrAAAAAEx17BtP4kIVDCmU1sGfaFLaFA5N';
           script.addEventListener('load', () => {
               setRecaptchaLoaded(true);
           });
@@ -57,7 +57,7 @@ export default function Login() {
     try {
 
       // Get reCAPTCHA token // this site key can be exposed
-      const token = await window.grecaptcha.execute('6LcNiHIrAAAAADOLYumj1n6TlcxjTgjE6c55J0YO', { action: 'login' });
+      const token = await window.grecaptcha.execute('6Les2nMrAAAAAEx17BtP4kIVDCmU1sGfaFLaFA5N', { action: 'login' });
 			console.log("Got the token sending to backend now")
 
       // 1) Perform login

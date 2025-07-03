@@ -7,6 +7,8 @@ const { v4: uuidv4 }           = require("uuid");
 const { sendAccountCreationEmail } = require("../routes/email");
 const bcrypt = require('bcrypt');
 const { ensureAuth, ensureRole, ensureSelfOrRole } = require('../middleware/auth.js');
+// for file upload validation 
+const validateFileBooking  = require('../middleware/bookingFileValidator.js');
 
 // for random password when staff creates a new user
 function generateRandomPassword(length = 12) {
@@ -113,6 +115,7 @@ router.post("/submitBooking", ensureAuth, upload.fields([
     { name: 'birthCertFile', maxCount: 1 },
     { name: 'deathCertFile', maxCount: 1 }
   ]),
+  validateFileBooking,
   async (req, res) => {
     const dbConn = await db.getConnection();
     await dbConn.beginTransaction();

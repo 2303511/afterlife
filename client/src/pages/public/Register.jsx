@@ -29,7 +29,7 @@ export default function Register() {
   useEffect(() => {
     const loadRecaptcha = () => {
       const script = document.createElement("script");
-      script.src = "https://www.google.com/recaptcha/api.js?render=6LcNiHIrAAAAADOLYumj1n6TlcxjTgjE6c55J0YO";
+      script.src = "https://www.google.com/recaptcha/api.js?render=6Les2nMrAAAAAEx17BtP4kIVDCmU1sGfaFLaFA5N";
       script.addEventListener("load", () => setRecaptchaLoaded(true));
       document.body.appendChild(script);
     };
@@ -110,7 +110,7 @@ export default function Register() {
     if (!recaptchaLoaded) return console.error("reCAPTCHA not loaded");
 
     try {
-      const token = await window.grecaptcha.execute("6LcNiHIrAAAAADOLYumj1n6TlcxjTgjE6c55J0YO", { action: "register" });
+      const token = await window.grecaptcha.execute("6Les2nMrAAAAAEx17BtP4kIVDCmU1sGfaFLaFA5N", { action: "register" });
       const cleanedForm = Object.fromEntries(
         Object.entries(form).map(([k, v]) => [k, typeof v === "string" ? v.trim() : v])
       );
