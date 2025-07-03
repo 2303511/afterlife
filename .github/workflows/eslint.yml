@@ -3,12 +3,18 @@ name: ESLint
 on:
   push:
     branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+# Give the CodeQL uploader permission to write code-scanning alerts
+permissions:
+  contents: read            
+  security-events: write     
 
 jobs:
   lint:
     runs-on: ubuntu-latest
 
-    # All run: steps will default to running in client/
     defaults:
       run:
         working-directory: client
@@ -29,14 +35,13 @@ jobs:
         run: npm install --save-dev @microsoft/eslint-formatter-sarif
 
       - name: Run ESLint and emit SARIF
-        # continue-on-error so lint failures don't break the job
         continue-on-error: true
         run: |
           npx eslint . \
             --ext .js,.jsx,.ts,.tsx \
             -f @microsoft/eslint-formatter-sarif \
             -o eslint-report.sarif \
-            || echo "Lint errors found—report generated as eslint-report.sarif"
+            || echo "🛠️ Lint issues found—SARIF report generated"
 
       - name: Upload ESLint SARIF report
         if: always()
