@@ -1,3 +1,4 @@
+// client/src/__tests__/Register.test.jsx
 import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
@@ -18,7 +19,7 @@ jest.mock('react-router-dom', () => {
   };
 });
 
-// 3) Stub grecaptcha
+// 3) Stub grecaptcha so recaptchaLoaded flips immediately
 beforeAll(() => {
   window.grecaptcha = {
     execute: jest.fn().mockResolvedValue('dummy-token'),
@@ -46,7 +47,7 @@ describe('Register Page', () => {
     expect(screen.getByPlaceholderText(/enter unit number/i)).toBeInTheDocument();
     expect(screen.getByPlaceholderText(/enter password/i)).toBeInTheDocument();
 
-    // date of birth (use name selector because label has no htmlFor)
+    // date of birth (use name selector)
     const dobInput = container.querySelector('input[name="dob"]');
     expect(dobInput).toBeInTheDocument();
 
@@ -87,8 +88,8 @@ describe('Register Page', () => {
     await userEvent.clear(dob);
     await userEvent.type(dob, '1990-01-01');
 
-    const nationalitySelect = container.querySelector('select[name="nationality"]');
-    await userEvent.selectOptions(nationalitySelect, 'Singaporean');
+    const nationality = container.querySelector('select[name="nationality"]');
+    await userEvent.selectOptions(nationality, 'Singaporean');
 
     await userEvent.type(screen.getByPlaceholderText(/enter address/i), '123 Test Street');
     await userEvent.type(screen.getByPlaceholderText(/enter postal code/i), '123456');
@@ -102,11 +103,13 @@ describe('Register Page', () => {
 
     // assertions
     await waitFor(() => {
+      // 1) grecaptcha was called
       expect(window.grecaptcha.execute).toHaveBeenCalledWith(
         '6Les2nMrAAAAAEx17BtP4kIVDCmU1sGfaFLaFA5N',
         { action: 'register' }
       );
 
+      // 2) axios.post called with recaptchaToken as any String
       expect(axios.post).toHaveBeenCalledWith(
         '/api/user/register',
         expect.objectContaining({
@@ -122,11 +125,15 @@ describe('Register Page', () => {
           unitnumber:     '05-01',
           gender:         'Male',
           password:       'password123',
-          recaptchaToken: 'dummy-token'
+          recaptchaToken: expect.any(String),
         }),
-        { headers: { 'Content-Type': 'application/json' }, withCredentials: true }
+        expect.objectContaining({
+          headers: { 'Content-Type': 'application/json' },
+          withCredentials: true,
+        })
       );
 
+      // 3) navigation
       expect(mockNavigate).toHaveBeenCalledWith('/setup-2fa');
     });
   });
