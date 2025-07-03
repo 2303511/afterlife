@@ -9,8 +9,7 @@ import 'react-toastify/dist/ReactToastify.css';
 
 export default function CheckoutForm(
   { onSubmit,
-    bookingID,
-    amount
+    bookingID
   }) {
   // import stripe elements
   const stripe = useStripe();

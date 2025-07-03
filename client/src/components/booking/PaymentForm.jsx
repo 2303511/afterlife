@@ -11,7 +11,7 @@ import "react-toastify/dist/ReactToastify.css";
 
 import { useNavigate } from "react-router-dom";
 
-export default function PaymentForm({ onBack, bookingID, applicantEmail, amount }) {
+export default function PaymentForm({ onBack, bookingID, applicantEmail }) {
   const navigate = useNavigate();
 	const [paymentMethod, setPaymentMethod] = useState("");
 	const [paymentAmount, setPaymentAmount] = useState("");
@@ -30,7 +30,7 @@ export default function PaymentForm({ onBack, bookingID, applicantEmail, amount 
 				setStripePromise(loadStripe(publishableKey));
 
 				// 2b. to get the secret key
-				const secretKey = await axios.post("/api/payment/create-payment-intent", { amount: paymentAmount })
+				const secretKey = await axios.post("/api/payment/create-payment-intent")
 				.then((res) => { return res.data.clientSecret; }); // this is client secret for stripe 
 
 				setClientSecret(secretKey);
@@ -41,7 +41,7 @@ export default function PaymentForm({ onBack, bookingID, applicantEmail, amount 
 			setStripePromise(null);
 			setClientSecret("");
 		}
-	}, [paymentMethod, paymentAmount]);
+	}, [paymentMethod]);
 
 	const handleSubmit = async (e) => {
 		e.preventDefault();
