@@ -230,10 +230,6 @@ router.post("/update_role", ensureAuth, ensureRole(["admin"]), async (req, res) 
 	if (!userID || !role)
 		return res.status(400).json({ error: "userID and role are required" });
 
-	const allowedRoles = ["applicant", "staff", "admin"];
-	if (!allowedRoles.includes(role))
-		return res.status(400).json({ error: `Role must be one of ${allowedRoles.join(", ")}` });
-
 	if (userID === req.session.userID)
 		return res.status(403).json({ error: "You cannot change your own role" });
 

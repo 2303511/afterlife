@@ -63,25 +63,36 @@ export default function UserManagement() {
     const [error, setError] = useState("");
     const [pendingRoles, setPendingRoles] = useState({});
     const [confirmData, setConfirmData] = useState(null);
-
-    const fetchUsers = async () => {
-        setLoading(true);
-        setError("");
-        try {
-            const { data } = await axios.get("/api/user/all_users", {
-            withCredentials: true,
-        });
-        setUsers(data);
-        } catch (err) {
-            setError(err.response?.data?.error || "Failed to fetch users");
-        } finally {
-            setLoading(false);
-        }
-    };
+    const [sessionUser, setSessionUser] = useState(undefined);
 
     useEffect(() => {
+        const fetchUsers = async () => {
+            setLoading(true);
+            setError("");
+            try {
+                const { data } = await axios.get("/api/user/all_users", {
+                withCredentials: true,
+                });
+                setUsers(data);
+            } catch (err) {
+                setError(err.response?.data?.error || "Failed to fetch users");
+            } finally {
+                setLoading(false);
+            }
+        };
         fetchUsers();
     }, []);
+
+    useEffect(() => {
+        axios.get("/api/user/me", { withCredentials: true })
+        .then(res => {
+            setSessionUser(res.data);
+        })
+        .catch(err => console.error("Failed to fetch session:", err));
+    }, []);
+
+    if (sessionUser === undefined) return null;  
+    const sessionUserID = sessionUser?.userID;  
 
     const saveRoleChange = async () => {
         if (!confirmData) return;
@@ -109,6 +120,7 @@ export default function UserManagement() {
 
     const filteredUsers = users.filter((u) => {
         if (selectedTab === "all") return true;
+        if (selectedTab === "applicant") return u.role === "applicant";
         if (selectedTab === "staff") return u.role === "staff";
         if (selectedTab === "admin") return u.role === "admin";
         return false;
@@ -126,6 +138,14 @@ export default function UserManagement() {
                 onClick={() => setSelectedTab("all")}
             >
                 All Users
+            </button>
+            </li>
+            <li className="nav-item">
+            <button
+                className={`nav-link ${selectedTab === "applicant" ? "active" : ""}`}
+                onClick={() => setSelectedTab("applicant")}
+            >
+                Applicant
             </button>
             </li>
             <li className="nav-item">
@@ -170,6 +190,7 @@ export default function UserManagement() {
                 {filteredUsers.map((u) => {
                     const currentVal = pendingRoles[u.userID] ?? u.role;
                     const roleOptions = ["applicant", "staff", "admin"].filter((r) => r !== u.role);
+                    const isSelf = (u.userID == sessionUserID);
                 return (
                     <tr key={u.userID}>
                     <td>{u.fullName}</td>
@@ -192,6 +213,7 @@ export default function UserManagement() {
                         <td style={{ width: 120 }}>
                             <button
                                 className="btn btn-outline-primary btn-sm"
+                                disabled={isSelf}
                                 onClick={() =>
                                     setConfirmData({
                                         userID: u.userID,
