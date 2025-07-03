@@ -22,7 +22,6 @@ import { retrieveSession } from "../../utils/retrieveSession";
 export default function FullFormFlow({ selectedSlot, onCancel, setIsBookButtonDisabled, setIsForm }) {
 	const [step, setStep] = useState("booking"); // or 'payment'
 	const [bookingFormData, setBookingFormData] = useState(null);
-	const [amount, setAmount] = useState(null);
 	const [stripePromise, setStripePromise] = useState(null);
 	const [clientSecret, setClientSecret] = useState("");
 	const [bookingID, setBookingID] = useState("");
@@ -42,9 +41,6 @@ export default function FullFormFlow({ selectedSlot, onCancel, setIsBookButtonDi
 				toast.error(`Failed to find user in session`);
 				return null
 			}
-
-			setAmount(100); // set defaut amount...
-			sessionStorage.setItem("paymentAmount", 100); 
 
 			let res_user = await axios.get(`/api/user/getUserByID?userID=${currentUser.userID}`);	
 			console.log(res_user.data);
@@ -111,10 +107,7 @@ export default function FullFormFlow({ selectedSlot, onCancel, setIsBookButtonDi
 
 		// 2b. to get the secret key
 		const secretKey = await axios
-			.post("/api/payment/create-payment-intent", {
-				amount: amount, 
-				bookingFormData: bookingFormData
-			})
+			.post("/api/payment/create-payment-intent")
 			.then((res) => {
 				return res.data.clientSecret; // this is client secret for stripe
 			});
@@ -147,14 +140,13 @@ export default function FullFormFlow({ selectedSlot, onCancel, setIsBookButtonDi
 							setStep("booking");							
 						}}
 						bookingID={bookingID}
-						amount={amount}
 						applicantEmail={applicantEmail}
 					/>
 				) : (
 					!!stripePromise &&
 					!!clientSecret && (
 						<Elements stripe={stripePromise} options={{ clientSecret }}>
-							<CheckoutForm bookingID={bookingID} amount={amount}/>
+							<CheckoutForm bookingID={bookingID} />
 						</Elements>
 					)
 				))}
