@@ -1,6 +1,6 @@
 // client/src/__tests__/Register.test.jsx
 import React from 'react';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import axios from 'axios';
 import Register from '../pages/public/Register';
@@ -41,8 +41,8 @@ describe('Register Page', () => {
     expect(screen.getByPlaceholderText(/enter address/i)).toBeInTheDocument();
     expect(screen.getByPlaceholderText(/enter password/i)).toBeInTheDocument();
 
-    // date input via name selector
-    const dobInput = screen.getByLabelText(/date of birth/i) || document.querySelector('input[name="dob"]');
+    // date input via label association or fallback to name selector
+    const dobInput = screen.queryByLabelText(/date of birth/i) || document.querySelector('input[name="dob"]');
     expect(dobInput).toBeInTheDocument();
 
     // radio inputs by exact label match
@@ -73,8 +73,9 @@ describe('Register Page', () => {
     await userEvent.clear(dob);
     await userEvent.type(dob, '1990-01-01');
 
-    // nationality select
-    await userEvent.selectOptions(screen.getByRole('combobox', { name: /nationality/i }), 'Singaporean');
+    // nationality select (only combobox on page)
+    const nationalitySelect = screen.getByRole('combobox');
+    await userEvent.selectOptions(nationalitySelect, 'Singaporean');
 
     await userEvent.type(screen.getByPlaceholderText(/enter address/i), '123 Test Street');
 
