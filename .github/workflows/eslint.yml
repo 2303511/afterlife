@@ -41,7 +41,7 @@ jobs:
             --ext .js,.jsx,.ts,.tsx \
             -f @microsoft/eslint-formatter-sarif \
             -o eslint-report.sarif \
-            || echo "🛠️ Lint issues found—SARIF report generated"
+            || echo "Lint issues found—SARIF report generated"
 
       - name: Upload ESLint SARIF report
         if: always()
