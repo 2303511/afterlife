@@ -20,7 +20,7 @@ const speakeasy = require('speakeasy');
 //for server side validation
 const validator = require("validator");
 //for denying compromised passwords
-const denylistPath = path.join(__dirname, 'compromised.txt');
+const denylistPath = path.join(__dirname, '../compromised.txt');
 const denylist = new Set(
   fs.readFileSync(denylistPath, 'utf-8')
     .split(/\r?\n/)
