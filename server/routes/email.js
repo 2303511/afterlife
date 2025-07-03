@@ -119,8 +119,7 @@ router.post('/sendResetPassword', async (req, res) => {
     );
 
     // 4. Build link
-    // const resetLink = `${process.env.FRONTEND_RESET_URL || 'http://localhost/reset-password'}?token=${token}`;
-    const resetLink = `http://localhost/reset-password?token=${token}`;
+    const resetLink = `http://afterlifeservices.app/reset-password?token=${token}`;
 
     // 5. Send email
     const subject = 'Password Reset';
