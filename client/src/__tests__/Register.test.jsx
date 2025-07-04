@@ -10,14 +10,16 @@ import userEvent from '@testing-library/user-event';
 jest.mock('axios');
 
 // mock react-router navigate
-const mockNavigate = jest.fn();
-jest.mock('react-router-dom', () => {
+typeof jest !== 'undefined' && jest.mock('react-router-dom', () => {
   const actual = jest.requireActual('react-router-dom');
   return {
     ...actual,
     useNavigate: () => mockNavigate,
   };
 });
+
+// mock navigate function
+const mockNavigate = jest.fn();
 
 // Stub grecaptcha before component mounts
 beforeAll(() => {
@@ -56,8 +58,8 @@ describe('Register Page', () => {
     expect(screen.getByRole('button', { name: /register/i })).toBeInTheDocument();
   });
 
-  it('submits form and navigates to login on success', async () => {
-    // mock successful API response
+  it('submits form and navigates to login on success without 2FA', async () => {
+    // mock successful API response without 2FA
     axios.post.mockResolvedValue({ data: { success: true, redirectTo: '/login', twoFAEnabled: false } });
 
     render(<Register />);
@@ -90,7 +92,7 @@ describe('Register Page', () => {
         '6Les2nMrAAAAAEx17BtP4kIVDCmU1sGfaFLaFA5N',
         { action: 'register' }
       );
-      // verify API call happened (loose check)
+      // verify API call happened
       expect(axios.post).toHaveBeenCalledWith(
         '/api/user/register',
         expect.any(Object),
@@ -98,6 +100,48 @@ describe('Register Page', () => {
       );
       // navigation should occur
       expect(mockNavigate).toHaveBeenCalledWith('/login');
+    });
+  });
+
+  it('navigates to setup-2fa when 2FA is enabled', async () => {
+    // mock successful API response with 2FA enabled
+    axios.post.mockResolvedValue({ data: { success: true, redirectTo: '/setup-2fa', twoFAEnabled: true } });
+
+    render(<Register />);
+
+    // fill out minimal required fields
+    await userEvent.type(screen.getByPlaceholderText(/enter username/i), 'testuser2fa');
+    await userEvent.type(screen.getByPlaceholderText(/enter email/i), '2fa@example.com');
+    await userEvent.type(screen.getByPlaceholderText(/enter full name/i), 'TwoFA User');
+    await userEvent.type(screen.getByPlaceholderText(/enter contact number/i), '87654321');
+    await userEvent.type(screen.getByPlaceholderText(/enter nric/i), 'S7654321B');
+
+    const dob2 = document.querySelector('input[name="dob"]');
+    await userEvent.clear(dob2);
+    await userEvent.type(dob2, '1992-02-02');
+
+    await userEvent.selectOptions(screen.getByRole('combobox'), 'Singaporean');
+    await userEvent.type(screen.getByPlaceholderText(/enter address/i), '456 TwoFA Street');
+    await userEvent.type(screen.getByPlaceholderText(/enter postal code/i), '654321');
+    await userEvent.type(screen.getByPlaceholderText(/enter unit number/i), '456');
+    await userEvent.click(screen.getByLabelText(/^female$/i));
+    await userEvent.type(screen.getByPlaceholderText(/enter password/i), 'secure456');
+
+    // submit the form
+    await userEvent.click(screen.getByRole('button', { name: /register/i }));
+
+    // assertions
+    await waitFor(() => {
+      // recaptcha should have been executed
+      expect(window.grecaptcha.execute).toHaveBeenCalled();
+      // verify API call happened
+      expect(axios.post).toHaveBeenCalledWith(
+        '/api/user/register',
+        expect.any(Object),
+        expect.any(Object)
+      );
+      // navigation to 2FA setup should occur
+      expect(mockNavigate).toHaveBeenCalledWith('/setup-2fa');
     });
   });
 });
