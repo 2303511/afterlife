@@ -97,7 +97,7 @@ describe('Register Page', () => {
         expect.any(Object)
       );
       // navigation should occur
-      expect(mockNavigate).toHaveBeenCalledWith('/setup-2fa');
+      expect(mockNavigate).toHaveBeenCalledWith('/login');
     });
   });
 });
