@@ -33,7 +33,7 @@ export default function Login2FA() {
             if (res.data.role === "user") {
                 navigate("/my-bookings");
             } else if (res.data.role === "staff") {
-                navigate("/dashboard");
+                navigate("/search-booking");
             } else if (res.data.role === "admin") {
                 navigate("/admin-dashboard");
             }

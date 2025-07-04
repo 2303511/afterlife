@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { staffRoutes, adminRoutes } from "../../config/routesConfig";
-import "../../styles/SideBar.css";
+import "../../styles/AfterLife-Theme.css";
 import logo from "../../img/logo.svg";
 import axios from "axios";
 

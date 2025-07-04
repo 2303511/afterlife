@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import BookingGrid from "../../components/booking/BookingGrid";
-import "../../styles/SearchBooking.css";
 import axios from "axios";
 import { toast } from "react-toastify";
 

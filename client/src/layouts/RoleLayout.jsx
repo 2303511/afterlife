@@ -29,7 +29,7 @@ export default function RoleLayout() {
     }
 
     if (pathname === "/" && role === "staff") {
-        return <Navigate to="/dashboard" replace />;
+        return <Navigate to="/search-booking" replace />;
     }
 
     if (pathname === "/" && role === "admin") {

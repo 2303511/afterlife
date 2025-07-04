@@ -10,7 +10,6 @@ import NicheBooking from "../pages/user/NicheBooking";
 import Profile from "../pages/general/Profile";
 
 // staff pages
-import Dashboard from "../pages/staff/Dashboard";
 import SearchBooking from "../pages/staff/SearchBooking";
 import NicheBookingStaff from "../pages/staff/NicheBookingStaff";
 import BookingApproval from "../pages/staff/BookingApproval";
@@ -114,13 +113,6 @@ export const userRoutes = [
 
 // STAFF
 export const staffRoutes = [
-  {
-    label: "Dashboard",
-    path: "/dashboard",
-    icon: <MdDashboard />,
-    element: <Dashboard />,
-    requiredRoles: ["staff"]
-  },
   {
     label: "Search Booking",
     path: "/search-booking",
