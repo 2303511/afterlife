@@ -2,14 +2,15 @@
 import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import axios from 'axios';
 import userEvent from '@testing-library/user-event';
+import axios from 'axios';
 import Login from '../pages/public/Login';
+import { AuthContext } from '../auth/AuthContext';
 
-// mock axios
+// Mock axios
 jest.mock('axios');
 
-// mock react-router navigate
+// Mock react-router navigate
 const mockNavigate = jest.fn();
 jest.mock('react-router-dom', () => {
   const actual = jest.requireActual('react-router-dom');
@@ -19,7 +20,7 @@ jest.mock('react-router-dom', () => {
   };
 });
 
-// stub grecaptcha before component mounts
+// Mock reCAPTCHA
 beforeAll(() => {
   Object.defineProperty(window, 'grecaptcha', {
     configurable: true,
@@ -29,7 +30,7 @@ beforeAll(() => {
   });
 });
 
-// mock the ForgetPasswordModal stub
+// Mock ForgetPasswordModal
 jest.mock('../pages/public/ForgetPasswordModal', () => {
   const React = require('react');
   return ({ show }) => (
@@ -39,6 +40,22 @@ jest.mock('../pages/public/ForgetPasswordModal', () => {
   );
 });
 
+// Helper to render Login with AuthContext
+const renderWithAuth = (ui, loginFn = jest.fn()) => {
+  return render(
+    <AuthContext.Provider
+      value={{
+        login: loginFn,
+        logout: jest.fn(),
+        user: null,
+        loading: false,
+      }}
+    >
+      {ui}
+    </AuthContext.Provider>
+  );
+};
+
 describe('Login Page', () => {
   beforeEach(() => {
     axios.post.mockClear();
@@ -46,46 +63,38 @@ describe('Login Page', () => {
   });
 
   it('renders email, password, buttons and register link', () => {
-    render(<Login />);
-
+    renderWithAuth(<Login />);
     expect(screen.getByPlaceholderText(/enter email/i)).toBeInTheDocument();
     expect(screen.getByPlaceholderText(/enter password/i)).toBeInTheDocument();
-    expect(
-      screen.getByRole('button', { name: /forgot password\?/i })
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole('button', { name: /log in/i })
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole('link', { name: /register here!/i })
-    ).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /forgot password\?/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /log in/i })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /register here!/i })).toBeInTheDocument();
 
     const modal = screen.getByTestId('forget-modal');
     expect(modal).toHaveAttribute('data-show', 'false');
   });
 
   it('executes reCAPTCHA and navigates to my-booking on success', async () => {
+    const mockLogin = jest.fn();
     axios.post.mockResolvedValue({ data: { success: true } });
 
-    render(<Login />);
+    renderWithAuth(<Login />, mockLogin);
 
     await userEvent.type(screen.getByPlaceholderText(/enter email/i), 'foo@bar.com');
     await userEvent.type(screen.getByPlaceholderText(/enter password/i), 'secret123');
     await userEvent.click(screen.getByRole('button', { name: /log in/i }));
 
     await waitFor(() => {
-      // recaptcha called
       expect(window.grecaptcha.execute).toHaveBeenCalledWith(
         '6Les2nMrAAAAAEx17BtP4kIVDCmU1sGfaFLaFA5N',
         { action: 'login' }
       );
-      // API called with some payload
       expect(axios.post).toHaveBeenCalledWith(
         '/api/user/login',
         expect.any(Object),
         expect.any(Object)
       );
-      // redirect
+      expect(mockLogin).toHaveBeenCalled(); // verifies context login()
       expect(mockNavigate).toHaveBeenCalledWith('/my-booking');
     });
   });
@@ -93,25 +102,23 @@ describe('Login Page', () => {
   it('shows "Incorrect email or password." on 401', async () => {
     axios.post.mockRejectedValue({ response: { status: 401 } });
 
-    render(<Login />);
+    renderWithAuth(<Login />);
 
     await userEvent.type(screen.getByPlaceholderText(/enter email/i), 'bad@creds.com');
     await userEvent.type(screen.getByPlaceholderText(/enter password/i), 'nopass');
     await userEvent.click(screen.getByRole('button', { name: /log in/i }));
 
     await waitFor(() => {
-      expect(
-        screen.getByText(/incorrect email or password\./i)
-      ).toBeInTheDocument();
+      expect(screen.getByText(/incorrect email or password\./i)).toBeInTheDocument();
     });
   });
 
   it('shows generic error on other failures', async () => {
-    axios.post.mockRejectedValue(new Error('oops'));
+    axios.post.mockRejectedValue(new Error('network error'));
 
-    render(<Login />);
+    renderWithAuth(<Login />);
 
-    await userEvent.type(screen.getByPlaceholderText(/enter email/i), 'u@v.com');
+    await userEvent.type(screen.getByPlaceholderText(/enter email/i), 'test@user.com');
     await userEvent.type(screen.getByPlaceholderText(/enter password/i), 'pass1234');
     await userEvent.click(screen.getByRole('button', { name: /log in/i }));
 
@@ -122,13 +129,10 @@ describe('Login Page', () => {
     });
   });
 
-  it('opens the forgot-password modal when clicked', async () => {
-    render(<Login />);
+  it('opens forgot-password modal when clicked', async () => {
+    renderWithAuth(<Login />);
 
-    await userEvent.click(
-      screen.getByRole('button', { name: /forgot password\?/i })
-    );
-
+    await userEvent.click(screen.getByRole('button', { name: /forgot password\?/i }));
     const modal = screen.getByTestId('forget-modal');
     expect(modal).toHaveAttribute('data-show', 'true');
   });
