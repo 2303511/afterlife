@@ -63,7 +63,7 @@ describe('Register Page', () => {
 
   it('submits form and navigates to login on success without 2FA', async () => {
     // mock successful API response without 2FA
-    axios.post.mockResolvedValue({ data: { success: true, redirectTo: '/login', twoFAEnabled: false } });
+    axios.post.mockResolvedValue({ data: { success: true, redirectTo: '/login', twoFASetupRequired: false } });
 
     render(
       <MemoryRouter>
@@ -94,25 +94,22 @@ describe('Register Page', () => {
 
     // assertions
     await waitFor(() => {
-      // recaptcha should have been executed
       expect(window.grecaptcha.execute).toHaveBeenCalledWith(
         '6Les2nMrAAAAAEx17BtP4kIVDCmU1sGfaFLaFA5N',
         { action: 'register' }
       );
-      // verify API call happened
       expect(axios.post).toHaveBeenCalledWith(
         '/api/user/register',
         expect.any(Object),
         expect.any(Object)
       );
-      // navigation should occur
       expect(mockNavigate).toHaveBeenCalledWith('/login');
     });
   });
 
-  it('navigates to setup-2fa when 2FA is enabled', async () => {
-    // mock successful API response with 2FA enabled
-    axios.post.mockResolvedValue({ data: { success: true, redirectTo: '/setup-2fa', twoFAEnabled: true } });
+  it('navigates to setup-2fa when 2FA setup is required', async () => {
+    // mock successful API response with 2FA setup required
+    axios.post.mockResolvedValue({ data: { success: true, redirectTo: '/setup-2fa', twoFASetupRequired: true } });
 
     render(
       <MemoryRouter>
@@ -143,15 +140,12 @@ describe('Register Page', () => {
 
     // assertions
     await waitFor(() => {
-      // recaptcha should have been executed
       expect(window.grecaptcha.execute).toHaveBeenCalled();
-      // verify API call happened
       expect(axios.post).toHaveBeenCalledWith(
         '/api/user/register',
         expect.any(Object),
         expect.any(Object)
       );
-      // navigation to 2FA setup should occur
       expect(mockNavigate).toHaveBeenCalledWith('/setup-2fa');
     });
   });
