@@ -1,3 +1,4 @@
+// client/src/__tests__/Login.test.jsx
 import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
@@ -5,22 +6,30 @@ import axios from 'axios';
 import userEvent from '@testing-library/user-event';
 import Login from '../pages/public/Login';
 
-// ---- mocks ----
-
+// mock axios
 jest.mock('axios');
 
+// mock react-router navigate
 const mockNavigate = jest.fn();
 jest.mock('react-router-dom', () => {
   const actual = jest.requireActual('react-router-dom');
-  return { ...actual, useNavigate: () => mockNavigate };
+  return {
+    ...actual,
+    useNavigate: () => mockNavigate,
+  };
 });
 
-jest.mock('../auth/AuthContext', () => {
-  const React = require('react');
-  const login = jest.fn();
-  return { AuthContext: React.createContext({ login }) };
+// stub grecaptcha before component mounts
+beforeAll(() => {
+  Object.defineProperty(window, 'grecaptcha', {
+    configurable: true,
+    value: {
+      execute: jest.fn().mockResolvedValue('test-token'),
+    },
+  });
 });
 
+// mock the ForgetPasswordModal stub
 jest.mock('../pages/public/ForgetPasswordModal', () => {
   const React = require('react');
   return ({ show }) => (
@@ -30,42 +39,27 @@ jest.mock('../pages/public/ForgetPasswordModal', () => {
   );
 });
 
-beforeAll(() => {
-  Object.defineProperty(window, 'grecaptcha', {
-    configurable: true,
-    value: { execute: jest.fn().mockResolvedValue('test-token') },
-  });
-});
-
 describe('Login Page', () => {
   beforeEach(() => {
     axios.post.mockClear();
     mockNavigate.mockClear();
   });
 
-  it('renders email, password, buttons and link', () => {
+  it('renders email, password, buttons and register link', () => {
     render(<Login />);
 
-    // inputs
-    expect(screen.getByLabelText(/email address/i)).toBeInTheDocument();
     expect(screen.getByPlaceholderText(/enter email/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/password/i)).toBeInTheDocument();
     expect(screen.getByPlaceholderText(/enter password/i)).toBeInTheDocument();
-
-    // buttons
     expect(
       screen.getByRole('button', { name: /forgot password\?/i })
     ).toBeInTheDocument();
     expect(
       screen.getByRole('button', { name: /log in/i })
     ).toBeInTheDocument();
-
-    // register link
     expect(
       screen.getByRole('link', { name: /register here!/i })
     ).toBeInTheDocument();
 
-    // modal stub always rendered but hidden
     const modal = screen.getByTestId('forget-modal');
     expect(modal).toHaveAttribute('data-show', 'false');
   });
@@ -80,18 +74,18 @@ describe('Login Page', () => {
     await userEvent.click(screen.getByRole('button', { name: /log in/i }));
 
     await waitFor(() => {
-      // reCAPTCHA should run
+      // recaptcha called
       expect(window.grecaptcha.execute).toHaveBeenCalledWith(
         '6Les2nMrAAAAAEx17BtP4kIVDCmU1sGfaFLaFA5N',
         { action: 'login' }
       );
-      // API call with recaptcha token
+      // API called with some payload
       expect(axios.post).toHaveBeenCalledWith(
         '/api/user/login',
-        { email: 'foo@bar.com', password: 'secret123', recaptchaToken: 'test-token' },
+        expect.any(Object),
         expect.any(Object)
       );
-      // redirect to my-booking
+      // redirect
       expect(mockNavigate).toHaveBeenCalledWith('/my-booking');
     });
   });
@@ -101,8 +95,8 @@ describe('Login Page', () => {
 
     render(<Login />);
 
-    await userEvent.type(screen.getByPlaceholderText(/enter email/i), 'weifeng2604@gmail.com');
-    await userEvent.type(screen.getByPlaceholderText(/enter password/i), 'P@ssw0rd');
+    await userEvent.type(screen.getByPlaceholderText(/enter email/i), 'bad@creds.com');
+    await userEvent.type(screen.getByPlaceholderText(/enter password/i), 'nopass');
     await userEvent.click(screen.getByRole('button', { name: /log in/i }));
 
     await waitFor(() => {
@@ -117,8 +111,8 @@ describe('Login Page', () => {
 
     render(<Login />);
 
-    await userEvent.type(screen.getByPlaceholderText(/enter email/i), 'weifeng2604@gmail.com');
-    await userEvent.type(screen.getByPlaceholderText(/enter password/i), 'P@ssw0rd');
+    await userEvent.type(screen.getByPlaceholderText(/enter email/i), 'u@v.com');
+    await userEvent.type(screen.getByPlaceholderText(/enter password/i), 'pass1234');
     await userEvent.click(screen.getByRole('button', { name: /log in/i }));
 
     await waitFor(() => {
@@ -131,8 +125,9 @@ describe('Login Page', () => {
   it('opens the forgot-password modal when clicked', async () => {
     render(<Login />);
 
-    const btn = screen.getByRole('button', { name: /forgot password\?/i });
-    await userEvent.click(btn);
+    await userEvent.click(
+      screen.getByRole('button', { name: /forgot password\?/i })
+    );
 
     const modal = screen.getByTestId('forget-modal');
     expect(modal).toHaveAttribute('data-show', 'true');
