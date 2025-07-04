@@ -99,7 +99,7 @@ router.post('/sendDeniedRequest',
 // Send password reset link (public)
 router.post('/sendResetPassword', async (req, res) => {
   const { to: email } = req.body;
-  const db = require('../db'); // adjust if different
+  const db = require("../db");
   const crypto = require('crypto');
 
   try {
@@ -144,18 +144,62 @@ router.post('/sendResetPassword', async (req, res) => {
 
 
 // For booking-account creation
-async function sendAccountCreationEmail(to, fullName, tempPassword) {
-  const subject = "Your Afterlife Account Has Been Created";
-  const html = `
-    <p>Hello ${fullName},</p>
-    <p>An account has been created for you on AfterLife.</p>
-    <p><strong>Temporary password:</strong> ${tempPassword}</p>
-    <p>Please log in and change your password as soon as possible.</p>
-    <p><a href="https://afterlifeservices.app/login">Click here to log in</a></p>
-    <p>If you have any questions or require further assistance, feel free to contact our support team.</p>
-    <p>Warm regards,<br/><strong>AfterLife Support Team</strong><br/>aftlifesup@gmail.com</p>
-  `;
-  return sendMail(to, subject, html);
+async function sendAccountCreationEmail(conn, to, fullName) {
+  const crypto = require("crypto");
+
+  try {
+    let user;
+    try {
+      const [[row]] = await conn.execute(
+        "SELECT userID FROM User WHERE email = ?",
+        [to]
+      );
+      user = row;
+    } catch (err) {
+      console.error("DB error (SELECT user by email):", err);
+      throw err;
+    }
+
+    if (!user) {
+      return {
+        ok: true,
+        message: "If the email is registered, a reset link has been sent."
+      };
+    }
+
+    const token = crypto.randomBytes(32).toString("hex");
+    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 1 week
+
+    /* ── insert token row ───────────────────── */
+    try {
+      await conn.execute(
+        "INSERT INTO PasswordResetToken (userID, token, expiresAt) VALUES (?, ?, ?)",
+        [user.userID, token, expiresAt]
+      );
+    } catch (err) {
+      console.error("DB error (INSERT PasswordResetToken):", err);
+      throw err;
+    }
+    
+    const resetLink = `http://localhost/reset-password?token=${token}`;
+    const subject = "Set Up Password";
+    const html = `
+        <p>Hello ${fullName},</p>
+        <p>An account has been created for you on AfterLife.</p>
+        <p><strong>Please set up your password using this link as soon as possible:</strong></p>
+        <p><a href="${resetLink}">${resetLink}</a></p>
+        <p>If you have any questions or require further assistance, feel free to contact our support team.</p>
+        <p>Warm regards,<br/><strong>AfterLife Support Team</strong><br/>aftlifesup@gmail.com</p>
+      `;
+
+    await sendMail(to, subject, html);
+    console.log("Set‑up password e‑mail sent to", to);
+
+    return { ok: true };
+  } catch (err) {
+    console.error("sendAccountCreationEmail failed:", err);
+    throw err;
+  }
 }
 
 module.exports = {
