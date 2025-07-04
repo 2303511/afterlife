@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import StatCard from "../../components/staffDashboard/StatCard";
+import StatCard from "../../components/dashboard/StatCard";
 import "../../styles/Dashboard.css";
 import axios from 'axios';
 

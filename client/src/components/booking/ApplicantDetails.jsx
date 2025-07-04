@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { Button, Modal, Form, Row, Col } from "react-bootstrap";
 
-import { nationalities } from "../nationalities.js";
+import { nationalities } from "../../config/nationalities.js";
 import axios from "axios";
 import { retrieveSession } from "../../utils/retrieveSession.js";
 

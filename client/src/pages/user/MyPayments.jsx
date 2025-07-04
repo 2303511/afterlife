@@ -1,7 +1,7 @@
 import { useEffect, useState, useContext } from "react";
 import axios from "axios";
 
-import CopyableField from "../../components/CopyableField";
+import CopyableField from "../../components/form/CopyableField";
 
 // src/pages/MyPayments.js
 export default function MyPayments() {

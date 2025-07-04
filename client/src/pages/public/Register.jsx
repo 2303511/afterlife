@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import "bootstrap/dist/js/bootstrap.bundle.min";
-import { nationalities } from "../../components/nationalities";
+import { nationalities } from "../../config/nationalities";
 
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';

@@ -2,7 +2,7 @@ import React from "react";
 import { Form, Row, Col, OverlayTrigger, Tooltip } from "react-bootstrap";
 import { BsQuestionCircle } from 'react-icons/bs';
 
-import {nationalities} from "../nationalities.js";
+import {nationalities} from "../../config/nationalities.js";
 
 export default function BeneficiaryDetails({ formData, onChange, onFileChange, errors, bookingType, width=600 }) {
     // if its for staff, width is bigger so it can accomodate to old width

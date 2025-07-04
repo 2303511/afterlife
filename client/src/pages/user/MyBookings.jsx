@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 
 import "bootstrap/dist/js/bootstrap.bundle.min";
-import CopyableField from "../../components/CopyableField";
+import CopyableField from "../../components/form/CopyableField";
 
 // for error toasts
 import { toast } from "react-toastify";

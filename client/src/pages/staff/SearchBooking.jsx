@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import StatCard from '../../components/staffDashboard/StatCard';
+import StatCard from '../../components/dashboard/StatCard';
 import BookingGrid from '../../components/booking/BookingGrid';
 import SearchBar from '../../components/booking/SearchBar';
 import '../../styles/SearchBooking.css';

@@ -5,7 +5,7 @@ import axios from "axios";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
-import logo from "../img/logo.svg";
+import logo from "../../img/logo.svg";
 import "../styles/AfterLife-Theme.css";
 
 export default function PaymentSuccess() {

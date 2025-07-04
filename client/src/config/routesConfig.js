@@ -7,7 +7,7 @@ import { MdDashboard, MdAdminPanelSettings, MdApartment, MdManageAccounts} from 
 import MyBookings from "../pages/user/MyBookings"; 
 import MyPayments from "../pages/user/MyPayments";
 import NicheBooking from "../pages/user/NicheBooking";
-import Profile from "../pages/Profile";
+import Profile from "../pages/general/Profile";
 
 // staff pages
 import Dashboard from "../pages/staff/Dashboard";
@@ -32,7 +32,7 @@ import ResetPassword from "../pages/public/ResetPassword";
 
 // hidden pages
 import RequestUrnPlacement from "../pages/user/RequestUrnPlacement";
-import PaymentSuccess from '../pages/PaymentSuccess';
+import PaymentSuccess from '../pages/general/PaymentSuccess';
 
 // PUBLIC
 export const publicRoutes = [
