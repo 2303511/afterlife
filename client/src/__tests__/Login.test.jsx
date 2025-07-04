@@ -1,4 +1,3 @@
-// client/src/__tests__/Login.test.jsx
 import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
@@ -23,12 +22,16 @@ jest.mock('react-router-dom', () => {
 
 // mock AuthContext so that useContext(AuthContext).login exists
 const mockLogin = jest.fn();
-jest.mock('../../auth/AuthContext', () => ({
-  AuthContext: React.createContext({ login: mockLogin }),
-}));
+jest.mock('../../auth/AuthContext', () => {
+  const React = require('react');           // pull React in here
+  return {
+    AuthContext: React.createContext({ login: mockLogin }),
+  };
+});
 
 // mock ForgetPasswordModal to expose its `show` prop via a test-id
 jest.mock('../pages/public/ForgetPasswordModal', () => {
+  const React = require('react');
   return ({ show, onHide }) => (
     <div data-testid="forget-modal" data-show={show ? 'true' : 'false'}>
       ForgetPasswordModal
