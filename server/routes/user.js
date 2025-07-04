@@ -889,6 +889,12 @@ router.post("/change_password", async (req, res) => {
 			.json({ error: "New password cannot be the same as the old password" });
 		}
 
+		// check for compromised password
+		if (areCompromisedPassword(newPassword)) {
+			await connection.rollback();
+			return res.status(400).json({ error: "New password has been compromised in a data breach. Please choose a different password." });
+		}
+
 		// hash new password
 		const saltRounds = 10;
 		const newSalt = await bcrypt.genSalt(saltRounds);
