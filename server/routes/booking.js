@@ -209,14 +209,7 @@ router.post("/submitBooking", ensureAuth, upload.fields([
                     [finalUserID, fullName, gender, nationality, nationalID, mobileNumber, fullUserAddress, dob, roleID, email, hashedPassword, salt]
                 );
 
-                // Email account credentials
-                try {
-                    //console.log("Sending account creation email...");
-                    await sendAccountCreationEmail(email, fullName, randomPassword);
-                    //console.log("Email sent");
-                } catch (e) {
-                    //console.error("Failed to send account creation email:", e);
-                }
+                await sendAccountCreationEmail(dbConn, email, fullName); 
             }
         }
 
