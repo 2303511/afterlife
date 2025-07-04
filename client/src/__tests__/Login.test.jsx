@@ -22,7 +22,7 @@ jest.mock('react-router-dom', () => {
 
 // mock AuthContext so that useContext(AuthContext).login exists
 const mockLogin = jest.fn();
-jest.mock('../../auth/AuthContext', () => {
+jest.mock('../auth/AuthContext', () => {
   const React = require('react');           // pull React in here
   return {
     AuthContext: React.createContext({ login: mockLogin }),
