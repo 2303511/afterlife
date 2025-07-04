@@ -5,21 +5,20 @@ import '@testing-library/jest-dom';
 import axios from 'axios';
 import Register from '../pages/public/Register';
 import userEvent from '@testing-library/user-event';
+import { MemoryRouter } from 'react-router-dom';
 
 // mock axios
 jest.mock('axios');
 
 // mock react-router navigate
-typeof jest !== 'undefined' && jest.mock('react-router-dom', () => {
+const mockNavigate = jest.fn();
+jest.mock('react-router-dom', () => {
   const actual = jest.requireActual('react-router-dom');
   return {
     ...actual,
     useNavigate: () => mockNavigate,
   };
 });
-
-// mock navigate function
-const mockNavigate = jest.fn();
 
 // Stub grecaptcha before component mounts
 beforeAll(() => {
@@ -38,7 +37,11 @@ describe('Register Page', () => {
   });
 
   it('renders all form fields and submit button', () => {
-    render(<Register />);
+    render(
+      <MemoryRouter>
+        <Register />
+      </MemoryRouter>
+    );
 
     // personal details fields
     expect(screen.getByPlaceholderText(/enter username/i)).toBeInTheDocument();
@@ -62,7 +65,11 @@ describe('Register Page', () => {
     // mock successful API response without 2FA
     axios.post.mockResolvedValue({ data: { success: true, redirectTo: '/login', twoFAEnabled: false } });
 
-    render(<Register />);
+    render(
+      <MemoryRouter>
+        <Register />
+      </MemoryRouter>
+    );
 
     // fill out form fields
     await userEvent.type(screen.getByPlaceholderText(/enter username/i), 'testuser');
@@ -107,7 +114,11 @@ describe('Register Page', () => {
     // mock successful API response with 2FA enabled
     axios.post.mockResolvedValue({ data: { success: true, redirectTo: '/setup-2fa', twoFAEnabled: true } });
 
-    render(<Register />);
+    render(
+      <MemoryRouter>
+        <Register />
+      </MemoryRouter>
+    );
 
     // fill out minimal required fields
     await userEvent.type(screen.getByPlaceholderText(/enter username/i), 'testuser2fa');
