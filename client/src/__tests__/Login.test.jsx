@@ -7,45 +7,33 @@ import Login from '../pages/public/Login';
 
 // ---- mocks ----
 
-// mock axios
 jest.mock('axios');
 
-// mock react-router navigate
 const mockNavigate = jest.fn();
 jest.mock('react-router-dom', () => {
   const actual = jest.requireActual('react-router-dom');
-  return {
-    ...actual,
-    useNavigate: () => mockNavigate,
-  };
+  return { ...actual, useNavigate: () => mockNavigate };
 });
 
-// mock AuthContext so that useContext(AuthContext).login exists
-const mockLogin = jest.fn();
 jest.mock('../auth/AuthContext', () => {
-  const React = require('react');           // pull React in here
-  return {
-    AuthContext: React.createContext({ login: mockLogin }),
-  };
+  const React = require('react');
+  const login = jest.fn();
+  return { AuthContext: React.createContext({ login }) };
 });
 
-// mock ForgetPasswordModal to expose its `show` prop via a test-id
 jest.mock('../pages/public/ForgetPasswordModal', () => {
   const React = require('react');
-  return ({ show, onHide }) => (
+  return ({ show }) => (
     <div data-testid="forget-modal" data-show={show ? 'true' : 'false'}>
       ForgetPasswordModal
     </div>
   );
 });
 
-// stub grecaptcha before any component mounts
 beforeAll(() => {
   Object.defineProperty(window, 'grecaptcha', {
     configurable: true,
-    value: {
-      execute: jest.fn().mockResolvedValue('test-token'),
-    },
+    value: { execute: jest.fn().mockResolvedValue('test-token') },
   });
 });
 
