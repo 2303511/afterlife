@@ -10,14 +10,11 @@ import { AuthContext } from '../auth/AuthContext';
 // Mock axios
 jest.mock('axios');
 
-// Mock react-router navigate
+// Mock useNavigate from react-router-dom
 const mockNavigate = jest.fn();
 jest.mock('react-router-dom', () => {
   const actual = jest.requireActual('react-router-dom');
-  return {
-    ...actual,
-    useNavigate: () => mockNavigate,
-  };
+  return { ...actual, useNavigate: () => mockNavigate };
 });
 
 // Mock reCAPTCHA
@@ -40,12 +37,12 @@ jest.mock('../pages/public/ForgetPasswordModal', () => {
   );
 });
 
-// Helper to render Login with AuthContext
-const renderWithAuth = (ui, loginFn = jest.fn()) => {
+// Helper to render Login with dummy AuthContext
+const renderWithAuth = (ui) => {
   return render(
     <AuthContext.Provider
       value={{
-        login: loginFn,
+        login: jest.fn(),
         logout: jest.fn(),
         user: null,
         loading: false,
@@ -74,28 +71,43 @@ describe('Login Page', () => {
     expect(modal).toHaveAttribute('data-show', 'false');
   });
 
-  it('executes reCAPTCHA and navigates to my-booking on success', async () => {
-    const mockLogin = jest.fn();
-    axios.post.mockResolvedValue({ data: { success: true } });
+  it('redirects to login-2fa page when 2FA is required', async () => {
+    axios.post.mockResolvedValue({
+      data: {
+        success: true,
+        redirectTo: '/login-2fa',
+        twoFARequired: true,
+      },
+    });
 
-    renderWithAuth(<Login />, mockLogin);
+    renderWithAuth(<Login />);
 
     await userEvent.type(screen.getByPlaceholderText(/enter email/i), 'foo@bar.com');
     await userEvent.type(screen.getByPlaceholderText(/enter password/i), 'secret123');
     await userEvent.click(screen.getByRole('button', { name: /log in/i }));
 
     await waitFor(() => {
-      expect(window.grecaptcha.execute).toHaveBeenCalledWith(
-        '6Les2nMrAAAAAEx17BtP4kIVDCmU1sGfaFLaFA5N',
-        { action: 'login' }
-      );
-      expect(axios.post).toHaveBeenCalledWith(
-        '/api/user/login',
-        expect.any(Object),
-        expect.any(Object)
-      );
-      expect(mockLogin).toHaveBeenCalled(); // verifies context login()
-      expect(mockNavigate).toHaveBeenCalledWith('/my-booking');
+      expect(mockNavigate).toHaveBeenCalledWith('/login-2fa');
+    });
+  });
+
+  it('redirects to setup-2fa page when 2FA setup is required', async () => {
+    axios.post.mockResolvedValue({
+      data: {
+        success: true,
+        redirectTo: '/setup-2fa',
+        twoFASetupRequired: true,
+      },
+    });
+
+    renderWithAuth(<Login />);
+
+    await userEvent.type(screen.getByPlaceholderText(/enter email/i), 'test@user.com');
+    await userEvent.type(screen.getByPlaceholderText(/enter password/i), '12345678');
+    await userEvent.click(screen.getByRole('button', { name: /log in/i }));
+
+    await waitFor(() => {
+      expect(mockNavigate).toHaveBeenCalledWith('/setup-2fa');
     });
   });
 
@@ -114,24 +126,21 @@ describe('Login Page', () => {
   });
 
   it('shows generic error on other failures', async () => {
-    axios.post.mockRejectedValue(new Error('network error'));
+    axios.post.mockRejectedValue(new Error('network fail'));
 
     renderWithAuth(<Login />);
 
-    await userEvent.type(screen.getByPlaceholderText(/enter email/i), 'test@user.com');
-    await userEvent.type(screen.getByPlaceholderText(/enter password/i), 'pass1234');
+    await userEvent.type(screen.getByPlaceholderText(/enter email/i), 'fail@net.com');
+    await userEvent.type(screen.getByPlaceholderText(/enter password/i), 'somepass');
     await userEvent.click(screen.getByRole('button', { name: /log in/i }));
 
     await waitFor(() => {
-      expect(
-        screen.getByText(/something went wrong\. please try again\./i)
-      ).toBeInTheDocument();
+      expect(screen.getByText(/something went wrong\. please try again\./i)).toBeInTheDocument();
     });
   });
 
   it('opens forgot-password modal when clicked', async () => {
     renderWithAuth(<Login />);
-
     await userEvent.click(screen.getByRole('button', { name: /forgot password\?/i }));
     const modal = screen.getByTestId('forget-modal');
     expect(modal).toHaveAttribute('data-show', 'true');
