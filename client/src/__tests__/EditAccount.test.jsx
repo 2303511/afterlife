@@ -34,7 +34,7 @@ describe('EditAccountModal', () => {
       />
     );
 
-    // Using display values since labels aren't associated
+    // Check input values directly
     expect(screen.getByDisplayValue('olduser')).toBeInTheDocument();
     expect(screen.getByDisplayValue('Old Name')).toBeInTheDocument();
     expect(screen.getByDisplayValue('old@example.com')).toBeInTheDocument();
@@ -43,7 +43,7 @@ describe('EditAccountModal', () => {
   });
 
   it('submits updated data and calls onUpdated on success', async () => {
-    // mock success
+    // mock success response
     axios.post.mockResolvedValue({ data: { success: true } });
 
     render(
@@ -55,16 +55,16 @@ describe('EditAccountModal', () => {
       />
     );
 
-    // change a field using display value
+    // Update full name
     const nameInput = screen.getByDisplayValue('Old Name');
     await userEvent.clear(nameInput);
     await userEvent.type(nameInput, 'New Name');
 
-    // click Save Changes
+    // Submit form
     const saveBtn = screen.getByRole('button', { name: /save changes/i });
     await userEvent.click(saveBtn);
 
-    // assert axios call
+    // Verify API call and callback
     await waitFor(() => {
       expect(axios.post).toHaveBeenCalledWith(
         '/api/user/edit_account',
@@ -82,6 +82,9 @@ describe('EditAccountModal', () => {
   });
 
   it('displays an error message on failure', async () => {
+    // Suppress console.error for this test
+    jest.spyOn(console, 'error').mockImplementation(() => {});
+
     axios.post.mockRejectedValue(new Error('Server Error'));
 
     render(
@@ -97,9 +100,11 @@ describe('EditAccountModal', () => {
     await userEvent.click(saveBtn);
 
     await waitFor(() => {
-      // The component shows "Update failed" on error
+      // The component renders 'Update failed' on error
       expect(screen.getByText(/update failed/i)).toBeInTheDocument();
       expect(onUpdated).not.toHaveBeenCalled();
     });
+
+    console.error.mockRestore();
   });
 });
