@@ -25,6 +25,7 @@ describe('EditAccountModal', () => {
   });
 
   it('renders form fields with profile values', () => {
+    console.log('Rendering EditAccountModal with mock profile');
     render(
       <EditAccountModal
         show={true}
@@ -34,18 +35,20 @@ describe('EditAccountModal', () => {
       />
     );
 
-    // Check input values directly
+    console.log('Checking initial input values');
     expect(screen.getByDisplayValue('olduser')).toBeInTheDocument();
     expect(screen.getByDisplayValue('Old Name')).toBeInTheDocument();
     expect(screen.getByDisplayValue('old@example.com')).toBeInTheDocument();
     expect(screen.getByDisplayValue('12345678')).toBeInTheDocument();
     expect(screen.getByDisplayValue('123 Old St')).toBeInTheDocument();
+    console.log('Initial render assertions passed');
   });
 
   it('submits updated data and calls onUpdated on success', async () => {
-    // mock success response
+    console.log('Mocking successful axios.post response');
     axios.post.mockResolvedValue({ data: { success: true } });
 
+    console.log('Rendering EditAccountModal for success flow');
     render(
       <EditAccountModal
         show={true}
@@ -56,16 +59,19 @@ describe('EditAccountModal', () => {
     );
 
     // Update full name
+    console.log('Updating fullName input');
     const nameInput = screen.getByDisplayValue('Old Name');
     await userEvent.clear(nameInput);
     await userEvent.type(nameInput, 'New Name');
 
     // Submit form
+    console.log('Clicking Save Changes button');
     const saveBtn = screen.getByRole('button', { name: /save changes/i });
     await userEvent.click(saveBtn);
 
     // Verify API call and callback
     await waitFor(() => {
+      console.log('Verifying axios.post call and onUpdated callback');
       expect(axios.post).toHaveBeenCalledWith(
         '/api/user/edit_account',
         {
@@ -78,15 +84,16 @@ describe('EditAccountModal', () => {
         expect.any(Object)
       );
       expect(onUpdated).toHaveBeenCalled();
+      console.log('Success flow assertions passed');
     });
   });
 
   it('displays an error message on failure', async () => {
-    // Suppress console.error for this test
+    console.log('Mocking failed axios.post response');
     jest.spyOn(console, 'error').mockImplementation(() => {});
-
     axios.post.mockRejectedValue(new Error('Server Error'));
 
+    console.log('🔍 Rendering EditAccountModal for error flow');
     render(
       <EditAccountModal
         show={true}
@@ -96,13 +103,15 @@ describe('EditAccountModal', () => {
       />
     );
 
+    console.log('Clicking Save Changes button to trigger error');
     const saveBtn = screen.getByRole('button', { name: /save changes/i });
     await userEvent.click(saveBtn);
 
     await waitFor(() => {
-      // The component renders 'Update failed' on error
+      console.log('Verifying error message and onUpdated not called');
       expect(screen.getByText(/update failed/i)).toBeInTheDocument();
       expect(onUpdated).not.toHaveBeenCalled();
+      console.log('Error flow assertions passed');
     });
 
     console.error.mockRestore();
