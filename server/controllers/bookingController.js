@@ -346,7 +346,7 @@ exports.getBookingApprovalDetails = async (req, res) => {
           bene.relationshipWithApplicant, bene.inscription,
           n.nicheID, n.blockID, n.nicheCode, n.status AS nicheStatus, n.lastUpdated,
           p.paymentID, p.amount AS paymentAmount, p.paymentMethod, p.paymentDate, p.paymentStatus,
-          u.fullName AS customerName, u.contactNumber
+          u.fullName AS customerName, u.contactNumber, u.email
         FROM Booking b
         LEFT JOIN Beneficiary bene ON b.beneficiaryID = bene.beneficiaryID
         LEFT JOIN Niche n ON b.nicheID = n.nicheID
