@@ -61,34 +61,6 @@ router.get("/niches/:blockID", ensureAuth, async (req, res) => {
   res.json(rows);
 });
 
-router.post("/create-block", ensureAuth, ensureRole(["staff","admin"]), async (req, res) => {
-  const { levelID, notes, rows, cols, status } = req.body;
-
-  try {
-    const blockID = uuidv4();
-
-    // Insert the new block
-    await db.query("INSERT INTO Block (blockID, levelID, levelNumber, notes) VALUES (?, ?, ?, ?)", 
-      [blockID, levelID, 1, notes]);
-
-    // Generate niche slots
-    for (let r = 1; r <= rows; r++) {
-      for (let c = 1; c <= cols; c++) {
-        const nicheID = uuidv4();
-        const code = `${String(r).padStart(2, '0')}-${String(c).padStart(2, '0')}`;
-        await db.query(
-          "INSERT INTO Niche (nicheID, blockID, nicheRow, nicheColumn, niche_code, status) VALUES (?, ?, ?, ?, ?, ?)",
-          [nicheID, blockID, r, c, code, status]
-        );
-      }
-    }
-
-    res.json({ success: true, blockID });
-  } catch (err) {
-    console.error("Error creating block:", err);
-    res.status(500).json({ success: false, error: err.message });
-  }
-});
 
 // admin level
 router.post("/update-status", ensureAuth, ensureRole(["admin"]), async (req, res) => {
