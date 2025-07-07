@@ -47,7 +47,7 @@ router.post("/place-urn", ensureAuth, ensureSelfOrRole(["staff","admin"]), uploa
 router.post('/approve', ensureAuth, ensureRole(["staff","admin"]), approveBooking);
 
 // staff - to archive ('free') niches once the applicants are done with it
-router.post('/booking/archive', ensureAuth, ensureRole(["staff","admin"]), archiveBooking );
+router.post('/archive', ensureAuth, ensureRole(["staff","admin"]), archiveBooking );
 
 //bene.beneficiaryNRIC, 
 router.get("/approval/:bookingID", ensureAuth, getBookingApprovalDetails);
