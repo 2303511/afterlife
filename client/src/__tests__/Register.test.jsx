@@ -30,34 +30,34 @@ beforeAll(() => {
   });
 });
 
-describe('Register Page - 2FA Setup Flow', () => {
+describe('Register Page', () => {
   beforeEach(() => {
     axios.post.mockClear();
     mockNavigate.mockClear();
   });
 
   it('navigates to setup-2fa when 2FA setup is required', async () => {
-    console.log('Start test: 2FA setup required');
-    axios.post.mockResolvedValue({ data: { success: true, redirectTo: '/setup-2fa', twoFASetupRequired: true } });
+    console.log('Start: 2FA setup required flow');
+    axios.post.mockResolvedValue({
+      data: { success: true, redirectTo: '/setup-2fa', twoFASetupRequired: true }
+    });
 
-    console.log('Render Register component');
+    console.log('Render form');
     render(
       <MemoryRouter>
         <Register />
       </MemoryRouter>
     );
 
-    console.log('Fill in required fields');
+    console.log('Fill required fields');
     await userEvent.type(screen.getByPlaceholderText(/enter username/i), 'testuser2fa');
     await userEvent.type(screen.getByPlaceholderText(/enter email/i), '2fa@example.com');
     await userEvent.type(screen.getByPlaceholderText(/enter full name/i), 'TwoFA User');
     await userEvent.type(screen.getByPlaceholderText(/enter contact number/i), '87654321');
-    await userEvent.type(screen.getByPlaceholderText(/enter nric/i), 'S7654321B');
-
+    await userEvent.type(screen.getByPlaceholderText(/enter nric/i), 'S1234567A');
     const dob = document.querySelector('input[name="dob"]');
     await userEvent.clear(dob);
     await userEvent.type(dob, '1992-02-02');
-
     await userEvent.selectOptions(screen.getByRole('combobox'), 'Singaporean');
     await userEvent.type(screen.getByPlaceholderText(/enter address/i), '456 TwoFA Street');
     await userEvent.type(screen.getByPlaceholderText(/enter postal code/i), '654321');
@@ -65,27 +65,32 @@ describe('Register Page - 2FA Setup Flow', () => {
     await userEvent.click(screen.getByLabelText(/^female$/i));
     await userEvent.type(screen.getByPlaceholderText(/enter password/i), 'secure456');
 
-    console.log('Submit the form');
+    console.log('Submit form');
     await userEvent.click(screen.getByRole('button', { name: /register/i }));
 
-    console.log('Await navigation assertion');
+    console.log('Await assertions');
     await waitFor(() => {
-      console.log('Assert reCAPTCHA executed');
+      console.log('Asserting navigation to /setup-2fa');
       expect(window.grecaptcha.execute).toHaveBeenCalled();
-      console.log('Assert API call');
       expect(axios.post).toHaveBeenCalledWith(
         '/api/user/register',
         expect.any(Object),
         expect.any(Object)
       );
-      console.log('Assert navigate to setup-2fa');
       expect(mockNavigate).toHaveBeenCalledWith('/setup-2fa');
     });
-    console.log('End test: 2FA setup required');
+    console.log('End: 2FA setup required flow');
   });
 
-    it('does not submit with invalid NRIC format when other fields are valid', async () => {
-    // Fill all other required fields with valid data
+  it('does not submit with invalid NRIC format', async () => {
+    console.log('Start: invalid NRIC');
+    render(
+      <MemoryRouter>
+        <Register />
+      </MemoryRouter>
+    );
+
+    // Fill all other fields validly
     await userEvent.type(screen.getByPlaceholderText(/enter username/i), 'validuser');
     await userEvent.type(screen.getByPlaceholderText(/enter email/i), 'valid@example.com');
     await userEvent.type(screen.getByPlaceholderText(/enter full name/i), 'Valid User');
@@ -98,16 +103,26 @@ describe('Register Page - 2FA Setup Flow', () => {
     await userEvent.type(screen.getByPlaceholderText(/enter unit number/i), '10-10');
     await userEvent.type(screen.getByPlaceholderText(/enter password/i), 'validpass');
 
-    // Invalid NRIC only
+    console.log('Enter malformed NRIC');
     await userEvent.clear(screen.getByPlaceholderText(/enter nric/i));
     await userEvent.type(screen.getByPlaceholderText(/enter nric/i), 'S1234567');
 
+    console.log('Attempt submit');
     await userEvent.click(screen.getByRole('button', { name: /register/i }));
     expect(axios.post).not.toHaveBeenCalled();
+    expect(mockNavigate).not.toHaveBeenCalled();
+    console.log('End: invalid NRIC');
   });
 
-  it('does not submit with underage DOB when other fields are valid', async () => {
-    // valid default fields
+  it('does not submit with underage DOB', async () => {
+    console.log('Start: underage DOB');
+    render(
+      <MemoryRouter>
+        <Register />
+      </MemoryRouter>
+    );
+
+    // Fill all other fields validly
     await userEvent.type(screen.getByPlaceholderText(/enter username/i), 'validuser');
     await userEvent.type(screen.getByPlaceholderText(/enter email/i), 'valid@example.com');
     await userEvent.type(screen.getByPlaceholderText(/enter full name/i), 'Valid User');
@@ -119,16 +134,26 @@ describe('Register Page - 2FA Setup Flow', () => {
     await userEvent.type(screen.getByPlaceholderText(/enter unit number/i), '10-10');
     await userEvent.type(screen.getByPlaceholderText(/enter password/i), 'validpass');
 
-    // Underage DOB
+    console.log('Enter underage DOB');
     await userEvent.clear(document.querySelector('input[name="dob"]'));
     await userEvent.type(document.querySelector('input[name="dob"]'), '2010-01-01');
 
+    console.log('Attempt submit');
     await userEvent.click(screen.getByRole('button', { name: /register/i }));
     expect(axios.post).not.toHaveBeenCalled();
+    expect(mockNavigate).not.toHaveBeenCalled();
+    console.log('End: underage DOB');
   });
 
-  it('does not submit with short contact number when other fields are valid', async () => {
-    // valid default fields
+  it('does not submit with short contact number', async () => {
+    console.log('Start: short contact');
+    render(
+      <MemoryRouter>
+        <Register />
+      </MemoryRouter>
+    );
+
+    // Fill other fields validly
     await userEvent.type(screen.getByPlaceholderText(/enter username/i), 'validuser');
     await userEvent.type(screen.getByPlaceholderText(/enter email/i), 'valid@example.com');
     await userEvent.type(screen.getByPlaceholderText(/enter full name/i), 'Valid User');
@@ -143,12 +168,22 @@ describe('Register Page - 2FA Setup Flow', () => {
     await userEvent.type(screen.getByPlaceholderText(/enter unit number/i), '10-10');
     await userEvent.type(screen.getByPlaceholderText(/enter password/i), 'validpass');
 
+    console.log('Attempt submit');
     await userEvent.click(screen.getByRole('button', { name: /register/i }));
     expect(axios.post).not.toHaveBeenCalled();
+    expect(mockNavigate).not.toHaveBeenCalled();
+    console.log('End: short contact');
   });
 
-  it('does not submit with short password when other fields are valid', async () => {
-    // valid default fields
+  it('does not submit with short password', async () => {
+    console.log('Start: short password');
+    render(
+      <MemoryRouter>
+        <Register />
+      </MemoryRouter>
+    );
+
+    // Fill other fields validly
     await userEvent.type(screen.getByPlaceholderText(/enter username/i), 'validuser');
     await userEvent.type(screen.getByPlaceholderText(/enter email/i), 'valid@example.com');
     await userEvent.type(screen.getByPlaceholderText(/enter full name/i), 'Valid User');
@@ -161,10 +196,14 @@ describe('Register Page - 2FA Setup Flow', () => {
     await userEvent.type(screen.getByPlaceholderText(/enter postal code/i), '123456');
     await userEvent.type(screen.getByPlaceholderText(/enter unit number/i), '10-10');
 
-    // Short password
+    console.log('Enter short password');
     await userEvent.clear(screen.getByPlaceholderText(/enter password/i));
     await userEvent.type(screen.getByPlaceholderText(/enter password/i), 'short');
 
+    console.log('Attempt submit');
     await userEvent.click(screen.getByRole('button', { name: /register/i }));
     expect(axios.post).not.toHaveBeenCalled();
+    expect(mockNavigate).not.toHaveBeenCalled();
+    console.log('End: short password');
   });
+});
