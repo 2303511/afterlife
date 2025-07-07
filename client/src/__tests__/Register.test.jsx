@@ -79,11 +79,11 @@ describe('Register Page', () => {
       );
       expect(mockNavigate).toHaveBeenCalledWith('/setup-2fa');
     });
-    console.log('End: 2FA setup required flow');
+    console.log('Successfully redirected to /setup-2fa');
   });
 
+  console.log('Beginning invalid input assertions.');
   it('does not submit with invalid NRIC format', async () => {
-    console.log('Start: invalid NRIC');
     render(
       <MemoryRouter>
         <Register />
@@ -103,19 +103,16 @@ describe('Register Page', () => {
     await userEvent.type(screen.getByPlaceholderText(/enter unit number/i), '10-10');
     await userEvent.type(screen.getByPlaceholderText(/enter password/i), 'validpass');
 
-    console.log('Enter malformed NRIC');
     await userEvent.clear(screen.getByPlaceholderText(/enter nric/i));
     await userEvent.type(screen.getByPlaceholderText(/enter nric/i), 'S1234567');
 
-    console.log('Attempt submit');
     await userEvent.click(screen.getByRole('button', { name: /register/i }));
     expect(axios.post).not.toHaveBeenCalled();
     expect(mockNavigate).not.toHaveBeenCalled();
-    console.log('End: invalid NRIC');
+    console.log('Invalid NRIC assertion passed');
   });
 
   it('does not submit with underage DOB', async () => {
-    console.log('Start: underage DOB');
     render(
       <MemoryRouter>
         <Register />
@@ -134,19 +131,16 @@ describe('Register Page', () => {
     await userEvent.type(screen.getByPlaceholderText(/enter unit number/i), '10-10');
     await userEvent.type(screen.getByPlaceholderText(/enter password/i), 'validpass');
 
-    console.log('Enter underage DOB');
     await userEvent.clear(document.querySelector('input[name="dob"]'));
     await userEvent.type(document.querySelector('input[name="dob"]'), '2010-01-01');
 
-    console.log('Attempt submit');
     await userEvent.click(screen.getByRole('button', { name: /register/i }));
     expect(axios.post).not.toHaveBeenCalled();
     expect(mockNavigate).not.toHaveBeenCalled();
-    console.log('End: underage DOB');
+    console.log('Underage DOB assertion passed');
   });
 
   it('does not submit with short contact number', async () => {
-    console.log('Start: short contact');
     render(
       <MemoryRouter>
         <Register />
@@ -168,15 +162,13 @@ describe('Register Page', () => {
     await userEvent.type(screen.getByPlaceholderText(/enter unit number/i), '10-10');
     await userEvent.type(screen.getByPlaceholderText(/enter password/i), 'validpass');
 
-    console.log('Attempt submit');
     await userEvent.click(screen.getByRole('button', { name: /register/i }));
     expect(axios.post).not.toHaveBeenCalled();
     expect(mockNavigate).not.toHaveBeenCalled();
-    console.log('End: short contact');
+    console.log('Invalid contact number assertion passed');
   });
 
   it('does not submit with short password', async () => {
-    console.log('Start: short password');
     render(
       <MemoryRouter>
         <Register />
@@ -196,14 +188,12 @@ describe('Register Page', () => {
     await userEvent.type(screen.getByPlaceholderText(/enter postal code/i), '123456');
     await userEvent.type(screen.getByPlaceholderText(/enter unit number/i), '10-10');
 
-    console.log('Enter short password');
     await userEvent.clear(screen.getByPlaceholderText(/enter password/i));
     await userEvent.type(screen.getByPlaceholderText(/enter password/i), 'short');
 
-    console.log('Attempt submit');
     await userEvent.click(screen.getByRole('button', { name: /register/i }));
     expect(axios.post).not.toHaveBeenCalled();
     expect(mockNavigate).not.toHaveBeenCalled();
-    console.log('End: short password');
+    console.log('Insufficient length password assertion passed');
   });
 });
