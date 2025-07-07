@@ -59,7 +59,7 @@ describe('EditAccountModal', () => {
     );
 
     // Update full name
-    console.log('Updating fullName input');
+    console.log('Updating full name field');
     const nameInput = screen.getByDisplayValue('Old Name');
     await userEvent.clear(nameInput);
     await userEvent.type(nameInput, 'New Name');
@@ -71,7 +71,7 @@ describe('EditAccountModal', () => {
 
     // Verify API call and callback
     await waitFor(() => {
-      console.log('Verifying axios.post call and onUpdated callback');
+      console.log('Verifying that profile is successfully updated');
       expect(axios.post).toHaveBeenCalledWith(
         '/api/user/edit_account',
         {
@@ -93,7 +93,7 @@ describe('EditAccountModal', () => {
     jest.spyOn(console, 'error').mockImplementation(() => {});
     axios.post.mockRejectedValue(new Error('Server Error'));
 
-    console.log('🔍 Rendering EditAccountModal for error flow');
+    console.log('Now asserting for failed profile update flow');
     render(
       <EditAccountModal
         show={true}
@@ -108,7 +108,7 @@ describe('EditAccountModal', () => {
     await userEvent.click(saveBtn);
 
     await waitFor(() => {
-      console.log('Verifying error message and onUpdated not called');
+      console.log('Verifying error message, profile not updated successfully.');
       expect(screen.getByText(/update failed/i)).toBeInTheDocument();
       expect(onUpdated).not.toHaveBeenCalled();
       console.log('Error flow assertions passed');
