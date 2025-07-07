@@ -81,48 +81,90 @@ describe('Register Page - 2FA Setup Flow', () => {
       console.log('Assert navigate to setup-2fa');
       expect(mockNavigate).toHaveBeenCalledWith('/setup-2fa');
     });
-    console.log('End test: Redirected to /setup-2fa successfully.');
+    console.log('End test: 2FA setup required');
   });
 
-  it('does not submit with invalid inputs', async () => {
-    console.log('Start test: invalid input validation');
-    render(
-      <MemoryRouter>
-        <Register />
-      </MemoryRouter>
-    );
+    it('does not submit with invalid NRIC format when other fields are valid', async () => {
+    // Fill all other required fields with valid data
+    await userEvent.type(screen.getByPlaceholderText(/enter username/i), 'validuser');
+    await userEvent.type(screen.getByPlaceholderText(/enter email/i), 'valid@example.com');
+    await userEvent.type(screen.getByPlaceholderText(/enter full name/i), 'Valid User');
+    await userEvent.type(screen.getByPlaceholderText(/enter contact number/i), '87654321');
+    await userEvent.clear(document.querySelector('input[name="dob"]'));
+    await userEvent.type(document.querySelector('input[name="dob"]'), '1990-01-01');
+    await userEvent.selectOptions(screen.getByRole('combobox'), 'Singaporean');
+    await userEvent.type(screen.getByPlaceholderText(/enter address/i), '1 Test Street');
+    await userEvent.type(screen.getByPlaceholderText(/enter postal code/i), '123456');
+    await userEvent.type(screen.getByPlaceholderText(/enter unit number/i), '10-10');
+    await userEvent.type(screen.getByPlaceholderText(/enter password/i), 'validpass');
 
-    console.log('Attempt to submit with no inputs');
-    await userEvent.click(screen.getByRole('button', { name: /register/i }));
-    console.log('Assert no API call on empty submit');
-    expect(axios.post).not.toHaveBeenCalled();
-    expect(mockNavigate).not.toHaveBeenCalled();
-
-    console.log('Fill NRIC without trailing letter');
+    // Invalid NRIC only
+    await userEvent.clear(screen.getByPlaceholderText(/enter nric/i));
     await userEvent.type(screen.getByPlaceholderText(/enter nric/i), 'S1234567');
-    console.log('Attempt to submit invalid NRIC');
+
     await userEvent.click(screen.getByRole('button', { name: /register/i }));
     expect(axios.post).not.toHaveBeenCalled();
+  });
 
-    console.log('Fill date of birth under 18');
-    const dob = document.querySelector('input[name="dob"]');
-    await userEvent.clear(dob);
-    await userEvent.type(dob, '2010-01-01');
+  it('does not submit with underage DOB when other fields are valid', async () => {
+    // valid default fields
+    await userEvent.type(screen.getByPlaceholderText(/enter username/i), 'validuser');
+    await userEvent.type(screen.getByPlaceholderText(/enter email/i), 'valid@example.com');
+    await userEvent.type(screen.getByPlaceholderText(/enter full name/i), 'Valid User');
+    await userEvent.type(screen.getByPlaceholderText(/enter contact number/i), '87654321');
+    await userEvent.type(screen.getByPlaceholderText(/enter nric/i), 'S1234567A');
+    await userEvent.selectOptions(screen.getByRole('combobox'), 'Singaporean');
+    await userEvent.type(screen.getByPlaceholderText(/enter address/i), '1 Test Street');
+    await userEvent.type(screen.getByPlaceholderText(/enter postal code/i), '123456');
+    await userEvent.type(screen.getByPlaceholderText(/enter unit number/i), '10-10');
+    await userEvent.type(screen.getByPlaceholderText(/enter password/i), 'validpass');
+
+    // Underage DOB
+    await userEvent.clear(document.querySelector('input[name="dob"]'));
+    await userEvent.type(document.querySelector('input[name="dob"]'), '2010-01-01');
+
     await userEvent.click(screen.getByRole('button', { name: /register/i }));
     expect(axios.post).not.toHaveBeenCalled();
+  });
 
-    console.log('Fill invalid contact number');
+  it('does not submit with short contact number when other fields are valid', async () => {
+    // valid default fields
+    await userEvent.type(screen.getByPlaceholderText(/enter username/i), 'validuser');
+    await userEvent.type(screen.getByPlaceholderText(/enter email/i), 'valid@example.com');
+    await userEvent.type(screen.getByPlaceholderText(/enter full name/i), 'Valid User');
+    await userEvent.type(screen.getByPlaceholderText(/enter nric/i), 'S1234567A');
     await userEvent.clear(screen.getByPlaceholderText(/enter contact number/i));
     await userEvent.type(screen.getByPlaceholderText(/enter contact number/i), '12345');
+    await userEvent.clear(document.querySelector('input[name="dob"]'));
+    await userEvent.type(document.querySelector('input[name="dob"]'), '1990-01-01');
+    await userEvent.selectOptions(screen.getByRole('combobox'), 'Singaporean');
+    await userEvent.type(screen.getByPlaceholderText(/enter address/i), '1 Test Street');
+    await userEvent.type(screen.getByPlaceholderText(/enter postal code/i), '123456');
+    await userEvent.type(screen.getByPlaceholderText(/enter unit number/i), '10-10');
+    await userEvent.type(screen.getByPlaceholderText(/enter password/i), 'validpass');
+
     await userEvent.click(screen.getByRole('button', { name: /register/i }));
     expect(axios.post).not.toHaveBeenCalled();
+  });
 
-    console.log('Fill invalid password');
+  it('does not submit with short password when other fields are valid', async () => {
+    // valid default fields
+    await userEvent.type(screen.getByPlaceholderText(/enter username/i), 'validuser');
+    await userEvent.type(screen.getByPlaceholderText(/enter email/i), 'valid@example.com');
+    await userEvent.type(screen.getByPlaceholderText(/enter full name/i), 'Valid User');
+    await userEvent.type(screen.getByPlaceholderText(/enter contact number/i), '87654321');
+    await userEvent.type(screen.getByPlaceholderText(/enter nric/i), 'S1234567A');
+    await userEvent.clear(document.querySelector('input[name="dob"]'));
+    await userEvent.type(document.querySelector('input[name="dob"]'), '1990-01-01');
+    await userEvent.selectOptions(screen.getByRole('combobox'), 'Singaporean');
+    await userEvent.type(screen.getByPlaceholderText(/enter address/i), '1 Test Street');
+    await userEvent.type(screen.getByPlaceholderText(/enter postal code/i), '123456');
+    await userEvent.type(screen.getByPlaceholderText(/enter unit number/i), '10-10');
+
+    // Short password
     await userEvent.clear(screen.getByPlaceholderText(/enter password/i));
     await userEvent.type(screen.getByPlaceholderText(/enter password/i), 'short');
+
     await userEvent.click(screen.getByRole('button', { name: /register/i }));
     expect(axios.post).not.toHaveBeenCalled();
-
-    console.log('End test: invalid input validation');
   });
-});
