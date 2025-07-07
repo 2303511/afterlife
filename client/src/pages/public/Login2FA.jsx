@@ -18,7 +18,7 @@ export default function Login2FA() {
     try {
         console.log("c - sending 2fa token for verifiation " , token );
         const response = await axios.post(
-            '/api/user/verify-login-2fa',
+            '/api/auth/verify-login-2fa',
             { token },
             { withCredentials: true }
             );

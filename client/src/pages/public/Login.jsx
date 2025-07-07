@@ -62,7 +62,7 @@ export default function Login() {
 
       // 1) Perform login
       const response = await axios.post(
-        "/api/user/login",
+        "/api/auth/login",
         { email: form.email, password: form.password, recaptchaToken: token},
         {
           headers: { "Content-Type": "application/json" },

@@ -15,7 +15,7 @@ export default function Setup2FA() {
     const generateSecret = async () => {
       try {
         console.log("Sending req to server to generate 2FA secret to display");
-        const response = await axios.post("/api/user/generate-2fa-secret", {}, {
+        const response = await axios.post("/api/auth/generate-2fa-secret", {}, {
           headers: { "Content-Type": "application/json" },
           withCredentials: true
         });
@@ -39,7 +39,7 @@ export default function Setup2FA() {
 
     try {
         console.log("Sending the token to server to verify", token)
-        const response = await axios.post("/api/user/verify-2fa", { token }, {
+        const response = await axios.post("/api/auth/verify-2fa", { token }, {
             headers: { "Content-Type": "application/json" },
             withCredentials: true
             });

@@ -182,7 +182,7 @@ export default function Register() {
       );
 
       const response = await axios.post(
-        "/api/user/register",
+        "/api/auth/register",
         { ...cleanedForm, recaptchaToken: token },
         { headers: { "Content-Type": "application/json" }, withCredentials: true }
       );
