@@ -10,7 +10,14 @@ const fs = require('fs');
 const path = require('path');
 const os = require('os');
 const logsDir = path.join(__dirname, '..', 'logs');
-const logFilePath = path.join(logsDir, 'login.logs');
+const loginFilePath = path.join(logsDir, 'login.logs');
+const registerFilePath = path.join(logsDir, 'register.logs');
+const reCaptchaFilePath = path.join(logsDir, 'reCAPTCHA.logs');
+const twofaFilePath = path.join(logsDir, 'twofa.logs');
+const privilegeFilePath = path.join(logsDir, 'privilege.logs');
+const editAccountFilePath = path.join(logsDir, 'editAccount.logs');
+const changePasswordFilePath = path.join(logsDir, 'changePassword.logs');
+const forgotPasswordFilePath = path.join(logsDir, 'forgotPassword.logs');
 //for rate limiting
 const rateLimit = require("express-rate-limit");
 //for recaptcha
@@ -46,15 +53,24 @@ router.post("/generate-2fa-secret", ensureAuth, async (req, res) => {
 			[secret.base32, userID]
 		);
 		
-		console.log("Sending back secret  " , secret.base32);
-		console.log("sending back url " , secret.otpauth_url);
+		//console.log("Sending back secret  " , secret.base32);
+		//console.log("sending back url " , secret.otpauth_url);
+
+
+		// Log 2fa set up attemept
+		const traceId = uuidv4();
+		loggingFunction({traceId,email: userID, status: "S - Temp 2FA secret generated",req,role : "UNKNOWN"},twofaFilePath);
+
+
 		res.json({
 			secret: secret.base32,
 			otpauthUrl: secret.otpauth_url
 		});
 		} catch (err) {
-		console.error(err);
-		res.status(500).json({ error: "Failed to generate 2FA secret" });
+			console.error(err);
+			const traceId = uuidv4();
+			loggingFunction({traceId,email: userID, status: "F - Temp 2FA secret generation FAILED",req,role:"UNKNOWN"},twofaFilePath);
+			res.status(500).json({ error: "Failed to generate 2FA secret" });
 		}
 	});
 
@@ -77,6 +93,7 @@ router.post("/verify-2fa", ensureAuth, async (req, res) => {
 		if (!userRow[0] || !userRow[0].temp2FASecret) {
 			return res.status(400).json({ error: "No 2FA setup in progress" });
 		}
+
 		
 		// Verify the token
 		const verified = speakeasy.totp.verify({
@@ -86,6 +103,7 @@ router.post("/verify-2fa", ensureAuth, async (req, res) => {
 			window: 1
 		});
 		
+		const role = await getUserRole(userID);
 		if (verified) {
 			// Store the permanent secret and mark 2FA as enabled
 			console.log("the token matches , will complete the 2fa verification now");
@@ -93,9 +111,20 @@ router.post("/verify-2fa", ensureAuth, async (req, res) => {
 			"UPDATE User SET twoFASecret = ?, temp2FASecret = NULL, twoFAEnabled = TRUE WHERE userID = ?",
 			[userRow[0].temp2FASecret, userID]
 			);
+
+			// Log successful 2fa verification
+			const traceId = uuidv4();
+			loggingFunction({traceId,email: userID, status: "S - 2FA set up successfully",req,role},twofaFilePath);
+			const traceId2 = uuidv4();
+			loggingFunction({traceId2,email: userID, status: "S - User created successfully",req,role},registerFilePath);
 			
 			return res.json({ success: true });
 		} else {
+
+			const traceId = uuidv4();
+			loggingFunction({traceId,email: userID, status: "F - 2FA FAILED set up",req,role},twofaFilePath);
+
+
 			return res.status(400).json({ error: "Invalid token" });
 		}
 		} catch (err) {
@@ -117,13 +146,14 @@ const loginLimiter = rateLimit({
 	//log this ip 
 	handler: (req, res, next, options) => {
 		const traceId = uuidv4();
-		logLoginAttempt({
+		loggingFunction({
 			traceId: traceId,
 			email: req.body.email,
-			status: "FAIL: Rate limit exceeded",
+			status: "F - Login rate limit exceeded",
 			req,
 			role: "UNKNOWN"
-		});
+		},
+		loginFilePath);
 		//maybe return the generic error message and traceid to user
 		return res.status(options.statusCode).json(options.message);
 	}
@@ -141,13 +171,14 @@ const registerLimiter = rateLimit({
 	//log this ip 
 	handler: (req, res, next, options) => {
 		const traceId = uuidv4();
-		logLoginAttempt({
+		loggingFunction({
 			traceId: traceId,
 			email: req.body.email,
-			status: "FAIL: Register limit exceeded",
+			status: "F - Register rate limit exceeded limit exceeded",
 			req,
 			role: "UNKNOWN"
-		});
+		},
+		registerFilePath);
 		//maybe return the generic error message and traceid to user
 		return res.status(options.statusCode).json(options.message);
 	}
@@ -158,7 +189,7 @@ function areCompromisedPassword(password) {
 }
 
 //logs login logs to /app/logs/login.logs
-function logLoginAttempt({ traceId, email, status, req, role }) {
+function loggingFunction({ traceId, email, status, req, role }, loggingFileName) {
 	console.log("Entering log function");
 
 	// Create logs folder if not exists
@@ -172,14 +203,14 @@ function logLoginAttempt({ traceId, email, status, req, role }) {
 		timestamp: new Date().toISOString(),
 		traceId: traceId,
 		ip: req.headers['x-forwarded-for'] || req.connection.remoteAddress,
-		email,
+		emailOrId: email,
 		status,
 		role
 	};
 
 	const logLine = JSON.stringify(logEntry) + os.EOL;
 
-	fs.appendFile(logFilePath, logLine, (err) => {
+	fs.appendFile(loggingFileName, logLine, (err) => {
 		if (err){
 			console.error("Failed to write login log:", err);
 		} else {
@@ -236,13 +267,21 @@ router.get("/all_users", ensureAuth, ensureRole(["admin"]), async (req, res) => 
 
 // Update user role
 router.post("/update_role", ensureAuth, ensureRole(["admin"]), async (req, res) => {
+
+	
+
+	
 	const { userID, role } = req.body;
 	console.log("this is in update role, new role:", role);
+
 	if (!userID || !role)
 		return res.status(400).json({ error: "userID and role are required" });
 
-	if (userID === req.session.userID)
+	if (userID === req.session.userID){
+		const traceId = uuidv4();
+		loggingFunction({traceId,email: userID, status: "F - User tried to change other user's role",req,role},privilegeFilePath);
 		return res.status(403).json({ error: "You cannot change your own role" });
+	}
 
 	const connection = await db.getConnection();
 	try {
@@ -270,6 +309,8 @@ router.post("/update_role", ensureAuth, ensureRole(["admin"]), async (req, res) 
 		}
 
 		await connection.commit();
+		const traceId = uuidv4();
+		loggingFunction({traceId,email: userID, status: "S - User successfully change other user role",req,role},privilegeFilePath);
 		res.json({ message: "Role updated successfully" });
 	} catch (err) {
 		await connection.rollback();
@@ -326,7 +367,11 @@ router.post("/register", registerLimiter, async (req, res) => {
 	// Verify the things for this work flow 
 	const isValid = success && score > 0.5 && action ==='register';
 	console.log("isValid register value is:", isValid);
-	if (!isValid){return res.status(400).json({ error: "recaptcha register failed" });}
+	if (!isValid){
+		const traceId = uuidv4();
+		loggingFunction({traceId,email: email, status: "F - Register reCAPTCHA failed",req,role : "UNKNOWN"},reCaptchaFilePath);
+		return res.status(400).json({ error: "recaptcha register failed" });
+	}
 	console.log("recaptcha register verficication passed");
 
 	//server side validation of the user input from the form
@@ -403,13 +448,19 @@ router.post("/register", registerLimiter, async (req, res) => {
 			const existing = existingUsers[0];
 
 			if (existing.username === username) {
-				return res.status(409).json({ error: "Username is already taken." });
+				const traceId = uuidv4();
+				loggingFunction({traceId,email: "CLASH WITH EXISTING USER", status: "F - User selected the same username",req,role:"UNKNOWN"},registerFilePath);
+				return res.status(409).json({ error: "Please contact admin over this Trace ID: ${traceId}" });
 			}
 			if (existing.email === email) {
-				return res.status(409).json({ error: "Email is already registered." });
+				const traceId = uuidv4();
+				loggingFunction({traceId,email: "CLASH WITH EXISTING USER", status: "F - User seleted the same email",req,role:"UNKNOWN"},registerFilePath);
+				return res.status(409).json({ error: "Please contact admin over this Trace ID: ${traceId}" });
 			}
 			if (existing.contactNumber === contactnumber) {
-				return res.status(409).json({ error: "Contact number is already in use." });
+				const traceId = uuidv4();
+				loggingFunction({traceId,email: "CLASH WITH EXISTING USER", status: "F - User selected the same contact number",req,role:"UNKNOWN"},registerFilePath);
+				return res.status(409).json({ error: "Please contact admin over this Trace ID: ${traceId}" });
 			}
 		}
 		
@@ -463,6 +514,9 @@ router.post("/register", registerLimiter, async (req, res) => {
 			  
 			  // Return success with redirect instruction
 			  console.log("returning to register jsx to get redirected to Setup2fA");
+			  const traceId = uuidv4();
+			  loggingFunction({traceId,email: email, status: "S - User successfully created",req,role: req.session.role},registerFilePath)
+
 			  res.json({ 
 				success: true,
 				twoFAEnabled : false, 
@@ -492,7 +546,11 @@ router.post("/login", loginLimiter, async (req, res) => {
 	// Verify the things for this work flow 
 	const isValid = success && score > 0.5 && action ==='login';
 	console.log("isValid login value is:", isValid);
-	if (!isValid){return res.status(400).json({ error: "recaptcha login failed" });}
+	if (!isValid){
+		const traceId = uuidv4();
+		loggingFunction({traceId,email: email, status: "F - Login reCAPTCHA failed",req,role:"UNKNOWN"},reCaptchaFilePath);
+		return res.status(400).json({ error: "recaptcha login failed" });
+	}
 	console.log("recaptcha login verficication passed");
 
 	// Back-end email validation
@@ -501,7 +559,6 @@ router.post("/login", loginLimiter, async (req, res) => {
 		return res.status(400).json({ error: "Invalid email format" });
 	}
 	console.log("email backend regrex verification passed");
-
 
 
 	try {
@@ -516,7 +573,7 @@ router.post("/login", loginLimiter, async (req, res) => {
 			// No user found
 			console.log("no user name found");
 			const traceId = uuidv4();
-			logLoginAttempt({traceId,email,status: "FAIL: Incorrect User",req, role :"UNKNOWN"});
+			loggingFunction({traceId,email,status: "F - User not found",req, role :"UNKNOWN"}, loginFilePath);
 			await conn.rollback();
 			return res.status(401).json({ error: "Invalid credentials" });
 		}
@@ -525,7 +582,7 @@ router.post("/login", loginLimiter, async (req, res) => {
 		if (hashedInput !== user.hashedPassword) {
 			console.log("Incorret password");
 			const traceId = uuidv4();
-			logLoginAttempt({traceId,email,status: "FAIL: Incorrect password",req, role :"UNKNOWN"});
+			loggingFunction({traceId,email,status: "F - Incorrect password",req, role :"UNKNOWN"},loginFilePath);
 			console.log("incorrect password");
 			await conn.rollback();
 			return res.status(401).json({ error: "Invalid credentials" });
@@ -560,6 +617,8 @@ router.post("/login", loginLimiter, async (req, res) => {
 			  // If 2FA is enabled, mark as temporary session for verification
 			  console.log("s - user has 2fa setup " , req.session.userID );
 			  req.session.temp2FA = true;
+			  const traceId = uuidv4();
+			  loggingFunction({traceId,email,status: "S - Credentials right, verifying 2FA",req, role :"UNKNOWN"},loginFilePath);
 			  res.json({ 
 				success: true, 
 				twoFARequired: true,
@@ -567,6 +626,8 @@ router.post("/login", loginLimiter, async (req, res) => {
 			  });
 			} else {
 				console.log("s - user DO NOT HAVE  2fa setup  gonna send him to setup " , req.session.userID );
+				const traceId = uuidv4();
+				loggingFunction({traceId,email,status: "S - Credentials right, no 2FA",req, role :"UNKNOWN"},loginFilePath);
 				// If 2FA is not enabled, redirect to setup page
 				res.json({ 
 					success: true, 
@@ -603,7 +664,7 @@ router.post("/login", loginLimiter, async (req, res) => {
 
 			//logs successful log in
 			const traceId = uuidv4();
-			logLoginAttempt({traceId,email,status: "SUCCESS",req, role :req.session.role});
+			loggingFunction({traceId,email,status: "SUCCESS",req, role :req.session.role});
 
 			await conn.commit();
 			req.session.save(saveErr => {
@@ -647,10 +708,12 @@ router.post("/verify-login-2fa", async (req, res) => {
 		console.log("s - token receive for USER ID is  " , userID);
 
 		// Get the user's 2FA secret
-		const [userEmail] = await db.query(
+		const [emailRow] = await db.query(
 			"SELECT email FROM User WHERE userID = ?",
 			[userID]
 			);
+
+		const userEmail = emailRow[0]?.email || "UNKNOWN";
 
 		// Get the user's 2FA secret
 		const [userRow] = await db.query(
@@ -690,7 +753,9 @@ router.post("/verify-login-2fa", async (req, res) => {
 
 			// Log successful login
 			const traceId = uuidv4();
-			logLoginAttempt({traceId,email: userEmail, status: "SUCCESS Login (2FA verified)",req,role});
+			loggingFunction({traceId,email: userEmail, status: "S - Login (2FA verified)",req,role},twofaFilePath);
+			const traceId1 = uuidv4();
+			loggingFunction({traceId1,email: userEmail, status: "S - Login (2FA verified)",req,role},loginFilePath);
 
 			await conn.commit();
 			req.session.save(err => {
@@ -701,8 +766,10 @@ router.post("/verify-login-2fa", async (req, res) => {
 				res.json({ success: true, role: req.session.role });
 			});
 		} else {
+			const traceId = uuidv4();
+			loggingFunction({traceId,email: userEmail, status: "F - Login (2FA FAILED)",req,role},twofaFilePath);
 			res.status(400).json({ error: "2FA verficiation failed" });
-			}
+		}
 	} catch (err) {
 	  console.error(err);
 	  res.status(500).json({ error: "Failed to verify 2FA token" });
@@ -788,6 +855,9 @@ router.post("/edit_account", async (req, res) => {
 	const { username, fullName, email, contactNumber, userAddress } = req.body;
 	const connection = await db.getConnection();
 
+	const role = await getUserRole(userID);
+
+
 	try {
 		await connection.beginTransaction();
 
@@ -798,7 +868,9 @@ router.post("/edit_account", async (req, res) => {
 				[email, userID]);
 			if (emailRows.length > 0) {
 				await connection.rollback();
-				return res.status(400).json({ error: "Email already in use" });
+				const traceId = uuidv4();
+				loggingFunction({traceId,email: email, status: "F - User tried to change to a email that already exist",req,role},editAccountFilePath);
+				return res.status(400).json({ error: "Please contact admin over this Trace ID: ${traceId}" });
 			}
 		}
 
@@ -838,6 +910,10 @@ router.post("/edit_account", async (req, res) => {
 
 		await connection.commit();
 		console.log("Account details updated successfully");
+
+		const traceId = uuidv4();
+		loggingFunction({traceId,email: email, status: "S - User edited profile",req,role},editAccountFilePath);
+
 		res.json({ message: "Account details updated successfully" });
 	} catch (err) {
 		await connection.rollback();
@@ -856,12 +932,17 @@ router.post("/change_password", async (req, res) => {
 
 	const { oldPassword, newPassword } = req.body;
 	if (!oldPassword || !newPassword) {
-	return res
+		return res
 		.status(400)
 		.json({ error: "Old password and new password are required" });
 	}
 
 	const connection = await db.getConnection();
+
+	const role = await getUserRole(userID);
+
+
+
 	try {
 		await connection.beginTransaction();
 
@@ -879,11 +960,17 @@ router.post("/change_password", async (req, res) => {
 		const hashedOldInput = await bcrypt.hash(oldPassword, user.salt);
 		if (hashedOldInput !== user.hashedPassword) {
 			await connection.rollback();
+			const traceId = uuidv4();
+			loggingFunction({traceId,email: userID, status: "F - Old PW is incorrect",req,role},changePasswordFilePath);
 			return res.status(401).json({ error: "Old password is incorrect" });
 		}
 
 		// check if new is same as old password
 		if (oldPassword === newPassword) {
+			const traceId = uuidv4();
+			loggingFunction({traceId,email: userID, status: "F - User tried to change to old PW",req,role},changePasswordFilePath);
+
+
 			return res
 			.status(400)
 			.json({ error: "New password cannot be the same as the old password" });
@@ -892,6 +979,11 @@ router.post("/change_password", async (req, res) => {
 		// check for compromised password
 		if (areCompromisedPassword(newPassword)) {
 			await connection.rollback();
+
+			const traceId = uuidv4();
+			loggingFunction({traceId,email: userID, status: "F - User tried to change to a compromise PW",req,role},changePasswordFilePath);
+
+
 			return res.status(400).json({ error: "New password has been compromised in a data breach. Please choose a different password." });
 		}
 
@@ -907,6 +999,10 @@ router.post("/change_password", async (req, res) => {
 		);
 
 		await connection.commit();
+		const traceId = uuidv4();
+		loggingFunction({traceId,email: userID, status: "S - PW change success",req,role},changePasswordFilePath);
+
+
 		res.json({ message: "Password updated successfully" });
 	} catch (err) {
 		await connection.rollback();
@@ -925,10 +1021,15 @@ router.post("/forget_password", async (req, res) => {
 	try {
 		const [userRow] = await db.query("SELECT * FROM User WHERE email = ?", [email]);
 		const user = userRow[0];
-
+		const role = user?.role || "UNKNOWN";
+		
 		if (!user) {
+			
 			return res.status(401).json({ error: "If that e-mail is registered, a reset link has been sent." });
 		}
+
+		const traceId = uuidv4();
+		loggingFunction({traceId,email: email, status: "S - Forgot PW initiated for this email",req,role},forgotPasswordFilePath);
 
 		const res = await axios.post('/api/email/sendResetPassword', {
 			to: email,
@@ -938,6 +1039,8 @@ router.post("/forget_password", async (req, res) => {
 
 	} catch (err) {
 		console.error(err);
+		const traceId = uuidv4();
+		loggingFunction({traceId,email: email, status: "F - Failed to send email for forgot PW",req,role},forgotPasswordFilePath);
 		res.status(500).json({ error: "Failed to send email" });
 	}
 });
