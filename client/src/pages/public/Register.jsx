@@ -84,7 +84,7 @@ export default function Register() {
   
     password: (v) => {
       if (!v) return "Password required";
-      if (v.length < 8) return "At least 8 characters";
+      if (v.length < 8) return "Please enter at least 8 characters";
       return "";
     },
   
@@ -181,11 +181,27 @@ export default function Register() {
         Object.entries(form).map(([k, v]) => [k, typeof v === "string" ? v.trim() : v])
       );
 
-      const response = await axios.post(
-        "/api/auth/register",
-        { ...cleanedForm, recaptchaToken: token },
-        { headers: { "Content-Type": "application/json" }, withCredentials: true }
-      );
+      console.log("sending to register !");
+
+      try {
+        await axios.post(
+          "/api/auth/register",
+          { ...cleanedForm, recaptchaToken: token },
+          { headers: { "Content-Type": "application/json" }, withCredentials: true }
+        );
+      } 
+      catch (err) {
+        if (err.response) {
+          const serverErrors = err.response.data.errors;
+          for (const [field, message] of Object.entries(serverErrors)) {
+            toast.error(`${message}`);
+          }
+          return;
+        } else {
+          // Axios config/network error (not server response)
+          console.error("Unexpected error:", err.response.data.errors);
+        }
+      }
 
       const { success, redirectTo, twoFAEnabled } = response.data;
       if (success && redirectTo && !twoFAEnabled) navigate(redirectTo);
