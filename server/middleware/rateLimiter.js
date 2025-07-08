@@ -1,6 +1,6 @@
 const rateLimit = require("express-rate-limit");
 const { v4: uuidv4 } = require("uuid");
-const { logLoginAttempt } = require("../utils/logger"); // logging function
+const { loggingFunction } = require("../utils/logger"); // logging function
 
 //define rate limit characteristic here and add middle ware to the login fucnction
 //once receive post will go thru this rate limit checks before going into the login function
