@@ -2,23 +2,21 @@
 
 const db = require("../db");
 const { v4: uuidv4 } = require("uuid");
+const fs = require("fs");
+const path = require("path");
 const bcrypt = require("bcrypt");
 
 const { loggingFunction } = require("../utils/logger");
 
 //for logging
-const path = require('path');
 const logsDir = path.join(__dirname, '..', 'logs');
-
 // log file paths
 const privilegeFilePath = path.join(logsDir, 'privilege.logs');
 const editAccountFilePath = path.join(logsDir, 'editAccount.logs');
 const changePasswordFilePath = path.join(logsDir, 'changePassword.logs');
 
+
 // compromised password 
-const fs = require("fs");
-const path = require("path");
-const bcrypt = require("bcrypt");
 const denylistPath = path.join(__dirname, '../compromised.txt');
 const denylist = new Set(
     fs.readFileSync(denylistPath, 'utf-8')

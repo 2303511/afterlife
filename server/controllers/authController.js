@@ -26,9 +26,6 @@ const reCaptchaFilePath = path.join(logsDir, 'reCAPTCHA.logs');
 const forgotPasswordFilePath = path.join(logsDir, 'forgotPassword.logs');
 
 // compromised password 
-const fs = require("fs");
-const path = require("path");
-const bcrypt = require("bcrypt");
 const denylistPath = path.join(__dirname, '../compromised.txt');
 const denylist = new Set(
     fs.readFileSync(denylistPath, 'utf-8')
