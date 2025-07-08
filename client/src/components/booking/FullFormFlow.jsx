@@ -120,7 +120,7 @@ export default function FullFormFlow({ selectedSlot, onCancel, setIsBookButtonDi
 					<BookingForm
 						selectedSlot={selectedSlot}
 						onSubmit={async (formData, applicantData) => {
-							setApplicantEmail(applicantData.email);  // ✅ Save it
+							sessionStorage.setItem("userEmail", applicantData.email);
 							setBookingFormData(formData); // temporarily store data
 							await handleSubmit(formData); // push other details to database first
 						}}
@@ -138,7 +138,6 @@ export default function FullFormFlow({ selectedSlot, onCancel, setIsBookButtonDi
 							setStep("booking");							
 						}}
 						bookingID={bookingID}
-						applicantEmail={applicantEmail}
 					/>
 				) : (
 					!!stripePromise &&

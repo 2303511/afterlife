@@ -56,7 +56,7 @@ export default function PaymentSuccess() {
 		};
 
 		updateTransaction();
-	}, [paymentAmount, searchParams]);
+	}, [paymentAmount, searchParams, paymentMethod]);
 
 	return (
 		<>

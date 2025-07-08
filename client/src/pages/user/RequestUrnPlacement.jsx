@@ -15,7 +15,7 @@ export default function RequestUrnPlacement() {
 	const [bookingID] = useState(searchParams.get("bookingID"));
 	const [currentBooking, setCurrentBooking] = useState(null);
 	const [beneficiaryDetails, setBeneficiaryDetails] = useState(null);
-i
+
 	const [formData, setFormData] = useState({
 		dateOfDeath: "",
 		inscription: "test inscription",
