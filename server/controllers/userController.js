@@ -7,7 +7,6 @@ const bcrypt = require("bcrypt");
 const { loggingFunction } = require("../utils/logger");
 
 //for logging
-const fs = require('fs');
 const path = require('path');
 const logsDir = path.join(__dirname, '..', 'logs');
 
