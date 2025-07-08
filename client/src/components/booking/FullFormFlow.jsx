@@ -43,8 +43,6 @@ export default function FullFormFlow({ selectedSlot, onCancel, setIsBookButtonDi
 			}
 
 			let res_user = await axios.get(`/api/user/getUserByID?userID=${currentUser.userID}`);	
-			console.log(res_user.data);
-			sessionStorage.setItem("userEmail", res_user.data.email);
 		}
 		init();
 	}, []);

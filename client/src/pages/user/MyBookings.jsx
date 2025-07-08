@@ -59,7 +59,7 @@ export default function MyBookings() {
 
 	// getter for all
 	const fetchDetails = async (endpoint, idLabel, indivID) => {
-		console.log(`[Frontend] Fetching details for ${endpoint}:`, indivID);
+		// console.log(`[Frontend] Fetching details for ${endpoint}:`, indivID);
 
 		try {
 			const response = await axios.get(`/api/${endpoint}`, {
@@ -70,7 +70,7 @@ export default function MyBookings() {
 				}
 			});
 
-			console.log(`${endpoint} fetched:`, response.data);
+			// console.log(`${endpoint} fetched:`, response.data);
 			return response.data;
 		} catch (error) {
 			console.error(`[frontend] Failed to fetch ${endpoint}:`, error);
@@ -97,19 +97,19 @@ export default function MyBookings() {
 	useEffect(() => {
 		if (!userID) return; // Wait until userID is set
 
-		console.log(`2. userID is now available: ${userID}, fetching booking...`);
+		// console.log(`2. userID is now available: ${userID}, fetching booking...`);
 
 		const init = async () => {
 			const booking = await fetchDetails("booking/getBookingByUserID", "userID", userID);
-			console.log("Bookings fetched:", booking);
-			console.log(`length of Bookings: ${booking.length}`);
+			// console.log("Bookings fetched:", booking);
+			// console.log(`length of Bookings: ${booking.length}`);
 
 			if (!booking || !Array.isArray(booking) || booking.length === 0) {
-				console.log("there are no bookings");
+				// console.log("there are no bookings");
 				return;
 			};
 
-			console.log("3. fetching all niche details");
+			// console.log("3. fetching all niche details");
 			const nicheMap = {};
 			const beneficiaryMap = {};
 			const blockMap = {};
@@ -125,7 +125,7 @@ export default function MyBookings() {
 				blockMap[currNicheDetail.blockID] = currBlockDetail;
 			}
 
-			console.log("All niche details fetched:", nicheMap);
+			// console.log("All niche details fetched:", nicheMap);
 
 			setUserBookings(booking);
 			setNicheDetailsMap(nicheMap);

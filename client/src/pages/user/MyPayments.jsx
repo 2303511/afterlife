@@ -12,8 +12,8 @@ export default function MyPayments() {
 	const userID   = user?.userID;
 	
 	// getter for all
-	const fetchDetails = async (endpoint, idLabel, indivID) => {
-		console.log(`[Frontend] Fetching details for ${endpoint}:`, indivID);
+	const fetchPaymentDetails = async (endpoint, idLabel, indivID) => {
+		// console.log(`[Frontend] Fetching details for ${endpoint}:`, indivID);
 
 		try {
 			const response = await axios.get(`/api/${endpoint}`, {
@@ -24,7 +24,7 @@ export default function MyPayments() {
 				}
 			});
 
-			console.log(`${endpoint} fetched:`, response.data);
+			// console.log(`${endpoint} fetched:`, response.data);
 			return response.data;
 		} catch (error) {
 			console.error(`[frontend] Failed to fetch ${endpoint}:`, error);
@@ -39,18 +39,18 @@ export default function MyPayments() {
 			try {
 				setLoading(true);
 				// Step 1: Bookings
-				const bookings = await fetchDetails("booking/getBookingByUserID", "userID", userID);
-				console.log("Bookings fetched:", bookings);
+				const bookings = await fetchPaymentDetails("booking/getBookingByUserID", "userID", userID);
+				// console.log("Bookings fetched:", bookings);
 
 				// Step 2: Payments
 				const paymentList = await Promise.all(
 					bookings.map(async (booking) => {
-						const payment = await fetchDetails("payment/getPaymentByID", "paymentID", booking.paymentID);
+						const payment = await fetchPaymentDetails("payment/getPaymentByID", "paymentID", booking.paymentID);
 						return payment;
 					})
 				);
 
-				console.log("Payments fetched:", paymentList);
+				// console.log("Payments fetched:", paymentList);
 				setPayments(paymentList);
 				setError(null);
 			} catch (err) {
@@ -117,7 +117,7 @@ export default function MyPayments() {
 									</td>
                   <td><CopyableField value={payment.paymentID} /></td>
 									<td>${Number(payment.amount).toFixed(2)}</td> {/* format for $$ */}
-									<td>{payment.paymentMethod}</td> 
+									<td>{payment.paymentMethod}</td>
 									<td>{new Date(payment.paymentDate).toLocaleDateString()}</td> {/* format the right date format, DD/MM/YYYY */}
 								</tr>
 							))}

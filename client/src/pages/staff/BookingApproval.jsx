@@ -18,7 +18,7 @@ export default function BookingApproval() {
     useEffect(() => {
         axios.get(`/api/booking/approval/${bookingID}`, { withCredentials: true })
             .then(res => {
-                console.log("Booking fetched:", res.data);
+                // console.log("Booking fetched:", res.data);
                 setBooking(res.data);
             })
             .catch(err => console.error("Failed to fetch booking:", err))
