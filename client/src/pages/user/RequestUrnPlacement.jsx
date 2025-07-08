@@ -15,7 +15,7 @@ export default function RequestUrnPlacement() {
 	const [bookingID] = useState(searchParams.get("bookingID"));
 	const [currentBooking, setCurrentBooking] = useState(null);
 	const [beneficiaryDetails, setBeneficiaryDetails] = useState(null);
-
+i
 	const [formData, setFormData] = useState({
 		dateOfDeath: "",
 		inscription: "test inscription",
@@ -53,7 +53,7 @@ export default function RequestUrnPlacement() {
 	};
 
 	useEffect(() => {
-		const init = async () => {
+		const fetchData = async () => {
 			let currBooking = await fetchBooking(bookingID);
 			if (currBooking != null) {
 				setCurrentBooking(currBooking);
@@ -64,7 +64,7 @@ export default function RequestUrnPlacement() {
 				setBeneficiaryDetails(res);
 			}
 		};
-		init();
+		fetchData();
 	}, [bookingID]);
 
 	// handlers
