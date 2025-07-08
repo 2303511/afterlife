@@ -35,5 +35,7 @@ function loggingFunction({ traceId, email, status, req, role }, loggingFileName)
 	});
 }
 
-module.exports = loggingFunction;
+module.exports = {
+	loggingFunction
+};
 
