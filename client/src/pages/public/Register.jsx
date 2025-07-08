@@ -184,29 +184,36 @@ export default function Register() {
       console.log("sending to register !");
 
       try {
-        await axios.post(
+        console.log("sending to server side?");
+        const response = await axios.post(
           "/api/auth/register",
           { ...cleanedForm, recaptchaToken: token },
           { headers: { "Content-Type": "application/json" }, withCredentials: true }
         );
+
+        const { success, redirectTo, twoFAEnabled } = response.data;
+        if (success && redirectTo && !twoFAEnabled) navigate(redirectTo);
       } 
       catch (err) {
         if (err.response) {
-          const serverErrors = err.response.data.errors;
-          for (const [field, message] of Object.entries(serverErrors)) {
-            toast.error(`${message}`);
+          if (err.status == 400) {
+            const serverErrors = err.response.data.errors;
+            for (const [field, message] of Object.entries(serverErrors)) {
+              toast.error(`${message}`);
+            }
+          }
+          else if (err.status == 409) {
+            toast.error(err.response.data.error);
           }
           return;
         } else {
           // Axios config/network error (not server response)
-          console.error("Unexpected error:", err.response.data.errors);
+          toast.error("Unexpected error from server:", err.response.data.errors);
         }
       }
 
-      const { success, redirectTo, twoFAEnabled } = response.data;
-      if (success && redirectTo && !twoFAEnabled) navigate(redirectTo);
     } catch (error) {
-      console.error("Failed to register user:", error);
+      toast.error("Failed to register user:", error);
     }
   };
 
