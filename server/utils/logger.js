@@ -3,10 +3,9 @@ const os = require("os");
 const path = require("path");
 
 const logsDir = path.join(__dirname, "../logs");
-const logFilePath = path.join(logsDir, "login.logs");
 
-//logs login logs to /app/logs/login.logs
-function logLoginAttempt({ traceId, email, status, req, role }) {
+//logs to different file paths
+function loggingFunction({ traceId, email, status, req, role }, loggingFileName) {
 	console.log("Entering log function");
 
 	// Create logs folder if not exists
@@ -20,14 +19,14 @@ function logLoginAttempt({ traceId, email, status, req, role }) {
 		timestamp: new Date().toISOString(),
 		traceId: traceId,
 		ip: req.headers['x-forwarded-for'] || req.connection.remoteAddress,
-		email,
+		emailOrId: email,
 		status,
 		role
 	};
 
 	const logLine = JSON.stringify(logEntry) + os.EOL;
 
-	fs.appendFile(logFilePath, logLine, (err) => {
+	fs.appendFile(loggingFileName, logLine, (err) => {
 		if (err){
 			console.error("Failed to write login log:", err);
 		} else {
@@ -36,6 +35,4 @@ function logLoginAttempt({ traceId, email, status, req, role }) {
 	});
 }
 
-module.exports = {
-	logLoginAttempt,
-};
+

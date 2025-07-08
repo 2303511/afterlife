@@ -2,10 +2,6 @@ const express = require('express');
 const router = express.Router();
 const { ensureAuth, ensureRole, ensureSelfOrRole } = require("../middleware/auth.js");
 
-
-//for rate limiting
-const rateLimit = require("express-rate-limit");
-
  const { 
 	getCurrentUser, 
 	getAllUsers,

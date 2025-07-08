@@ -1,9 +1,36 @@
 // controllers/userController.js
 
 const db = require("../db");
+const { v4: uuidv4 } = require("uuid");
 const bcrypt = require("bcrypt");
 
-const { recaptchaServerCheck } = require("../utils/recaptcha");
+const { loggingFunction } = require("../utils/logger");
+
+//for logging
+const fs = require('fs');
+const path = require('path');
+const logsDir = path.join(__dirname, '..', 'logs');
+
+// log file paths
+const privilegeFilePath = path.join(logsDir, 'privilege.logs');
+const editAccountFilePath = path.join(logsDir, 'editAccount.logs');
+const changePasswordFilePath = path.join(logsDir, 'changePassword.logs');
+
+// compromised password 
+const fs = require("fs");
+const path = require("path");
+const bcrypt = require("bcrypt");
+const denylistPath = path.join(__dirname, '../compromised.txt');
+const denylist = new Set(
+    fs.readFileSync(denylistPath, 'utf-8')
+        .split(/\r?\n/)
+        .map(p => p.trim().toLowerCase())
+        .filter(Boolean)
+);
+
+function areCompromisedPassword(password) {
+    return denylist.has(password.toLowerCase());
+}
 
 exports.getCurrentUser = (req, res) => {
 	if (!req.session.userID) {
@@ -30,13 +57,14 @@ exports.getAllUsers = async (req, res) => {
 
 exports.updateUserRole = async (req, res) => {
 	const { userID, role } = req.body;
-	console.log("Update role requested:", role);
+	console.log("this is in update role, new role:", role);
 
-	if (!userID || !role) {
+	if (!userID || !role)
 		return res.status(400).json({ error: "userID and role are required" });
-	}
 
-	if (userID === req.session.userID) {
+	if (userID === req.session.userID){
+		const traceId = uuidv4();
+		loggingFunction({traceId,email: userID, status: "F - User tried to change other user's role",req,role},privilegeFilePath);
 		return res.status(403).json({ error: "You cannot change your own role" });
 	}
 
@@ -79,12 +107,11 @@ exports.updateUserRole = async (req, res) => {
 };
 
 exports.getUserByID = async (req, res) => {
-	const userID = req.query.userID;
+	let userID = req.query.userID;
 
 	try {
 		const [user] = await db.query("SELECT * FROM User WHERE userID = ?", [userID]);
-		if (user.length === 0)
-			return res.status(404).json({ error: "User not found" });
+		if (user.length <= 0) return res.status(404).json({ error: 'User not found' });
 
 		res.json(user[0]);
 	} catch (err) {
@@ -94,37 +121,39 @@ exports.getUserByID = async (req, res) => {
 };
 
 exports.getUserByNRIC = async (req, res) => {
-	const userNRIC = req.body.nric;
+	let userNRIC = req.body.nric;
 
 	try {
 		const [user] = await db.query("SELECT * FROM User WHERE nric = ?", [userNRIC]);
-		if (user.length === 0)
-			return res.status(404).json({ message: `User with NRIC ${userNRIC} not found` });
+		if (user.length === 0) return res.status(404).json({ message: `User with NRIC ${userNRIC} not found` });
 
-		console.log("User details retrieved:", user[0]);
-		res.json(user[0]);
+		console.log("we got user details!!");
+		console.log(user[0]);
+
+		res.json(user[0]); // return user details
 	} catch (err) {
 		console.error(err);
-		res.status(500).json({ error: `Failed to fetch user with NRIC ${userNRIC}` });
+		res.status(500).json({ error: `Failed to fetch user with ID ${userNRIC}` });
 	}
 };
 
 exports.findExistingUser = async (req, res) => {
 	const { attr, value } = req.query;
 
-	console.log(`Searching by attr: ${attr}, value: ${value}`);
+	console.log(`now tracking attr: ${attr} and value: ${value}`)
 
 	try {
-		const [entry] = await db.query(`SELECT * FROM User WHERE ${attr} = ?`, [value]);
-		res.json(entry);
+		const [entry] = await db.query(`SELECT * FROM User WHERE ${attr} = ?`, [ value ]);
+		console.log("this is entry");
+		console.log(entry);
+		res.json(entry); // return user details
 	} catch (err) {
 		console.error(err);
-		res.status(500).json({ error: `Failed to fetch user by ${attr}` });
+		res.status(500).json({ error: `Failed to fetch user with ID ${userID}` });
 	}
 };
 
 exports.editAccount = async (req, res) => {
-	// Edit account
 	const userID = req.session.userID;
 	if (!userID) {
 		return res.status(401).json({ error: "Unauthorized: Not logged in" });
@@ -133,6 +162,9 @@ exports.editAccount = async (req, res) => {
 	const { username, fullName, email, contactNumber, userAddress } = req.body;
 	const connection = await db.getConnection();
 
+	const role = await getUserRole(userID);
+
+
 	try {
 		await connection.beginTransaction();
 
@@ -140,11 +172,12 @@ exports.editAccount = async (req, res) => {
 		if (email) {
 			const [emailRows] = await connection.query(
 				"SELECT userID FROM User WHERE email = ? AND userID <> ?",
-				[email, userID]
-			);
+				[email, userID]);
 			if (emailRows.length > 0) {
 				await connection.rollback();
-				return res.status(400).json({ error: "Email already in use" });
+				const traceId = uuidv4();
+				loggingFunction({traceId,email: email, status: "F - User tried to change to a email that already exist",req,role},editAccountFilePath);
+				return res.status(400).json({ error: "Please contact admin over this Trace ID: ${traceId}" });
 			}
 		}
 
@@ -184,6 +217,10 @@ exports.editAccount = async (req, res) => {
 
 		await connection.commit();
 		console.log("Account details updated successfully");
+
+		const traceId = uuidv4();
+		loggingFunction({traceId,email: email, status: "S - User edited profile",req,role},editAccountFilePath);
+
 		res.json({ message: "Account details updated successfully" });
 	} catch (err) {
 		await connection.rollback();
@@ -203,11 +240,16 @@ exports.changePassword = async (req, res) => {
 	const { oldPassword, newPassword } = req.body;
 	if (!oldPassword || !newPassword) {
 		return res
-			.status(400)
-			.json({ error: "Old password and new password are required" });
+		.status(400)
+		.json({ error: "Old password and new password are required" });
 	}
 
 	const connection = await db.getConnection();
+
+	const role = await getUserRole(userID);
+
+
+
 	try {
 		await connection.beginTransaction();
 
@@ -225,14 +267,31 @@ exports.changePassword = async (req, res) => {
 		const hashedOldInput = await bcrypt.hash(oldPassword, user.salt);
 		if (hashedOldInput !== user.hashedPassword) {
 			await connection.rollback();
+			const traceId = uuidv4();
+			loggingFunction({traceId,email: userID, status: "F - Old PW is incorrect",req,role},changePasswordFilePath);
 			return res.status(401).json({ error: "Old password is incorrect" });
 		}
 
 		// check if new is same as old password
 		if (oldPassword === newPassword) {
+			const traceId = uuidv4();
+			loggingFunction({traceId,email: userID, status: "F - User tried to change to old PW",req,role},changePasswordFilePath);
+
+
 			return res
-				.status(400)
-				.json({ error: "New password cannot be the same as the old password" });
+			.status(400)
+			.json({ error: "New password cannot be the same as the old password" });
+		}
+
+		// check for compromised password
+		if (areCompromisedPassword(newPassword)) {
+			await connection.rollback();
+
+			const traceId = uuidv4();
+			loggingFunction({traceId,email: userID, status: "F - User tried to change to a compromise PW",req,role},changePasswordFilePath);
+
+
+			return res.status(400).json({ error: "New password has been compromised in a data breach. Please choose a different password." });
 		}
 
 		// hash new password
@@ -247,6 +306,10 @@ exports.changePassword = async (req, res) => {
 		);
 
 		await connection.commit();
+		const traceId = uuidv4();
+		loggingFunction({traceId,email: userID, status: "S - PW change success",req,role},changePasswordFilePath);
+
+
 		res.json({ message: "Password updated successfully" });
 	} catch (err) {
 		await connection.rollback();
