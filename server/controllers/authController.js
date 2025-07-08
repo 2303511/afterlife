@@ -275,7 +275,7 @@ exports.registerUser = async (req, res) => {
         );
 
         // Create session for 2FA setup
-        req.session.regenerate((errf) => {
+        req.session.regenerate((err) => {
             if (err) {
                 console.error("Session regeneration error:", err);
                 return res.status(500).json({ error: "Registration failed" });
