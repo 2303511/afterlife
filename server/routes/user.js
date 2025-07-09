@@ -171,7 +171,7 @@ router.post("/verify-2fa", ensureAuth, async (req, res) => {
 //once receive post will go thru this rate limit checks before going into the login function
 const loginLimiter = rateLimit({
 	windowMs: 1 * 60 * 1000, // 1 min time window
-	max: 6, // Max attempt tied to IP
+	max: 10, // Max attempt tied to IP
 	message: { error: 'Too many login attempts. Please try again later.' },
 	standardHeaders: true, // Enables RateLimit-* headers for clients
 	legacyHeaders: false, 
@@ -611,8 +611,8 @@ router.post("/login", loginLimiter, async (req, res) => {
 			return res.status(401).json({ error: "Invalid credentials" });
 		}
 
-		const hashedInput = await bcrypt.hash(password, user.salt);
-		if (hashedInput !== user.hashedPassword) {
+		const passwordMatch = await bcrypt.compare(password, user.hashedPassword);
+		if (!passwordMatch) {
 			console.log("Incorret password");
 			const traceId = uuidv4();
 			loggingFunction({traceId,email,status: "F - Incorrect password",req, role :"UNKNOWN"},loginFilePath);
@@ -759,7 +759,7 @@ router.post("/verify-login-2fa", async (req, res) => {
 			}
 
 		twoFASecret = decrypt(userRow[0].twoFASecret);
-		
+
 		// Verify the token
 		const verified = speakeasy.totp.verify({
 			secret: twoFASecret,
