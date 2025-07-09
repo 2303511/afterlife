@@ -1,3 +1,5 @@
+const db = require("../db");
+
 // Get user role
 async function getUserRole(userID) {
     try {
@@ -15,4 +17,4 @@ async function getUserRole(userID) {
     }
 };
 
-module.exports = {getUserRole };
+module.exports = { getUserRole };
