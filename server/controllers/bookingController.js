@@ -34,7 +34,7 @@ exports.getBookingByUserID = async (req, res) => {
     }
 };
 
-exports.getBookingIDByBookingID = async (req, res) => {
+exports.getBookingByBookingID = async (req, res) => {
     // GET a booking by bookingID (self if owner, or staff/admin)
     const bookingID = req.query.bookingID;
     try {

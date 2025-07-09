@@ -8,7 +8,7 @@ const validateFileBooking = require('../middleware/bookingFileValidator');
 const {
   getBookingsForUser,
   getBookingByUserID,
-  getBookingIDByBookingID,
+  getBookingByBookingID,
   getSearchedBookings,
   getPendingBookings,
   submitBooking,
@@ -26,7 +26,7 @@ router.get("/", ensureAuth, ensureSelfOrRole(["staff","admin"]), getBookingsForU
 router.get("/getBookingByUserID", ensureAuth, ensureSelfOrRole(["staff","admin"]), getBookingByUserID);
 
 // GET a booking by bookingID (self if owner, or staff/admin)
-router.get("/getBookingByBookingID", ensureAuth, getBookingIDByBookingID);
+router.get("/getBookingByBookingID", ensureAuth, getBookingByBookingID);
 
 // staff-only search
 router.get("/search", ensureAuth, ensureRole(["staff","admin"]), getSearchedBookings);
