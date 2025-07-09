@@ -200,7 +200,6 @@ export default function BookingApproval() {
                             </p>
 
                             <p><strong>Relationship:</strong> {booking.relationshipWithApplicant || <span className="text-muted fst-italic">Not assigned</span>}</p>
-                            <p><strong>Inscription:</strong> {booking.inscription || <span className="text-muted fst-italic">Not assigned</span>}</p>
                         </div>
                     </div>
 

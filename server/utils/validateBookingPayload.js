@@ -66,10 +66,6 @@ function validateBookingPayload(payload, isPayment) {
 
     if (!payload.beneficiaryUnitNumber) errors.beneficiaryUnitNumber = "Unit Number is required";
 
-    if (!payload.inscription) {
-        errors.inscription = "Inscription is required";
-    }
-
     if (payload.bookingType === "Current" && !payload.deathCertificate) {
         errors.deathCertficate = "Death Certificate file is required";
     }

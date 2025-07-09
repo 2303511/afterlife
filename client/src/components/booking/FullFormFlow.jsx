@@ -21,7 +21,7 @@ import { retrieveSession } from "../../utils/retrieveSession";
 
 export default function FullFormFlow({ selectedSlot, onCancel, setIsBookButtonDisabled, setIsForm }) {
 	const [step, setStep] = useState("booking"); // or 'payment'
-	const [setBookingFormData] = useState(null);
+	const [bookingFormData, setBookingFormData] = useState(null);
 	const [stripePromise, setStripePromise] = useState(null);
 	const [clientSecret, setClientSecret] = useState("");
 	const [bookingID, setBookingID] = useState("");

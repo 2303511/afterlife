@@ -103,7 +103,6 @@ CREATE TABLE Beneficiary (
     nationality VARCHAR(255),
     nric VARCHAR(20),
     beneficiaryAddress TEXT,
-    inscription TEXT,
     dateOfBirth DATE,
     dateOfDeath DATE,
     birthCertificate LONGBLOB,

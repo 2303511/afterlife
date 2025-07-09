@@ -104,7 +104,7 @@ exports.submitBooking = async (req, res) => {
         const {
             fullName, gender, nationality, nationalID, mobileNumber, email, address, postalCode, unitNumber, dob,
             beneficiaryName, beneficiaryGender, beneficiaryNationality, beneficiaryNationalID, beneficiaryAddress,
-            dateOfBirth, dateOfDeath, relationshipWithApplicant, inscription,
+            dateOfBirth, dateOfDeath, relationshipWithApplicant,
             nicheID, bookingType, paidByID, userRole
         } = req.body;
 
@@ -174,11 +174,11 @@ exports.submitBooking = async (req, res) => {
         INSERT INTO Beneficiary (
           beneficiaryID, beneficiaryName, gender, nationality, nric, beneficiaryAddress, dateOfBirth, dateOfDeath,
           birthCertificate, birthCertificateMime, deathCertificate, deathCertificateMime,
-          relationshipWithApplicant, inscription
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          relationshipWithApplicant
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [beneficiaryID, beneficiaryName, beneficiaryGender, beneficiaryNationality, beneficiaryNationalID, beneficiaryAddress,
                 dateOfBirth, finalDateOfDeath, birthCertificate, birthCertificateMime, deathCertificate, deathCertificateMime,
-                relationshipWithApplicant, inscription]
+                relationshipWithApplicant]
         );
 
         const bookingStatus = userRole === "user" ? "Pending" : "Confirmed";
@@ -304,16 +304,16 @@ exports.updateBookingTransaction = async (req, res) => {
 };
 
 exports.placeUrn = async (req, res) => {
-    const { bookingID, nicheID, beneficiaryID, dateOfDeath, inscription } = req.body;
+    const { bookingID, nicheID, beneficiaryID, dateOfDeath } = req.body;
     const deathCertificate = req.file?.buffer || null;
     const deathCertificateMime = req.file?.mimetype || null;
 
     try {
         const [result] = await db.query(
             `UPDATE Beneficiary 
-         SET dateOfDeath = ?, deathCertificate = ?, deathCertificateMime = ?, inscription = ?
+         SET dateOfDeath = ?, deathCertificate = ?, deathCertificateMime = ?
          WHERE beneficiaryID = ?`,
-            [new Date(dateOfDeath), deathCertificate, deathCertificateMime, inscription, beneficiaryID]
+            [new Date(dateOfDeath), deathCertificate, deathCertificateMime, beneficiaryID]
         );
 
         if (result.affectedRows === 0) {
@@ -406,7 +406,7 @@ exports.getBookingApprovalDetails = async (req, res) => {
           b.*, 
           bene.beneficiaryID, bene.beneficiaryName, bene.dateOfBirth, bene.dateOfDeath,
           bene.birthCertificate, bene.deathCertificate, bene.birthCertificateMime, bene.deathCertificateMime,
-          bene.relationshipWithApplicant, bene.inscription,
+          bene.relationshipWithApplicant,
           n.nicheID, n.blockID, n.nicheCode, n.status AS nicheStatus, n.lastUpdated,
           p.paymentID, p.amount AS paymentAmount, p.paymentMethod, p.paymentDate, p.paymentStatus,
           u.fullName AS customerName, u.contactNumber, u.email

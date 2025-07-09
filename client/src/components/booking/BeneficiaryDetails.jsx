@@ -73,7 +73,7 @@ export default function BeneficiaryDetails({ formData, onChange, onFileChange, e
                             <option>Father</option>
                             <option>Sibling</option>
                             <option>Relative</option>
-                            <option>Other</option>
+                            <option>Others</option>
                         </Form.Select>
                         <Form.Control.Feedback type="invalid">
                             {errors.relationshipWithApplicant}
@@ -254,19 +254,6 @@ export default function BeneficiaryDetails({ formData, onChange, onFileChange, e
                     </Form.Group>
                 </Col>
             </Row>
-            
-            {bookingType === "Current" && (
-                <Form.Group className="mb-3">
-                    <Form.Label>Inscription</Form.Label>
-                    <Form.Control
-                        as="textarea"
-                        rows={3}
-                        name="inscription"
-                        value={formData.inscription}
-                        onChange={onChange}
-                    />
-                </Form.Group>
-            )}
 
         </>
     );
