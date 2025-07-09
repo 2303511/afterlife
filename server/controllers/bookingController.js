@@ -206,6 +206,69 @@ exports.submitBooking = async (req, res) => {
     }
 };
 
+exports.deleteDraftBookings = async (req, res) => {
+    const {bookingID} = req.body; // retrieve the bookingID to delete
+
+    const dbConn = await db.getConnection();
+    await dbConn.beginTransaction();
+
+    try {
+        // 1. retrieve the booking details
+        const [bookingRows] = await dbConn.query(`
+            SELECT beneficiaryID, paidByID, nicheID
+            FROM Booking
+            WHERE bookingID = ?
+            `, [bookingID]);
+
+        if (!bookingRows.length) throw new Error(`Booking with bookingID: ${bookingID} not found`);
+        // 1a. set the beneficiary ID and paidbyID
+        const {beneficiaryID, paidByID, nicheID} = bookingRows[0];
+
+        // 2. delete booking itself
+        const [deleteBooking] = await dbConn.query(`
+            DELETE FROM Booking
+            WHERE bookingID = ?;
+            `, [bookingID]);
+        if (deleteBooking.affectedRows === 0) throw new Error(`Failed to delete booking with ID: ${bookingID}`);
+
+        // 3. delete beneficiary data
+        const [deleteBeneficiaryResponse] = await dbConn.query(`
+            DELETE FROM Beneficiary
+            WHERE beneficiaryID = ?;
+            `, [beneficiaryID]);
+        if (deleteBeneficiaryResponse.affectedRows === 0) throw new Error(`Failed to delete benficiary with beneficiaryID: ${beneficiaryID}`);
+
+        // 4. delete user if there are no other bookings under them
+        const [[{ bookingCount }]] = await dbConn.query(
+            `SELECT COUNT(*) AS bookingCount FROM Booking WHERE paidByID = ?`, [paidByID]
+            );
+        // this is their only this newly created account
+        if (bookingCount <= 1) {
+            const [deleteUser] = await dbConn.query(`DELETE FROM User WHERE userID = ?`, [paidByID]);
+            if (deleteUser.affectedRows === 0) throw new Error(`Failed to delete existing user with userID ${paidByID}`);
+        }
+
+        // 5. make the niche available
+        const [updateNiche] = await dbConn.query(`
+            UPDATE Niche
+            SET status = 'Available', lastUpdated = NOW()
+            WHERE nicheID = ?;
+            `, [nicheID]);
+        if (updateNiche.affectedRows === 0) throw new Error(`Failed to make niche with ID ${nicheID} available`);
+
+        // 6. successfully deleted the booking
+        await dbConn.commit();
+        res.status(201).json({ success: true, bookingID });
+
+    } catch (err) {
+        await dbConn.rollback(); // undo all transactions
+        console.error("Failed to delete draft booking:", err);
+        res.status(500).json({ message: "Failed to delete draft booking" });
+    } finally {
+        dbConn.release();
+    }
+}
+
 exports.updateBookingTransaction = async (req, res) => {
     const dbConn = await db.getConnection();
     await dbConn.beginTransaction();

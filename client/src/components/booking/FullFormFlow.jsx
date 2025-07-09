@@ -134,8 +134,9 @@ export default function FullFormFlow({ selectedSlot, onCancel, setIsBookButtonDi
 				(user?.role === "staff" ? (
 					// display the option for cash, cheque, or card
 					<PaymentForm
-						onBack={() => {
-							setStep("booking");							
+						onBack={async () => {
+							setStep("booking");
+							await axios.post("/api/booking/delete-draft-booking", {bookingID});
 						}}
 						bookingID={bookingID}
 					/>
@@ -143,7 +144,12 @@ export default function FullFormFlow({ selectedSlot, onCancel, setIsBookButtonDi
 					!!stripePromise &&
 					!!clientSecret && (
 						<Elements stripe={stripePromise} options={{ clientSecret }}>
-							<CheckoutForm bookingID={bookingID} />
+							<CheckoutForm 
+							bookingID={bookingID} 
+							onBack = {async () => {
+								setStep("booking");
+								await axios.post("/api/booking/delete-draft-booking", {bookingID});
+							}} />
 						</Elements>
 					)
 				))}

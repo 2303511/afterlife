@@ -12,6 +12,7 @@ const {
   getSearchedBookings,
   getPendingBookings,
   submitBooking,
+  deleteDraftBookings,
   updateBookingTransaction,
   placeUrn,
   approveBooking,
@@ -36,6 +37,9 @@ router.get("/pending", ensureAuth, ensureRole(["staff","admin"]), getPendingBook
 
 // Submit a booking
 router.post("/submitBooking", ensureAuth, upload.fields([{ name: 'birthCertFile', maxCount: 1 }, { name: 'deathCertFile', maxCount: 1 }]), validateFileBooking, submitBooking);
+
+// booking failed
+router.post("/delete-draft-booking", ensureAuth, ensureRole(["user","staff","admin"]), deleteDraftBookings);
 
 // after the user completes payment, need to update the booking to fully paid. 
 router.post("/updateBookingTransaction", ensureAuth, ensureSelfOrRole(["user", "staff","admin"]), updateBookingTransaction);
