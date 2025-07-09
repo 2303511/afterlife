@@ -34,6 +34,38 @@ const denylist = new Set(
     .map(p => p.trim().toLowerCase()) 
     .filter(Boolean) 
 );
+//for db temp2FA encryption
+const crypto = require("crypto");
+const ENC_KEY = Buffer.from(process.env.ENCRYPTION_KEY, "hex"); // 64-char hex = 32 bytes
+const IV_LENGTH = 12; 
+
+
+//encrypt and decrypt function
+function encrypt(text) {
+	const iv = crypto.randomBytes(IV_LENGTH);
+	const cipher = crypto.createCipheriv("aes-256-gcm", ENC_KEY, iv);
+
+	const encrypted = Buffer.concat([cipher.update(text, "utf8"), cipher.final()]);
+	const tag = cipher.getAuthTag();
+
+	return iv.toString("hex") + ":" + tag.toString("hex") + ":" + encrypted.toString("hex");
+}
+  
+function decrypt(encryptedText) {
+	const [ivHex, tagHex, dataHex] = encryptedText.split(":");
+
+	const iv = Buffer.from(ivHex, "hex");
+	const tag = Buffer.from(tagHex, "hex");
+	const encrypted = Buffer.from(dataHex, "hex");
+
+	const decipher = crypto.createDecipheriv("aes-256-gcm", ENC_KEY, iv);
+	decipher.setAuthTag(tag);
+
+	const decrypted = Buffer.concat([decipher.update(encrypted), decipher.final()]);
+	return decrypted.toString("utf8");
+}
+
+
 
 // Generate 2FA secret for new user
 router.post("/generate-2fa-secret", ensureAuth, async (req, res) => {
@@ -50,7 +82,7 @@ router.post("/generate-2fa-secret", ensureAuth, async (req, res) => {
 		// Store the secret temporarily (in memory or database)
 		await db.query(
 			"UPDATE User SET temp2FASecret = ? WHERE userID = ?",
-			[secret.base32, userID]
+			[encrypt(secret.base32), userID]
 		);
 		
 		//console.log("Sending back secret  " , secret.base32);
@@ -94,10 +126,11 @@ router.post("/verify-2fa", ensureAuth, async (req, res) => {
 			return res.status(400).json({ error: "No 2FA setup in progress" });
 		}
 
-		
+		temp2FASecret = decrypt(userRow[0].temp2FASecret)
+
 		// Verify the token
 		const verified = speakeasy.totp.verify({
-			secret: userRow[0].temp2FASecret,
+			secret: temp2FASecret,
 			encoding: 'base32',
 			token: token,
 			window: 1
@@ -725,10 +758,11 @@ router.post("/verify-login-2fa", async (req, res) => {
 			return res.status(400).json({ error: "2FA not configured" });
 			}
 
+		twoFASecret = decrypt(userRow[0].twoFASecret);
 		
 		// Verify the token
 		const verified = speakeasy.totp.verify({
-			secret: userRow[0].twoFASecret,
+			secret: twoFASecret,
 			encoding: 'base32',
 			token: token,
 			window: 1
