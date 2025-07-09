@@ -12,7 +12,6 @@ import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 import PageNotFound from './pages/public/PageNotFound';
-import LandingPage from "./pages/public/LandingPage";
 import Unauthorized from "./pages/public/Unauthorized";
 
 import { AuthProvider } from "./auth/AuthContext";
@@ -30,8 +29,6 @@ function App() {
 
           {/* Protected + role-based layout routes */}
           <Route element={<RoleLayout />}>
-            <Route path="/" element={<LandingPage />} />
-
             {appRoutes.map(({ path, element, requiredRoles }) => (
               <Route
                 key={path}

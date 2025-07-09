@@ -1,5 +1,5 @@
 import { Link, useSearchParams } from "react-router-dom";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import axios from "axios";
 
 import { toast } from "react-toastify";
@@ -8,13 +8,20 @@ import "react-toastify/dist/ReactToastify.css";
 import logo from "../../img/logo.svg";
 import "../../styles/AfterLife-Theme.css";
 
+import { retrieveSession } from "../../utils/retrieveSession";
+
 export default function PaymentSuccess() {
 	const [searchParams] = useSearchParams();
 	const paymentAmount = sessionStorage.getItem("paymentAmount");
 	const paymentMethod = sessionStorage.getItem("paymentMethod") || "Credit Card";
+	const [user, setUser] = useState(null);
 	
 	useEffect(() => {
 		const updateTransaction = async () => {
+			// get current user 
+			let currUser = await retrieveSession();
+			setUser(currUser);
+			
 			// if there is no payment made, immediately redirect
 			if (!searchParams.get("bookingID")) {
 				window.location.href = "/my-bookings";
@@ -71,9 +78,16 @@ export default function PaymentSuccess() {
 						You can return to your bookings page or back to the homepage.
 					</p>
 					<div className="d-flex justify-content-center gap-3">
-						<Link to="/my-bookings">
-							<button className="btn btn-success btn-lg rounded-pill px-5">📄 View My Bookings</button>
-						</Link>
+						{user?.role === "user" && (
+							<Link to="/my-bookings">
+								<button className="btn btn-success btn-lg rounded-pill px-5">📄 View My Bookings</button>
+							</Link>
+						)} 
+						{user?.role === "staff" && (
+							<Link to="/search-booking">
+								<button className="btn btn-success btn-lg rounded-pill px-5">🔍 Search Booking</button>
+							</Link>
+						)} 
 						<Link to="/">
 							<button className="btn btn-outline-secondary btn-lg rounded-pill px-5">🏠 Back to Home</button>
 						</Link>

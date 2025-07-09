@@ -33,12 +33,15 @@ import ResetPassword from "../pages/public/ResetPassword";
 import RequestUrnPlacement from "../pages/user/RequestUrnPlacement";
 import PaymentSuccess from '../pages/general/PaymentSuccess';
 
+// for role redirect
+import RoleRedirect from "../components/navigation/RoleRedirect";
+
 // PUBLIC
 export const publicRoutes = [
   {
     label: "Home",
     path: "/",
-    element: <LandingPage />,
+    element: <RoleRedirect />,
   },
   {
     label: "About Us",
