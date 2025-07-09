@@ -222,7 +222,7 @@ export default function UserManagement() {
                                         newRole: pendingRoles[u.userID],
                                     })
                                 }>
-                                Edit User
+                                Confirm Edit
                             </button>
                         </td>
                     </tr>
