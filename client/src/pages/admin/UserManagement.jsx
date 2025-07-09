@@ -128,7 +128,7 @@ export default function UserManagement() {
 
     return (
         <div className="container py-4">
-        <h1 className="mb-4">Admin Dashboard</h1>
+        <h1 className="mb-4">Manage User</h1>
 
         {/* Tabs */}
         <ul className="nav nav-tabs mb-3">

@@ -120,7 +120,7 @@ export default function FullFormFlow({ selectedSlot, onCancel, setIsBookButtonDi
 					<BookingForm
 						selectedSlot={selectedSlot}
 						onSubmit={async (formData, applicantData) => {
-							setApplicantEmail(applicantData.email);  // ✅ Save it
+							sessionStorage.setItem("userEmail", applicantData.email);
 							setBookingFormData(formData); // temporarily store data
 							await handleSubmit(formData); // push other details to database first
 						}}
@@ -134,17 +134,22 @@ export default function FullFormFlow({ selectedSlot, onCancel, setIsBookButtonDi
 				(user?.role === "staff" ? (
 					// display the option for cash, cheque, or card
 					<PaymentForm
-						onBack={() => {
-							setStep("booking");							
+						onBack={async () => {
+							setStep("booking");
+							await axios.post("/api/booking/delete-draft-booking", {bookingID});
 						}}
 						bookingID={bookingID}
-						applicantEmail={applicantEmail}
 					/>
 				) : (
 					!!stripePromise &&
 					!!clientSecret && (
 						<Elements stripe={stripePromise} options={{ clientSecret }}>
-							<CheckoutForm bookingID={bookingID} />
+							<CheckoutForm 
+							bookingID={bookingID} 
+							onBack = {async () => {
+								setStep("booking");
+								await axios.post("/api/booking/delete-draft-booking", {bookingID});
+							}} />
 						</Elements>
 					)
 				))}

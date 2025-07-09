@@ -230,17 +230,17 @@ exports.registerUser = async (req, res) => {
             if (existing.username === username) {
                 const traceId = uuidv4();
                 loggingFunction({ traceId, email: "CLASH WITH EXISTING USER", status: "F - User selected the same username", req, role: "UNKNOWN" }, registerFilePath);
-                return res.status(409).json({ error: "Please contact admin over this Trace ID: ${traceId}" });
+                return res.status(409).json({ error: `Please contact admin over this Trace ID: ${traceId}` });
             }
             if (existing.email === email) {
                 const traceId = uuidv4();
                 loggingFunction({ traceId, email: "CLASH WITH EXISTING USER", status: "F - User seleted the same email", req, role: "UNKNOWN" }, registerFilePath);
-                return res.status(409).json({ error: "Please contact admin over this Trace ID: ${traceId}" });
+                return res.status(409).json({ error: `Please contact admin over this Trace ID: ${traceId}` });
             }
             if (existing.contactNumber === contactnumber) {
                 const traceId = uuidv4();
                 loggingFunction({ traceId, email: "CLASH WITH EXISTING USER", status: "F - User selected the same contact number", req, role: "UNKNOWN" }, registerFilePath);
-                return res.status(409).json({ error: "Please contact admin over this Trace ID: ${traceId}" });
+                return res.status(409).json({ error: `Please contact admin over this Trace ID: ${traceId}` });
             }
         }
 

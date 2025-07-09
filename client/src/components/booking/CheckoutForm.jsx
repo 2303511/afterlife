@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useStripe, useElements } from "@stripe/react-stripe-js";
+import { Button } from "react-bootstrap";
 
 // import payment elements
 import { PaymentElement } from "@stripe/react-stripe-js";
@@ -8,7 +9,8 @@ import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 export default function CheckoutForm(
-  { onSubmit,
+  { 
+    onBack,
     bookingID
   }) {
   // import stripe elements
@@ -45,6 +47,9 @@ export default function CheckoutForm(
     <>
       <div className="container p-3 mt-4">
         <h3>Payment</h3>
+        <Button variant="outline-secondary" onClick={onBack}>
+					← Back
+				</Button>
         <form id="payment-form" className="payment-form mt-4" onSubmit={handleSubmit}>
           <PaymentElement />
           <button className="btn btn-elegant btn-md px-3 my-3" disabled={isProcessing} id="submit">
