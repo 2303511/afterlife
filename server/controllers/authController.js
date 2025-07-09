@@ -5,6 +5,7 @@ const bcrypt = require("bcrypt");
 const { loggingFunction } = require("../utils/logger");
 const { recaptchaServerCheck } = require("../utils/recaptcha");
 const { sessionStore } = require("../utils/sessionConfig");
+const {getUserRole } = require("../utils/roleUtils");
 
 //for recaptcha
 const axios = require('axios');
@@ -463,23 +464,6 @@ exports.loginUser = async (req, res) => {
     }
 };
 
-
-// Get user role
-async function getUserRole(userID) {
-    try {
-        const [role] = await db.query(`
-			SELECT roleName 
-			FROM Role r 
-			INNER JOIN User u ON u.roleID = r.roleID 
-			WHERE u.userID = ?
-		`, [userID]);
-        return role[0].roleName;
-
-    } catch (error) {
-        console.error("Error fetching role:", error);
-        throw error;
-    }
-};
 
 //new end point to check the 2fa, the check for password and user name will be the default /login
 //it will only come here if the user have 2fa setup properly and password is correct

@@ -7,6 +7,7 @@ const path = require("path");
 const bcrypt = require("bcrypt");
 
 const { loggingFunction } = require("../utils/logger");
+const {getUserRole } = require("../utils/roleUtils");
 
 //for logging
 const logsDir = path.join(__dirname, '..', 'logs');
