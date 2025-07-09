@@ -1,5 +1,5 @@
 import { FaClipboardList, FaFileInvoice, FaBookOpen, FaUserCircle, FaListAlt, FaMapMarkedAlt } from "react-icons/fa";
-import { MdDashboard, MdAdminPanelSettings, MdApartment, MdManageAccounts} from "react-icons/md";
+import { MdAdminPanelSettings, MdManageAccounts} from "react-icons/md";
 
 
 // Import all route components
@@ -22,7 +22,6 @@ import UserManagement from "../pages/admin/UserManagement";
 
 import Login from "../pages/public/Login";
 import Register from "../pages/public/Register";
-import LandingPage from "../pages/public/LandingPage";
 import Logout from "../pages/public/Logout";
 import Setup2FA from "../pages/public/Setup2FA";
 import Login2FA from "../pages/public/Login2FA";

@@ -21,11 +21,10 @@ import { retrieveSession } from "../../utils/retrieveSession";
 
 export default function FullFormFlow({ selectedSlot, onCancel, setIsBookButtonDisabled, setIsForm }) {
 	const [step, setStep] = useState("booking"); // or 'payment'
-	const [bookingFormData, setBookingFormData] = useState(null);
+	const [setBookingFormData] = useState(null);
 	const [stripePromise, setStripePromise] = useState(null);
 	const [clientSecret, setClientSecret] = useState("");
 	const [bookingID, setBookingID] = useState("");
-	const [applicantEmail, setApplicantEmail] = useState("");
 
 	// get the form width
 	const { ref, width = 0 } = useResizeDetector();
@@ -42,7 +41,7 @@ export default function FullFormFlow({ selectedSlot, onCancel, setIsBookButtonDi
 				return null
 			}
 
-			let res_user = await axios.get(`/api/user/getUserByID?userID=${currentUser.userID}`);	
+			//let res_user = await axios.get(`/api/user/getUserByID?userID=${currentUser.userID}`);	
 		}
 		init();
 	}, []);

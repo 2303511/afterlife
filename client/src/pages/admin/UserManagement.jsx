@@ -190,7 +190,7 @@ export default function UserManagement() {
                 {filteredUsers.map((u) => {
                     const currentVal = pendingRoles[u.userID] ?? u.role;
                     const roleOptions = ["applicant", "staff", "admin"].filter((r) => r !== u.role);
-                    const isSelf = (u.userID == sessionUserID);
+                    const isSelf = (u.userID === sessionUserID);
                 return (
                     <tr key={u.userID}>
                     <td>{u.fullName}</td>

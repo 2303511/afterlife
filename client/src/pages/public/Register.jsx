@@ -169,11 +169,12 @@ export default function Register() {
     if (!recaptchaLoaded) return console.error("reCAPTCHA not loaded");
     console.log(`this is number of error found ${errorExists.length}`);
     if (errorExists.length > 0) {
-      errorExists.map((err) => {
+      errorExists.forEach((err) => {
         toast.error(err);
       });
-      return; // there are errors. 
+      return;
     }
+    
 
     try {
       const token = await window.grecaptcha.execute("6Les2nMrAAAAAEx17BtP4kIVDCmU1sGfaFLaFA5N", { action: "register" });
@@ -196,13 +197,13 @@ export default function Register() {
       } 
       catch (err) {
         if (err.response) {
-          if (err.status == 400) {
+          if (err.status === 400) {
             const serverErrors = err.response.data.errors;
-            for (const [field, message] of Object.entries(serverErrors)) {
+            for (const [message] of Object.entries(serverErrors)) {
               toast.error(`${message}`);
             }
           }
-          else if (err.status == 409) {
+          else if (err.status === 409) {
             toast.error(err.response.data.error);
           }
           return;

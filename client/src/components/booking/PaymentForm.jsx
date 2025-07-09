@@ -6,7 +6,6 @@ import CheckoutForm from "./CheckoutForm";
 import axios from "axios";
 
 // for error toasts
-import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 import { useNavigate } from "react-router-dom";
