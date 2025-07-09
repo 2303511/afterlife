@@ -5,7 +5,7 @@ const bcrypt = require("bcrypt");
 const { loggingFunction } = require("../utils/logger");
 const { recaptchaServerCheck } = require("../utils/recaptcha");
 const { sessionStore } = require("../utils/sessionConfig");
-const {getUserRole } = require("../utils/roleUtils");
+const { getUserRole, areCompromisedPassword } = require("../utils/authUtils");
 
 //for recaptcha
 const axios = require('axios');
@@ -15,7 +15,6 @@ const speakeasy = require('speakeasy');
 const validator = require("validator");
 
 //for logging
-const fs = require('fs');
 const path = require('path');
 const logsDir = path.join(__dirname, '..', 'logs');
 
@@ -26,19 +25,6 @@ const loginFilePath = path.join(logsDir, 'login.logs');
 const reCaptchaFilePath = path.join(logsDir, 'reCAPTCHA.logs');
 const forgotPasswordFilePath = path.join(logsDir, 'forgotPassword.logs');
 
-// compromised password 
-const denylistPath = path.join(__dirname, '../compromised.txt');
-const denylist = new Set(
-    fs.readFileSync(denylistPath, 'utf-8')
-        .split(/\r?\n/)
-        .map(p => p.trim().toLowerCase())
-        .filter(Boolean)
-);
-
-
-function areCompromisedPassword(password) {
-    return denylist.has(password.toLowerCase());
-}
 
 // got some logging function
 exports.generate2FASecret = async (req, res) => {
@@ -55,7 +41,7 @@ exports.generate2FASecret = async (req, res) => {
         // Store the secret temporarily (in memory or database)
         await db.query(
             "UPDATE User SET temp2FASecret = ? WHERE userID = ?",
-            [secret.base32, userID]
+            [encrypt(secret.base32), userID]
         );
 
         //console.log("Sending back secret  " , secret.base32);
@@ -96,10 +82,11 @@ exports.verify2FAToken = async (req, res) => {
             return res.status(400).json({ error: "No 2FA setup in progress" });
         }
 
+        temp2FASecret = decrypt(userRow[0].temp2FASecret)
 
         // Verify the token
         const verified = speakeasy.totp.verify({
-            secret: userRow[0].temp2FASecret,
+            secret: temp2FASecret,
             encoding: 'base32',
             token: token,
             window: 1

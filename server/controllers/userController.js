@@ -2,12 +2,11 @@
 
 const db = require("../db");
 const { v4: uuidv4 } = require("uuid");
-const fs = require("fs");
 const path = require("path");
 const bcrypt = require("bcrypt");
 
 const { loggingFunction } = require("../utils/logger");
-const {getUserRole } = require("../utils/roleUtils");
+const { getUserRole, areCompromisedPassword } = require("../utils/authUtils");
 
 //for logging
 const logsDir = path.join(__dirname, '..', 'logs');
@@ -16,19 +15,6 @@ const privilegeFilePath = path.join(logsDir, 'privilege.logs');
 const editAccountFilePath = path.join(logsDir, 'editAccount.logs');
 const changePasswordFilePath = path.join(logsDir, 'changePassword.logs');
 
-
-// compromised password 
-const denylistPath = path.join(__dirname, '../compromised.txt');
-const denylist = new Set(
-    fs.readFileSync(denylistPath, 'utf-8')
-        .split(/\r?\n/)
-        .map(p => p.trim().toLowerCase())
-        .filter(Boolean)
-);
-
-function areCompromisedPassword(password) {
-    return denylist.has(password.toLowerCase());
-}
 
 exports.getCurrentUser = (req, res) => {
 	if (!req.session.userID) {
