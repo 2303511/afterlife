@@ -7,6 +7,8 @@ const { recaptchaServerCheck } = require("../utils/recaptcha");
 const { sessionStore } = require("../utils/sessionConfig");
 const { getUserRole, areCompromisedPassword } = require("../utils/authUtils");
 
+const { encrypt, decrypt} = require("../utils/authUtils")
+
 //for recaptcha
 const axios = require('axios');
 //for 2FA
@@ -495,7 +497,7 @@ exports.verifyLogin2FA = async (req, res) => {
 
         // Verify the token
         const verified = speakeasy.totp.verify({
-            secret: userRow[0].twoFASecret,
+            secret: decrypt(userRow[0].twoFASecret),
             encoding: 'base32',
             token: token,
             window: 1
