@@ -236,7 +236,7 @@ exports.registerUser = async (req, res) => {
 
         // Generate UUID for userID
         const userID = uuidv4();
-        const salt = await bcrypt.genSalt(10);
+        const salt = await bcrypt.genSalt(12);
         const hashedPassword = await bcrypt.hash(password, salt);
         const fullAddress = `${address}, ${unitnumber}, ${postalcode}`;
 
@@ -620,7 +620,7 @@ exports.resetPassword = async (req, res) => {
         const { userID } = tokens[0];
 
         // ✅ 2. Correct hashing logic
-        const salt = await bcrypt.genSalt(10);
+        const salt = await bcrypt.genSalt(12);
         const hashedPassword = await bcrypt.hash(newPassword, salt);
 
         // 3. Update user password
