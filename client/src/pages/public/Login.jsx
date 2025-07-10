@@ -1,12 +1,12 @@
-import React, { useState, useEffect  } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import "bootstrap/dist/js/bootstrap.bundle.min";
 import ForgetPasswordModal from "./ForgetPasswordModal";
-//import { AuthContext } from "../../auth/AuthContext";
+// Removed unused AuthContext import
 
 export default function Login() {
-  const {} = useContext(AuthContext);
+// Removed unused useContext(AuthContext) call
   const [showForget, setShowForget] = useState(false);
   const [form, setForm]             = useState({ email: "", password: "" });
   const [error, setError]           = useState("");
