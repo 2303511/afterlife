@@ -73,7 +73,7 @@ describe('Register Page', () => {
       console.log('Asserting navigation to /setup-2fa');
       expect(window.grecaptcha.execute).toHaveBeenCalled();
       expect(axios.post).toHaveBeenCalledWith(
-        '/api/user/register',
+        '/api/auth/register',
         expect.any(Object),
         expect.any(Object)
       );
