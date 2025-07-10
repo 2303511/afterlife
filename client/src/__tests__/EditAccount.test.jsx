@@ -4,7 +4,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import userEvent from '@testing-library/user-event';
 import axios from 'axios';
-import EditAccountModal from '../pages/EditAccountModal';
+import EditAccountModal from '../pages/general/EditAccountModal';
 
 jest.mock('axios');
 
