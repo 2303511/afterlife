@@ -87,7 +87,7 @@ exports.sendResetPassword = async (req, res) => {
 
     const userID = users[0].userID;
     const token = crypto.randomBytes(32).toString("hex");
-    const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
+    const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
 
     await db.execute(
       "INSERT INTO PasswordResetToken (userID, token, expiresAt) VALUES (?, ?, ?)",
