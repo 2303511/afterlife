@@ -84,7 +84,7 @@ export default function FullFormFlow({ selectedSlot, onCancel, setIsBookButtonDi
 		} catch (err) {
 			if (err.response && err.response.status === 400) {
 				// eslint-disable-next-line
-				for (const [key, value] of Object.entries(err.response.data.errors)) {
+				for (const [, value] of Object.entries(err.response.data.errors)) {
 					toast.error(value);
 				}
 				setStep("booking"); // ensure that the steps remains on booking, do not proceeed to payment
