@@ -148,7 +148,7 @@ export default function Register() {
     
     try {
       const res = await axios.get(`/api/user/findExistingUser?attr=${attr}&value=${encodeURIComponent(value)}`);
-      const match = res.data;
+      const match = res?.data ?? []; // if cannot find existing user, set match as [] instead of undefined
   
       // 2. if found value
       if (Array.isArray(match) && match.length > 0) {
