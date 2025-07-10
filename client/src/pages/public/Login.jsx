@@ -6,7 +6,7 @@ import ForgetPasswordModal from "./ForgetPasswordModal";
 import { AuthContext } from "../../auth/AuthContext";
 
 export default function Login() {
-  const { login } = useContext(AuthContext);
+  const {} = useContext(AuthContext);
   const [showForget, setShowForget] = useState(false);
   const [form, setForm]             = useState({ email: "", password: "" });
   const [error, setError]           = useState("");
