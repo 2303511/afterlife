@@ -7,6 +7,8 @@ const { recaptchaServerCheck } = require("../utils/recaptcha");
 const { sessionStore } = require("../utils/sessionConfig");
 const { getUserRole, areCompromisedPassword } = require("../utils/authUtils");
 
+const { encrypt, decrypt} = require("../utils/authUtils")
+
 //for recaptcha
 const axios = require('axios');
 //for 2FA
@@ -234,7 +236,7 @@ exports.registerUser = async (req, res) => {
 
         // Generate UUID for userID
         const userID = uuidv4();
-        const salt = await bcrypt.genSalt(10);
+        const salt = await bcrypt.genSalt(12);
         const hashedPassword = await bcrypt.hash(password, salt);
         const fullAddress = `${address}, ${unitnumber}, ${postalcode}`;
 
@@ -495,7 +497,7 @@ exports.verifyLogin2FA = async (req, res) => {
 
         // Verify the token
         const verified = speakeasy.totp.verify({
-            secret: userRow[0].twoFASecret,
+            secret: decrypt(userRow[0].twoFASecret),
             encoding: 'base32',
             token: token,
             window: 1
@@ -618,7 +620,7 @@ exports.resetPassword = async (req, res) => {
         const { userID } = tokens[0];
 
         // ✅ 2. Correct hashing logic
-        const salt = await bcrypt.genSalt(10);
+        const salt = await bcrypt.genSalt(12);
         const hashedPassword = await bcrypt.hash(newPassword, salt);
 
         // 3. Update user password
