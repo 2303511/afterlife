@@ -43,7 +43,7 @@ export default function FullNicheMap({
 	const maxRow = slots.length > 0 ? Math.max(...slots.map((s) => s.nicheRow)) : 0;
 	const maxCol = slots.length > 0 ? Math.max(...slots.map((s) => s.nicheColumn)) : 0;
 
-	const bookingRef = useRef(null);
+
 
 	useEffect(() => {
 		axios.get("/api/user/me", { withCredentials: true })
