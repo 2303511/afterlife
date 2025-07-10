@@ -1,12 +1,12 @@
-import React, { useContext, useState, useEffect  } from "react";
+import React, { useState, useEffect  } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import "bootstrap/dist/js/bootstrap.bundle.min";
 import ForgetPasswordModal from "./ForgetPasswordModal";
-import { AuthContext } from "../../auth/AuthContext";
+//import { AuthContext } from "../../auth/AuthContext";
 
 export default function Login() {
-  const { login } = useContext(AuthContext);
+  //const { login } = useContext(AuthContext);
   const [showForget, setShowForget] = useState(false);
   const [form, setForm]             = useState({ email: "", password: "" });
   const [error, setError]           = useState("");
@@ -62,7 +62,7 @@ export default function Login() {
 
       // 1) Perform login
       const response = await axios.post(
-        "/api/user/login",
+        "/api/auth/login",
         { email: form.email, password: form.password, recaptchaToken: token},
         {
           headers: { "Content-Type": "application/json" },

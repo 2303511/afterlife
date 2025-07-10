@@ -1,5 +1,5 @@
 import { FaClipboardList, FaFileInvoice, FaBookOpen, FaUserCircle, FaListAlt, FaMapMarkedAlt } from "react-icons/fa";
-import { MdDashboard, MdAdminPanelSettings, MdApartment, MdManageAccounts} from "react-icons/md";
+import { MdAdminPanelSettings, MdManageAccounts} from "react-icons/md";
 
 
 // Import all route components
@@ -7,10 +7,9 @@ import { MdDashboard, MdAdminPanelSettings, MdApartment, MdManageAccounts} from 
 import MyBookings from "../pages/user/MyBookings"; 
 import MyPayments from "../pages/user/MyPayments";
 import NicheBooking from "../pages/user/NicheBooking";
-import Profile from "../pages/Profile";
+import Profile from "../pages/general/Profile";
 
 // staff pages
-import Dashboard from "../pages/staff/Dashboard";
 import SearchBooking from "../pages/staff/SearchBooking";
 import NicheBookingStaff from "../pages/staff/NicheBookingStaff";
 import BookingApproval from "../pages/staff/BookingApproval";
@@ -23,7 +22,6 @@ import UserManagement from "../pages/admin/UserManagement";
 
 import Login from "../pages/public/Login";
 import Register from "../pages/public/Register";
-import LandingPage from "../pages/public/LandingPage";
 import Logout from "../pages/public/Logout";
 import Setup2FA from "../pages/public/Setup2FA";
 import Login2FA from "../pages/public/Login2FA";
@@ -32,14 +30,17 @@ import ResetPassword from "../pages/public/ResetPassword";
 
 // hidden pages
 import RequestUrnPlacement from "../pages/user/RequestUrnPlacement";
-import PaymentSuccess from '../pages/PaymentSuccess';
+import PaymentSuccess from '../pages/general/PaymentSuccess';
+
+// for role redirect
+import RoleRedirect from "../components/navigation/RoleRedirect";
 
 // PUBLIC
 export const publicRoutes = [
   {
     label: "Home",
     path: "/",
-    element: <LandingPage />,
+    element: <RoleRedirect />,
   },
   {
     label: "About Us",
@@ -114,13 +115,6 @@ export const userRoutes = [
 
 // STAFF
 export const staffRoutes = [
-  {
-    label: "Dashboard",
-    path: "/dashboard",
-    icon: <MdDashboard />,
-    element: <Dashboard />,
-    requiredRoles: ["staff"]
-  },
   {
     label: "Search Booking",
     path: "/search-booking",

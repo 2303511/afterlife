@@ -7,7 +7,7 @@ import StaffLayout from "./StaffLayout";
 import PublicLayout from "./PublicLayout";
 import { publicPaths } from "../config/routesConfig";
 
-import Unauthorized from "../pages/Unauthorized";
+import Unauthorized from "../pages/public/Unauthorized";
 
 export default function RoleLayout() {
     const { pathname } = useLocation();
@@ -29,7 +29,7 @@ export default function RoleLayout() {
     }
 
     if (pathname === "/" && role === "staff") {
-        return <Navigate to="/dashboard" replace />;
+        return <Navigate to="/search-booking" replace />;
     }
 
     if (pathname === "/" && role === "admin") {

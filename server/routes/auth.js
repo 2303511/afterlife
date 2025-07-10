@@ -1,50 +1,38 @@
 const express = require("express");
-const db = require("../db"); // adjust as needed
-const crypto = require("crypto");
-const bcrypt = require("bcrypt");
 const router = express.Router();
+const { ensureAuth } = require("../middleware/auth");
 
-router.post("/resetPassword", async (req, res) => {
-  const { token, newPassword } = req.body;
-  if (!token || !newPassword) {
-    return res.status(400).json({ error: "Missing token or password." });
-  }
+const { loginLimiter, registerLimiter } = require("../middleware/rateLimiter");
 
-  try {
-    // 1. Look up token
-    const [tokens] = await db.execute(
-      `SELECT userID, expiresAt, used FROM PasswordResetToken WHERE token = ?`,
-      [token]
-    );
+const { 
+	generate2FASecret,
+	verify2FAToken,
+  registerUser, 
+  verifyLogin2FA,
+  loginUser,
+  logoutUser,
+  forgetPassword,
+  resetPassword
+ } = require("../controllers/authController");
 
-    if (tokens.length === 0 || tokens[0].used || new Date(tokens[0].expiresAt) < new Date()) {
-      return res.status(400).json({ error: "Invalid or expired token." });
-    }
+// Generate 2FA secret for new user
+router.post("/generate-2fa-secret", ensureAuth, generate2FASecret);
 
-    const { userID } = tokens[0];
+// Verify 2FA token and complete registration
+router.post("/verify-2fa", ensureAuth, verify2FAToken);
 
-    // ✅ 2. Correct hashing logic
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(newPassword, salt);
+router.post("/verify-login-2fa", verifyLogin2FA);
 
-    // 3. Update user password
-    await db.execute(
-      `UPDATE User SET hashedPassword = ?, salt = ? WHERE userID = ?`,
-      [hashedPassword, salt, userID]
-    );
+router.post("/register", registerLimiter, registerUser);
 
-    // 4. Mark token as used
-    await db.execute(
-      `UPDATE PasswordResetToken SET used = TRUE WHERE token = ?`,
-      [token]
-    );
+router.post("/login", loginLimiter, loginUser);
 
-    res.json({ message: "Password reset successful." });
-  } catch (err) {
-    console.error("Reset password error:", err);
-    res.status(500).json({ error: "Failed to reset password." });
-  }
-});
+// Logout
+router.post("/logout", ensureAuth, logoutUser);
 
+router.post("/forget_password", forgetPassword);
+
+// Reset password (e.g. via email link)
+router.post("/resetPassword", resetPassword);
 
 module.exports = router;

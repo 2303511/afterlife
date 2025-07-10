@@ -18,7 +18,6 @@ export default function RequestUrnPlacement() {
 
 	const [formData, setFormData] = useState({
 		dateOfDeath: "",
-		inscription: "test inscription",
 		deathCertFile: null
 	});
 
@@ -53,7 +52,7 @@ export default function RequestUrnPlacement() {
 	};
 
 	useEffect(() => {
-		const init = async () => {
+		const fetchData = async () => {
 			let currBooking = await fetchBooking(bookingID);
 			if (currBooking != null) {
 				setCurrentBooking(currBooking);
@@ -64,7 +63,7 @@ export default function RequestUrnPlacement() {
 				setBeneficiaryDetails(res);
 			}
 		};
-		init();
+		fetchData();
 	}, [bookingID]);
 
 	// handlers
@@ -97,7 +96,6 @@ export default function RequestUrnPlacement() {
 		form.append("nicheID", currentBooking.nicheID);
 		form.append("bookingID", bookingID);
 		form.append("dateOfDeath", formData.dateOfDeath);
-		form.append("inscription", formData.inscription); // optional
 		form.append("deathCertFile", formData.deathCertFile); // ✅ match `multer.single("deathCertFile")`
 
 		try {
@@ -128,12 +126,6 @@ export default function RequestUrnPlacement() {
 					<Form.Label>Death Certificate</Form.Label>
 					<Form.Control type="file" name="deathCertFile" onChange={handleFileChange} isInvalid={!!errors.deathCertFile} />
 					<Form.Control.Feedback type="invalid">{errors.deathCertFile}</Form.Control.Feedback>
-				</Form.Group>
-
-				<Form.Group className="mb-3">
-					<Form.Label>Inscription</Form.Label>
-					<Form.Control as="textarea" rows={3} name="inscription" value={formData.inscription} onChange={handleChange} isInvalid={!!errors.inscription} />
-					<Form.Control.Feedback type="invalid">{errors.inscription}</Form.Control.Feedback>
 				</Form.Group>
 
 				<Button type="submit">Submit Urn Placement Request</Button>

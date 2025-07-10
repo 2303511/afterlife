@@ -33,7 +33,6 @@ const joiValidatorRequirement = Joi.object({
     beneficiaryAddress: Joi.string().trim().required().max(200),
     dateOfDeath: Joi.when('bookingType', {is: 'Current',then: Joi.date().required(),otherwise: Joi.any().empty('').valid(null)}),
     relationshipWithApplicant: Joi.string().trim().required().max(50),
-    inscription: Joi.string().trim().max(500).allow(''),
 
     // Booking - 2 fields on front end
     nicheID: Joi.required(),
@@ -122,7 +121,6 @@ const validateFileBooking = async  (req, res, next) => {
         console.log('- dateOfBirth:', req.body.dateOfBirth);
         console.log('- dateOfDeath:', req.body.dateOfDeath);
         console.log('- relationshipWithApplicant:', req.body.relationshipWithApplicant);
-        console.log('- inscription:', req.body.inscription);
 
         console.log('\nBooking Details:');
         console.log('- nicheID:', req.body.nicheID);

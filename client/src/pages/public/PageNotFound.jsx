@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
-import logo from "../img/logo.svg";
-import "../styles/AfterLife-Theme.css";
+import logo from "../../img/logo.svg";
+import "../../styles/AfterLife-Theme.css";
 
 export default function PageNotFound() {
     return (

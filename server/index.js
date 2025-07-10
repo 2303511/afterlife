@@ -53,13 +53,13 @@ app.set('trust proxy', 1);
 // TODO: Define routes
 app.use("/api/user",        usersRoute);
 app.use("/api/booking",     bookingsRoute); 
-app.use("/api/payment",     paymentsRoute.router); 
+app.use("/api/payment",     paymentsRoute); 
 app.use("/api/niche",       nicheRoute); 
 app.use("/api/beneficiary", beneficiaryRoute);
 app.use("/api/block",       blockRoute);
 app.use("/api/dashboard",   dashboardRoute);
 app.use("/api/payment",     stripeRoute);
-app.use('/api/email',       emailRoutes.router);
+app.use('/api/email',       emailRoutes);
 app.use("/api/auth",        authRoutes);
 
 const port = 8888;

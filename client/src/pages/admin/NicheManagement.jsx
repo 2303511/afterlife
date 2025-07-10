@@ -4,6 +4,7 @@ import { useState } from "react";
 import FullNicheMap from "../../components/niche/FullNicheMap"; // adjust path if needed
 
 export default function NicheManagement() {
+  const [isForm, setIsForm] = useState(false);
   const [isBookButtonDisabled, setIsBookButtonDisabled] = useState(true);
 
   const [selectedBuilding, setSelectedBuilding] = useState(null);
@@ -41,6 +42,7 @@ export default function NicheManagement() {
           isBookButtonDisabled={isBookButtonDisabled}
           setIsBookButtonDisabled={setIsBookButtonDisabled}
           onlyAllowClickStatuses={["available", "reserved", "occupied", "pending"]}
+          setIsForm={setIsForm}
         />
       </div>
     </div>

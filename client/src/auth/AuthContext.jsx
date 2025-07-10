@@ -30,7 +30,7 @@ export function AuthProvider({ children }) {
   // Calls the logout endpoint, clears context
   const logout = async () => {
     try {
-      await axios.post("/api/user/logout", {}, { withCredentials: true });
+      await axios.post("/api/auth/logout", {}, { withCredentials: true });
     } catch (e) {
       console.error("Logout failed", e);
     }

@@ -5,7 +5,7 @@ import FullNicheMap from "../../components/niche/FullNicheMap";
 import FullFormFlow from "../../components/booking/FullFormFlow";
 
 export default function NicheBooking() {
-	const [isForm, setIsForm] = useState(null);
+	const [isForm, setIsForm] = useState(false);
 
 	// to pass data from FullNicheMap to FullFormFlow
 	const [selectedBuilding, setSelectedBuilding] = useState("");
@@ -48,7 +48,7 @@ export default function NicheBooking() {
 				<Col xs={12} md={12} lg={12} xl={4}>
 					{isForm && (
 						<>
-							<FullFormFlow selectedSlot={selectedSlot} onCancel={onCancel} />
+							<FullFormFlow selectedSlot={selectedSlot} onCancel={onCancel} setIsForm={setIsForm}/>
 						</>
 					)}
 				</Col>

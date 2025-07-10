@@ -4,7 +4,57 @@ import axios from "axios";
 export default function EditAccountModal({ show, profile, onClose, onUpdated }) {
     const [form, setForm]   = useState(profile);  // editable copy
     const [loading, setLoading] = useState(false);
-    const [error, setError] = useState("");
+    const [error, setError] = useState(""); // for api error
+
+    const [errors, setErrors] = useState({}); // for validation error
+
+    const validators = {
+        username: (v) => !v?.trim()
+          ? "Username is required"
+          : v.length < 4
+          ? "At least 4 characters"
+          : !/^[a-zA-Z0-9_]+$/.test(v)
+          ? "Only letters, numbers, and _"
+          : "",
+      
+        fullName: (v) => !v?.trim()
+          ? "Full name is required"
+          : v.length < 2
+          ? "At least 2 characters"
+          : !/^[a-zA-Z\s]+$/.test(v)
+          ? "Only letters and spaces"
+          : "",
+      
+        email: (v) => !v?.trim()
+          ? "Email is required"
+          : !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)
+          ? "Invalid email"
+          : "",
+      
+        contactNumber: (v) => !v?.trim()
+          ? "Contact number required"
+          : !/^\+?\d{8,15}$/.test(v)
+          ? "Invalid contact number"
+          : "",
+      
+        userAddress: (v) => !v?.trim()
+          ? "Address required"
+          : v.length < 5
+          ? "Address must be at least 5 characters"
+          : ""
+      };
+      
+    const validateForm = () => {
+        const newErrors = {};
+        const fieldsToValidate = ["username", "fullName", "email", "contactNumber", "userAddress"];
+        fieldsToValidate.forEach(key => {
+            if (validators[key]) {
+                newErrors[key] = validators[key](form[key]);
+            }
+        });
+        setErrors(newErrors);
+        return Object.values(newErrors).every(v => v === "");
+    };
 
     useEffect(() => setForm(profile), [profile]);
 
@@ -16,29 +66,33 @@ export default function EditAccountModal({ show, profile, onClose, onUpdated }) 
     };
 
     const handleSubmit = async () => {
-        setLoading(true);
         setError("");
-
+        setLoading(true);
+    
+        if (!validateForm()) {
+            setLoading(false); // allows save changes button to be clicked again
+            return;
+        }
+    
         try {
             const { username, fullName, email, contactNumber, userAddress } = form;
-
+    
             await axios.post(
-            "/api/user/edit_account",
-            { username, fullName, email, contactNumber, userAddress },
-            { withCredentials: true }
+                "/api/user/edit_account",
+                { username, fullName, email, contactNumber, userAddress },
+                { withCredentials: true }
             );
-
-            /* Immediately tell parent about the new data */
+    
             if (onUpdated) onUpdated(form);
-
-            setLoading(false);
             onClose();
         } catch (err) {
             console.error("Edit account failed:", err);
             setError(err.response?.data?.error || "Update failed");
-            setLoading(false);
+        } finally {
+            setLoading(false); 
         }
     };
+    
     const stop = (e) => e.stopPropagation();
 
     return (
@@ -64,6 +118,7 @@ export default function EditAccountModal({ show, profile, onClose, onUpdated }) 
                     value={form.username}
                     onChange={handleChange}
                     />
+                    {errors.username && <div className="text-danger">{errors.username}</div>}
                 </div>
                 <div className="mb-3">
                     <label className="form-label">Full Name</label>
@@ -74,6 +129,7 @@ export default function EditAccountModal({ show, profile, onClose, onUpdated }) 
                     value={form.fullName}
                     onChange={handleChange}
                     />
+                    {errors.fullName && <div className="text-danger">{errors.fullName}</div>}
                 </div>
                 <div className="mb-3">
                     <label className="form-label">Email</label>
@@ -84,6 +140,7 @@ export default function EditAccountModal({ show, profile, onClose, onUpdated }) 
                     value={form.email}
                     onChange={handleChange}
                     />
+                    {errors.email && <div className="text-danger">{errors.email}</div>}
                 </div>
                 <div className="mb-3">
                     <label className="form-label">Phone</label>
@@ -94,6 +151,7 @@ export default function EditAccountModal({ show, profile, onClose, onUpdated }) 
                     value={form.contactNumber}
                     onChange={handleChange}
                     />
+                    {errors.contactNumber && <div className="text-danger">{errors.contactNumber}</div>}
                 </div>
                 <div className="mb-3">
                     <label className="form-label">Address</label>
@@ -104,6 +162,7 @@ export default function EditAccountModal({ show, profile, onClose, onUpdated }) 
                     value={form.userAddress}
                     onChange={handleChange}
                     />
+                    {errors.userAddress && <div className="text-danger">{errors.userAddress}</div>}
                 </div>
                 </form>
             </div>

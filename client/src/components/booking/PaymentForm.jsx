@@ -6,12 +6,11 @@ import CheckoutForm from "./CheckoutForm";
 import axios from "axios";
 
 // for error toasts
-import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 import { useNavigate } from "react-router-dom";
 
-export default function PaymentForm({ onBack, bookingID, applicantEmail }) {
+export default function PaymentForm({ onBack, bookingID }) {
   const navigate = useNavigate();
 	const [paymentMethod, setPaymentMethod] = useState("");
 	const [paymentAmount, setPaymentAmount] = useState("");
@@ -52,7 +51,6 @@ export default function PaymentForm({ onBack, bookingID, applicantEmail }) {
 
 		// save the payment method within session storage
 		sessionStorage.setItem("paymentMethod", paymentMethod);
-		sessionStorage.setItem("userEmail", applicantEmail);
 
 		// navigate to the payment success page
 		navigate(`/payment-success?bookingID=${bookingID}`);

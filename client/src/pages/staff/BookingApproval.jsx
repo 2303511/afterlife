@@ -18,7 +18,7 @@ export default function BookingApproval() {
     useEffect(() => {
         axios.get(`/api/booking/approval/${bookingID}`, { withCredentials: true })
             .then(res => {
-                console.log("Booking fetched:", res.data);
+                // console.log("Booking fetched:", res.data);
                 setBooking(res.data);
             })
             .catch(err => console.error("Failed to fetch booking:", err))
@@ -76,6 +76,7 @@ export default function BookingApproval() {
         try {
             const res = await axios.post('/api/email/sendDeniedRequest', {
                 to: booking.email,
+                fullName: booking.fullName,
                 reason: denialReason
             }, { withCredentials: true });
 
@@ -199,7 +200,6 @@ export default function BookingApproval() {
                             </p>
 
                             <p><strong>Relationship:</strong> {booking.relationshipWithApplicant || <span className="text-muted fst-italic">Not assigned</span>}</p>
-                            <p><strong>Inscription:</strong> {booking.inscription || <span className="text-muted fst-italic">Not assigned</span>}</p>
                         </div>
                     </div>
 

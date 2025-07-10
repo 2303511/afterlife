@@ -2,7 +2,7 @@ import React from "react";
 import { Form, Row, Col, OverlayTrigger, Tooltip } from "react-bootstrap";
 import { BsQuestionCircle } from 'react-icons/bs';
 
-import {nationalities} from "../nationalities.js";
+import {nationalities} from "../../config/nationalities.js";
 
 export default function BeneficiaryDetails({ formData, onChange, onFileChange, errors, bookingType, width=600 }) {
     // if its for staff, width is bigger so it can accomodate to old width
@@ -73,7 +73,7 @@ export default function BeneficiaryDetails({ formData, onChange, onFileChange, e
                             <option>Father</option>
                             <option>Sibling</option>
                             <option>Relative</option>
-                            <option>Other</option>
+                            <option>Others</option>
                         </Form.Select>
                         <Form.Control.Feedback type="invalid">
                             {errors.relationshipWithApplicant}
@@ -254,19 +254,6 @@ export default function BeneficiaryDetails({ formData, onChange, onFileChange, e
                     </Form.Group>
                 </Col>
             </Row>
-            
-            {bookingType === "Current" && (
-                <Form.Group className="mb-3">
-                    <Form.Label>Inscription</Form.Label>
-                    <Form.Control
-                        as="textarea"
-                        rows={3}
-                        name="inscription"
-                        value={formData.inscription}
-                        onChange={onChange}
-                    />
-                </Form.Group>
-            )}
 
         </>
     );

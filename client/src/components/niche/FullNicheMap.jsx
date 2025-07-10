@@ -3,7 +3,6 @@
 import { useState, useEffect, useRef } from "react";
 
 import axios from "axios";
-import "../../styles/Niche-Management.css";
 
 import LocationSelector from "./LocationSelector";
 import NicheLegend from "./NicheLegend";

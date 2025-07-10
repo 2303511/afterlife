@@ -4,7 +4,7 @@ import { loadStripe } from "@stripe/stripe-js";
 import { Elements } from "@stripe/react-stripe-js";
 
 import axios from "axios";
-import "../../styles/Niche-Management.css";
+import "../../styles/AfterLife-Theme.css";
 
 import BookingForm from "./BookingForm";
 import PaymentForm from "./PaymentForm";
@@ -25,7 +25,6 @@ export default function FullFormFlow({ selectedSlot, onCancel, setIsBookButtonDi
 	const [stripePromise, setStripePromise] = useState(null);
 	const [clientSecret, setClientSecret] = useState("");
 	const [bookingID, setBookingID] = useState("");
-	const [applicantEmail, setApplicantEmail] = useState("");
 
 	// get the form width
 	const { ref, width = 0 } = useResizeDetector();
@@ -42,9 +41,7 @@ export default function FullFormFlow({ selectedSlot, onCancel, setIsBookButtonDi
 				return null
 			}
 
-			let res_user = await axios.get(`/api/user/getUserByID?userID=${currentUser.userID}`);	
-			console.log(res_user.data);
-			sessionStorage.setItem("userEmail", res_user.data.email);
+			//let res_user = await axios.get(`/api/user/getUserByID?userID=${currentUser.userID}`);	
 		}
 		init();
 	}, []);
@@ -73,7 +70,7 @@ export default function FullFormFlow({ selectedSlot, onCancel, setIsBookButtonDi
 				console.log("Booking confirmed! Now fetching Stripe keys...");
 
 				// 2. FETCH STRIPE KEYS !
-				await handleCard();
+				if (user?.role === "user") await handleCard();
 
 				// 3. finally move to payment step:
 				setStep("payment");
@@ -122,7 +119,7 @@ export default function FullFormFlow({ selectedSlot, onCancel, setIsBookButtonDi
 					<BookingForm
 						selectedSlot={selectedSlot}
 						onSubmit={async (formData, applicantData) => {
-							setApplicantEmail(applicantData.email);  // ✅ Save it
+							sessionStorage.setItem("userEmail", applicantData.email);
 							setBookingFormData(formData); // temporarily store data
 							await handleSubmit(formData); // push other details to database first
 						}}
@@ -136,17 +133,22 @@ export default function FullFormFlow({ selectedSlot, onCancel, setIsBookButtonDi
 				(user?.role === "staff" ? (
 					// display the option for cash, cheque, or card
 					<PaymentForm
-						onBack={() => {
-							setStep("booking");							
+						onBack={async () => {
+							setStep("booking");
+							await axios.post("/api/booking/delete-draft-booking", {bookingID});
 						}}
 						bookingID={bookingID}
-						applicantEmail={applicantEmail}
 					/>
 				) : (
 					!!stripePromise &&
 					!!clientSecret && (
 						<Elements stripe={stripePromise} options={{ clientSecret }}>
-							<CheckoutForm bookingID={bookingID} />
+							<CheckoutForm 
+							bookingID={bookingID} 
+							onBack = {async () => {
+								setStep("booking");
+								await axios.post("/api/booking/delete-draft-booking", {bookingID});
+							}} />
 						</Elements>
 					)
 				))}

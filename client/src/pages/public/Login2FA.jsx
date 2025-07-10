@@ -18,7 +18,7 @@ export default function Login2FA() {
     try {
         console.log("c - sending 2fa token for verifiation " , token );
         const response = await axios.post(
-            '/api/user/verify-login-2fa',
+            '/api/auth/verify-login-2fa',
             { token },
             { withCredentials: true }
             );
@@ -33,7 +33,7 @@ export default function Login2FA() {
             if (res.data.role === "user") {
                 navigate("/my-bookings");
             } else if (res.data.role === "staff") {
-                navigate("/dashboard");
+                navigate("/search-booking");
             } else if (res.data.role === "admin") {
                 navigate("/admin-dashboard");
             }

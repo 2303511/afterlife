@@ -58,7 +58,6 @@ export const applicantFieldLabels = {
     unitNumber: "Unit Number",
     birthCertFile: "Birth Certificate",
     deathCertFile: "Death Certificate",
-    inscription: "Inscription"
   };
   
   export const beneficiaryRules = {
@@ -79,7 +78,6 @@ export const applicantFieldLabels = {
       pattern: /^\d{6}$/,
       message: "Postal code must be 6 digits"
     },
-    beneficiaryUnitNumber: { required: true },
-    inscription: { required: false } // optional
+    beneficiaryUnitNumber: { required: true }
   };
   

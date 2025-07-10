@@ -128,7 +128,7 @@ export default function UserManagement() {
 
     return (
         <div className="container py-4">
-        <h1 className="mb-4">Admin Dashboard</h1>
+        <h1 className="mb-4">Manage User</h1>
 
         {/* Tabs */}
         <ul className="nav nav-tabs mb-3">
@@ -190,7 +190,7 @@ export default function UserManagement() {
                 {filteredUsers.map((u) => {
                     const currentVal = pendingRoles[u.userID] ?? u.role;
                     const roleOptions = ["applicant", "staff", "admin"].filter((r) => r !== u.role);
-                    const isSelf = (u.userID == sessionUserID);
+                    const isSelf = (u.userID === sessionUserID);
                 return (
                     <tr key={u.userID}>
                     <td>{u.fullName}</td>
@@ -222,7 +222,7 @@ export default function UserManagement() {
                                         newRole: pendingRoles[u.userID],
                                     })
                                 }>
-                                Edit User
+                                Confirm Edit
                             </button>
                         </td>
                     </tr>

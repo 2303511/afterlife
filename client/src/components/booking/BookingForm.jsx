@@ -31,19 +31,18 @@ export default function BookingForm({ selectedSlot, onCancel, onSubmit, isModal 
     dob: ""
   });
 
-  // const [beneficiaryData, setBeneficiaryData] = useState({
-  //   beneficiaryName: "",
-  //   beneficiaryGender: "",
-  //   beneficiaryNationality: "",
-  //   beneficiaryNRIC: "",
-  //   dateOfBirth: "",
-  //   dateOfDeath: "",
-  //   relationshipWithApplicant: "",
-  //   inscription: "",
-  //   beneficiaryAddress: "",
-  //   beneficiaryPostalCode: "",
-  //   beneficiaryUnitNumber: ""
-  // });
+  const [beneficiaryData, setBeneficiaryData] = useState({
+    beneficiaryName: "",
+    beneficiaryGender: "",
+    beneficiaryNationality: "",
+    beneficiaryNRIC: "",
+    dateOfBirth: "",
+    dateOfDeath: "",
+    relationshipWithApplicant: "",
+    beneficiaryAddress: "",
+    beneficiaryPostalCode: "",
+    beneficiaryUnitNumber: ""
+  });
 
 	
   // const [applicantData, setApplicantData] = useState({
@@ -58,19 +57,18 @@ export default function BookingForm({ selectedSlot, onCancel, onSubmit, isModal 
   //   dob: "1990-01-01"
   // });
 
-  const [beneficiaryData, setBeneficiaryData] = useState({
-    beneficiaryName: "Jane Doe",
-    beneficiaryGender: "Female",
-    relationshipWithApplicant: "Mother",
-    beneficiaryNationality: "Singaporean",
-    beneficiaryNRIC: "S1234567A",
-    dateOfBirth: "1995-01-01",
-    dateOfDeath: "",
-    beneficiaryAddress: "456 Example Road",
-    beneficiaryPostalCode: "654321",
-    beneficiaryUnitNumber: "02-03",
-    inscription: "test test"
-  });
+  // const [beneficiaryData, setBeneficiaryData] = useState({
+  //   beneficiaryName: "Jane Doe",
+  //   beneficiaryGender: "Female",
+  //   relationshipWithApplicant: "Mother",
+  //   beneficiaryNationality: "Singaporean",
+  //   beneficiaryNRIC: "S1234567A",
+  //   dateOfBirth: "1995-01-01",
+  //   dateOfDeath: "",
+  //   beneficiaryAddress: "456 Example Road",
+  //   beneficiaryPostalCode: "654321",
+  //   beneficiaryUnitNumber: "02-03",
+  // });
 
   // to make sure that all the input fields are proper
   const lookupFields = { // must validate if the field exists too!!
@@ -235,7 +233,6 @@ export default function BookingForm({ selectedSlot, onCancel, onSubmit, isModal 
     const activeBeneficiaryRules = { ...beneficiaryRules };
     if (bookingType === "PreOrder") {
       delete activeBeneficiaryRules.dateOfDeath;
-      delete activeBeneficiaryRules.inscription;
     }
 
     const allErrors = validateFormData(nextBeneficiaryData, activeBeneficiaryRules, beneficiaryFieldLabels);
@@ -302,7 +299,6 @@ export default function BookingForm({ selectedSlot, onCancel, onSubmit, isModal 
 
     if (bookingType === "PreOrder") {
       delete activeBeneficiaryRules.dateOfDeath;
-      delete activeBeneficiaryRules.inscription;
     }
 
 
@@ -449,7 +445,7 @@ export default function BookingForm({ selectedSlot, onCancel, onSubmit, isModal 
 
                 {bookingType === "PreOrder" && (
                   <div className="alert alert-info mt-2">
-                    <strong>Pre-Order:</strong> For future use. Upload birth certificate only. Death certificate and inscription can be added later when applicable.
+                    <strong>Pre-Order:</strong> For future use. Upload birth certificate only. Death certificate can be added later when applicable.
                   </div>
                 )}
                 {errors.bookingType && (

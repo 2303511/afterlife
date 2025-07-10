@@ -1,5 +1,4 @@
-/* MyBookings.css */
-
+/* AfterLife-Theme */
 .hero-gradient {
 	background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
 }
@@ -50,12 +49,6 @@
 	height: 3px;
 	background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
 	border-radius: 2px;
-}
-
-.booking-card {
-	background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
-	border-radius: 20px;
-	overflow: hidden;
 }
 
 .icon-circle {
@@ -691,3 +684,385 @@
 	align-items: center;
 	gap: 0.5rem;
 }
+
+/* Niche-Management CSS */
+.grid-wrapper {
+	display: flex;
+	flex-direction: column; /* top to bottom rows */
+	gap: 6px;
+}
+
+.d-flex {
+	display: flex;
+	flex-direction: row; /* left to right columns */
+	gap: 6px;
+}
+
+.slot-box {
+	width: 40px;
+	height: 40px;
+	background-color: #ccc;
+	border-radius: 6px;
+	cursor: pointer;
+	text-align: center;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 10px;
+	font-weight: bold;
+}
+
+.slot-box {
+	width: 60px;
+	height: 60px;
+	border-radius: 8px;
+	margin: 5px;
+	cursor: pointer;
+	transition: transform 0.1s;
+}
+
+.slot-box:hover {
+	transform: scale(1.05);
+}
+
+.legend-box {
+	width: 20px;
+	height: 20px;
+	border-radius: 4px;
+}
+
+.slot-box.selected {
+	border: 2px solid #0f0;
+	background-color: #b3fcb3 !important;
+}
+
+.status-empty {
+	background-color: #e0e0e0;
+	opacity: 0.5;
+	pointer-events: none;
+}
+
+.grid-disabled {
+	pointer-events: none;
+	opacity: 0.5;
+}
+
+.status-available {
+	background-color: #d3d3d3;
+}
+.status-selected {
+	background-color: #28a745;
+}
+.status-pending {
+	background-color: #f0ad4e;
+}
+.status-occupied {
+	background-color: #dc3545;
+}
+.status-reserved {
+	background-color: #ffc107;
+}
+.status-booked {
+	background-color: #007bff;
+}
+.status-blocked {
+	background-color: #6c757d;
+}
+
+.status-current,
+.status-confirmed {
+	background-color: #c3e6cb;
+	color: #155724;
+}
+
+.status-pending,
+.status-preorder {
+	background-color: #ffeaa7;
+	color: #856404;
+}
+
+.status-cancelled,
+.status-archived {
+	background-color: #f5c6cb;
+	color: #721c24;
+}
+
+/* Search Booking CSS */
+.search-booking {
+	padding: 2rem;
+	background-color: #f9f9f9;
+	min-height: 100vh;
+}
+
+.title {
+	font-size: 2rem;
+	font-weight: bold;
+}
+
+.subtitle {
+	color: #666;
+	margin-bottom: 1.5rem;
+}
+
+.search-bar {
+	display: flex;
+	gap: 1rem;
+	margin-bottom: 2rem;
+}
+
+.search-bar input {
+	flex: 1;
+	padding: 0.75rem 1rem;
+	border: 1px solid #ccc;
+	border-radius: 0.5rem;
+	font-size: 1rem;
+}
+
+.search-bar button {
+	padding: 0.75rem 1.5rem;
+	border: none;
+	background-color: #007bff;
+	color: white;
+	border-radius: 0.5rem;
+	cursor: pointer;
+	font-weight: 500;
+}
+
+.search-bar button:disabled {
+	background-color: #aaa;
+	cursor: not-allowed;
+}
+
+.loading {
+	text-align: center;
+	margin: 2rem 0;
+	font-weight: 500;
+	color: #555;
+}
+
+.no-results {
+	text-align: center;
+	margin: 2rem 0;
+	color: #888;
+	font-style: italic;
+}
+
+.stats-container {
+	display: flex;
+	gap: 1rem;
+	margin-bottom: 2rem;
+}
+
+.tabs {
+	display: flex;
+	gap: 2rem;
+	margin-bottom: 1.5rem;
+	font-weight: 500;
+	border-bottom: 1px solid #ddd;
+	padding-bottom: 0.5rem;
+}
+
+.tabs span {
+	cursor: pointer;
+	color: #777;
+}
+
+.tabs .active {
+	color: #000;
+	border-bottom: 2px solid #000;
+}
+
+.booking-section {
+	margin-top: 1rem;
+}
+
+.booking-section h3 {
+	margin-bottom: 1rem;
+	font-size: 1.25rem;
+	font-weight: 600;
+}
+
+.booking-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+	gap: 1rem;
+	margin-bottom: 2rem;
+}
+
+.pending-bookings-section {
+	border-top: 1px solid #ddd;
+	padding-top: 2rem;
+}
+
+/* SideBar CSS */
+.main-content {
+	margin-left: 250px; /* same as your sidebar width */
+	padding: 0;
+	min-height: 100vh;
+	background-color: #f8f9fa;
+}
+
+.sidebar {
+	height: 100vh;
+	width: 250px;
+	background-color: #f9f9f9;
+	border-right: 1px solid #ddd;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+	padding: 1rem 0;
+	position: fixed;
+	left: 0;
+	top: 0;
+	z-index: 100;
+}
+
+.sidebar-header {
+	padding: 0 1.5rem 1rem;
+	border-bottom: 1px solid #eee;
+}
+
+.brand {
+	font-size: 1.5rem;
+	font-weight: 700;
+	color: #3b49df;
+}
+
+.sidebar-nav {
+	flex-grow: 1;
+	padding: 1rem 1.25rem;
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+}
+
+.nav-item {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding: 10px 14px;
+	border-radius: 8px;
+	text-decoration: none;
+	color: #333;
+	font-weight: 500;
+	transition: background 0.2s;
+}
+
+.nav-item:hover {
+	background-color: #f1f3f5;
+}
+
+.nav-item.active {
+	background-color: #eaeefc;
+	color: #3b49df;
+}
+
+.nav-item.active .icon {
+	color: #3b49df;
+}
+
+.nav-item-content {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+}
+
+.icon {
+	font-size: 1.2rem;
+	color: #6c757d;
+}
+
+/* Sidebar footer */
+.sidebar-footer {
+	padding: 0 1.5rem 1rem;
+	font-size: 0.85rem;
+	color: #888;
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+}
+
+.footer-nav {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	padding: 10px 14px;
+	border-radius: 8px;
+	text-decoration: none;
+	color: #333;
+	font-weight: 500;
+	transition: background 0.2s;
+	cursor: pointer;
+	width: 100%;
+	text-align: left;
+	background: none;
+	border: none;
+}
+
+.footer-nav:hover {
+	background-color: #f1f3f5;
+}
+
+/* Red logout button variant */
+.footer-nav.logout-btn {
+	color: #c0392b;
+}
+
+.footer-nav.logout-btn:hover {
+	background-color: #ffeaea;
+}
+
+.footer-role {
+	font-size: 0.75rem;
+	color: #888;
+	padding-top: 0.5rem;
+	padding-left: 4px;
+}
+
+.sidebar-header {
+	padding: 1rem;
+	border-bottom: 1px solid #eee;
+}
+
+.sidebar-role {
+	font-size: 0.9rem;
+	color: #888;
+}
+
+/* Staff Booking Card CSS */
+.booking-card h5 {
+  font-size: 1.125rem;
+  margin-bottom: 0.25rem;
+}
+
+.booking-card .text-muted {
+  font-size: 0.9rem;
+}
+
+.booking-card .info-group p {
+  margin: 0.25rem 0;
+  font-size: 0.9rem;
+  color: #444;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #eee; /* 👈 this is your divider line */
+}
+
+
+.booking-card .info-group {
+  margin-bottom: 1rem;
+}
+
+.booking-card .badge {
+  font-size: 0.85rem;
+  padding: 0.35em 0.6em;
+  text-transform: uppercase;
+  border-radius: 0.5rem;
+}
+
+.booking-card .btn {
+  font-weight: 500;
+}
+
