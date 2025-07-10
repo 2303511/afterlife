@@ -43,10 +43,6 @@ export const publicRoutes = [
     element: <RoleRedirect />,
   },
   {
-    label: "About Us",
-    path: "/about",
-  },
-  {
     label: "FAQ",
     path: "/faq",
   },

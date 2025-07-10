@@ -49,9 +49,6 @@ export default function HomePage() {
 							</p>
 							
 							<div className="d-flex gap-3 flex-wrap">
-								<button className="btn btn-elegant btn-lg rounded-pill px-4">
-									ℹ️ About Us
-								</button>
                                 <a href="/login">
                                     <button className="btn btn-elegant btn-lg rounded-pill px-4">
                                         Get Started
@@ -104,11 +101,6 @@ export default function HomePage() {
 								</div>
 							</div>
 							
-							<div className="text-center mt-5">
-								<button className="btn btn-elegant btn-lg rounded-pill px-5">
-									Learn More About Our Mission
-								</button>
-							</div>
 						</div>
 					</div>
 				</div>
